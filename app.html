@@ -623,34 +623,42 @@ let S={challenges:[],payouts:[],expenses:[],invoices:[],
   settings:{jur:'US'}};
 const KEY='pft5';
 
-async function loadS(){
-  // Always load from localStorage first (fast, works offline)
-  try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r);}catch(e){}
+function fixS(){
   if(!S.expenses)S.expenses=[];
   if(!S.invoices)S.invoices=[];
   if(!S.profile)S.profile={name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''};
   if(!S.settings)S.settings={jur:'US'};
+}
 
-  // If logged in, try to load from Supabase (cloud takes priority)
-  if(currentUser){
-    try{
-      const {data,error}=await sb.from('user_data').select('data').eq('user_id',currentUser.id).maybeSingle();
-      if(data?.data){
-        S=data.data;
-        if(!S.expenses)S.expenses=[];
-        if(!S.invoices)S.invoices=[];
-        if(!S.profile)S.profile={name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''};
-        if(!S.settings)S.settings={jur:'US'};
-        localStorage.setItem(KEY,JSON.stringify(S)); // keep local in sync
-      } else {
-        // New user — upload any existing localStorage data to Supabase
-        if(S.challenges.length||S.payouts.length)await syncSB();
-      }
-    }catch(e){console.warn('Supabase load error:',e);}
-  }
+function loadLocal(){
+  try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r);}catch(e){}
+  fixS();
+}
 
+async function loadS(){
+  // 1. Load localStorage immediately (fast, no network)
+  loadLocal();
   if(!S.challenges.length&&!S.payouts.length)demo();
   buildYr();
+
+  // 2. Sync Supabase in background after app is already showing
+  if(currentUser){
+    syncFromSB().catch(e=>console.warn('Supabase sync error:',e));
+  }
+}
+
+async function syncFromSB(){
+  const timeout = new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000));
+  const query = sb.from('user_data').select('data').eq('user_id',currentUser.id).maybeSingle();
+  const {data} = await Promise.race([query, timeout]);
+  if(data?.data){
+    S=data.data; fixS();
+    localStorage.setItem(KEY,JSON.stringify(S));
+    buildYr(); render();
+  } else if(!data){
+    // New user — save current state to Supabase
+    if(S.challenges.length||S.payouts.length) await syncSB();
+  }
 }
 
 function saveS(){
