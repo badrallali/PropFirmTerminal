@@ -228,8 +228,17 @@
 </head>
 <body>
 
+<!-- ══ LOADING SCREEN ══ -->
+<div id="loadWrap" style="position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="display:flex;align-items:center;gap:9px">
+    <div class="bm">PT</div>
+    <div class="bn">PropFirm<em>Terminal</em></div>
+  </div>
+  <div style="font-size:12px;color:var(--text3)">Loading…</div>
+</div>
+
 <!-- ══ AUTH SCREEN ══ -->
-<div id="authWrap" style="position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px">
+<div id="authWrap" style="position:fixed;inset:0;background:var(--bg);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px">
   <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
     <div class="bm">PT</div>
     <div class="bn">PropFirm<em>Terminal</em></div>
@@ -562,34 +571,48 @@ async function authSubmit(){
 }
 
 async function signOut(){
-  try{ await sb.auth.signOut(); }catch(e){ console.warn('signOut error:',e); }
-  currentUser=null;
   localStorage.removeItem(KEY);
   S={challenges:[],payouts:[],expenses:[],invoices:[],
     profile:{name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''},
     settings:{jur:'US'}};
-  document.getElementById('userBadge').style.display='none';
-  document.getElementById('userEmail').textContent='';
-  document.getElementById('authWrap').style.display='flex';
-  document.getElementById('appWrap').style.display='none';
+  try{ await sb.auth.signOut(); }catch(e){ console.warn('signOut error:',e); }
+  // onAuthStateChange SIGNED_OUT handles the UI
 }
 
-// Listen for auth state changes (login / logout / token refresh / page load)
-sb.auth.onAuthStateChange(async (event,session)=>{
-  currentUser = session?.user??null;
-  if(currentUser){
+let _appLoading = false;
+async function showApp(user){
+  if(_appLoading) return;
+  _appLoading = true;
+  try{
+    currentUser = user;
+    await loadS();
+    jur = S.settings.jur||'US';
+    document.getElementById('loadWrap').style.display='none';
     document.getElementById('authWrap').style.display='none';
     document.getElementById('appWrap').style.display='block';
     document.getElementById('userBadge').style.display='flex';
     document.getElementById('userEmail').textContent=currentUser.email;
-    await loadS();
-    jur=S.settings.jur||'US';
     render();
     setTimeout(()=>{document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));},0);
-  } else {
+  }finally{ _appLoading=false; }
+}
+
+// Listen for auth state changes
+sb.auth.onAuthStateChange(async (event,session)=>{
+  if(event==='INITIAL_SESSION'){
+    if(session?.user){ await showApp(session.user); }
+    else{
+      document.getElementById('loadWrap').style.display='none';
+      document.getElementById('authWrap').style.display='flex';
+    }
+  } else if(event==='SIGNED_IN'){
+    await showApp(session.user);
+  } else if(event==='SIGNED_OUT'){
+    currentUser=null;
     document.getElementById('authWrap').style.display='flex';
     document.getElementById('appWrap').style.display='none';
     document.getElementById('userBadge').style.display='none';
+    document.getElementById('loadWrap').style.display='none';
   }
 });
 
@@ -701,7 +724,8 @@ function demo(){
     {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro',  amt:14.95,date:'2025-01-01',rec:'monthly'},
     {id:uid(),cat:'VPS / Hosting',         vendor:'ForexVPS',         amt:29.99,date:'2025-01-01',rec:'monthly'},
   ];
-  saveS();
+  // Demo data is display-only — do not sync to Supabase
+  localStorage.setItem(KEY,JSON.stringify(S));
 }
 
 // ── YEAR FILTER ─────────────────────────────────────────────────
