@@ -404,13 +404,8 @@
   <!-- ── TAX ── -->
   <section class="sec" id="tax">
     <div class="sec-hd">
-      <div class="sec-title"><span class="sec-dot" style="background:var(--yellow)"></span>Tax Summary</div>
+      <div class="sec-title"><span class="sec-dot" style="background:var(--yellow)"></span>Tax Report</div>
       <div class="sec-actions">
-        <div class="seg" id="jurSeg">
-          <button onclick="setJur('US')"    class="active">🇺🇸 US</button>
-          <button onclick="setJur('UK')">🇬🇧 UK</button>
-          <button onclick="setJur('OTHER')">🌍 Other</button>
-        </div>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('tax')">↓ CSV</button>
         <button class="btn btn-ghost btn-xs" onclick="window.print()">🖨 Print</button>
         <button class="btn btn-blue btn-xs" onclick="openMo('exp')">+ Add Expense</button>
@@ -629,14 +624,12 @@ async function showApp(user){
   try{
     await loadS();
   }catch(e){ console.warn('loadS error:',e); }
-  jur = S.settings.jur||'US';
   showLoad(false);
   document.getElementById('authWrap').style.display='none';
   document.getElementById('appWrap').style.display='block';
   document.getElementById('userBadge').style.display='flex';
   document.getElementById('userEmail').textContent=currentUser.email;
   try{ render(); }catch(e){ console.warn('render error:',e); }
-  setTimeout(()=>{document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));},0);
 }
 
 // Fallback: if onAuthStateChange never fires within 4s, show auth screen
@@ -1059,98 +1052,76 @@ function renderFirms(chs,pys){
 }
 
 // ── TAX ─────────────────────────────────────────────────────────
-let jur=S.settings.jur||'US';
-function setJur(j){jur=j;S.settings.jur=j;saveS();document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===j));renderTax(fy(S.challenges),fy(S.payouts));}
-
 function renderTax(chs,pys){
   chs=chs||fy(S.challenges);pys=pys||fy(S.payouts);
   const exps=fy(S.expenses);
   const gross=pys.reduce((s,p)=>s+Number(p.amt),0);
   const fees=chs.reduce((s,c)=>s+Number(c.fee),0);
   const other=exps.reduce((s,e)=>s+Number(e.amt),0);
-  const deduct=fees+other,net=gross-deduct;
-  const tax=jur==='US'?calcUS(net):jur==='UK'?calcUK(net):{total:Math.max(0,net*0.25),lines:[{l:'Estimated (25% placeholder)',v:Math.max(0,net*0.25)}]};
-  const ft={};pys.forEach(p=>{ft[p.firm]=(ft[p.firm]||0)+Number(p.amt);});
-  const over600=Object.entries(ft).filter(([,v])=>v>600).map(([f])=>f);
+  const deduct=fees+other, net=gross-deduct;
 
-  // Quarterly income (US only)
-  let qHtml='';
-  if(jur==='US'){
-    const dues=['Apr 15','Jun 15','Sep 15','Jan 15'];
-    qHtml=`<div class="q-row">${[1,2,3,4].map((q,i)=>{
-      const ms=[(q-1)*3+1,(q-1)*3+2,(q-1)*3+3];
-      const qi=pys.filter(p=>parseInt(p.date.substr(5,2))>=ms[0]&&parseInt(p.date.substr(5,2))<=ms[2]).reduce((s,p)=>s+Number(p.amt),0);
-      const qf=chs.filter(c=>parseInt(c.date.substr(5,2))>=ms[0]&&parseInt(c.date.substr(5,2))<=ms[2]).reduce((s,c)=>s+Number(c.fee),0);
-      const qn=qi-qf;
-      return `<div class="qc"><div class="ql">Q${q}</div><div class="qv ${qn>=0?'g':'r'}">${qn>=0?'+':''}${$$(qn)}</div><div class="qd">Income ${$$(qi)} · Fees ${$$(qf)}</div><div class="qd" style="color:var(--yellow)">Est. due: ${dues[i]}</div></div>`;
-    }).join('')}</div>`;
-  }
-
-  let notice=jur==='US'
-    ?`<strong>US:</strong> Prop payouts are generally <strong>ordinary self-employment income</strong>, not capital gains (Schedule C). Challenge fees are deductible. USDT payouts are taxable at USD value on date of receipt. If you expect to owe >$1,000 this year, make quarterly estimated payments. ${over600.length?`<span style="color:var(--yellow)">⚠ ${over600.join(', ')} may issue a 1099-NEC (over $600).</span>`:''} Always consult a CPA.`
-    :jur==='UK'
-    ?`<strong>UK:</strong> Prop trading income is generally <strong>trading income</strong> subject to Income Tax and NI (not gambling or CGT). Challenge fees are likely allowable deductions. UK tax year: 6 Apr–5 Apr. Self Assessment deadline: 31 Jan. Consult an accountant.`
-    :`<strong>International:</strong> Net taxable income: ${$$(net)}. Tax treatment varies by country. Consult a local tax professional.`;
+  // Quarterly breakdown
+  const quarters=[1,2,3,4].map(q=>{
+    const ms=[(q-1)*3+1,(q-1)*3+2,(q-1)*3+3];
+    const inc=pys.filter(p=>{const m=parseInt(p.date.substr(5,2));return m>=ms[0]&&m<=ms[2];}).reduce((s,p)=>s+Number(p.amt),0);
+    const exp=chs.filter(c=>{const m=parseInt(c.date.substr(5,2));return m>=ms[0]&&m<=ms[2];}).reduce((s,c)=>s+Number(c.fee),0)
+              +exps.filter(e=>{const m=parseInt(e.date.substr(5,2));return m>=ms[0]&&m<=ms[2];}).reduce((s,e)=>s+Number(e.amt),0);
+    return{q,inc,exp,net:inc-exp};
+  });
 
   const expRows=exps.length
-    ?[...exps].reverse().map(e=>`<tr><td style="color:var(--text)">${e.cat}</td><td style="color:var(--text2)">${e.vendor||'—'}</td><td class="r" style="font-weight:600">${$$(e.amt)}</td><td style="color:var(--text3)">${e.date}</td><td style="display:flex;gap:6px;align-items:center">${e.invoiceUrl?`<a href="${e.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;white-space:nowrap">📄 View</a>`:''}<button class="btn-del" onclick="delExp('${e.id}')">Remove</button></td></tr>`).join('')
-    :`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No additional expenses. Challenge fees are auto-imported above.</td></tr>`;
+    ?[...exps].reverse().map(e=>`<tr>
+        <td style="color:var(--text)">${e.cat}</td>
+        <td style="color:var(--text2)">${e.vendor||'—'}</td>
+        <td class="r" style="font-weight:600;color:var(--red)">${$$(e.amt)}</td>
+        <td style="color:var(--text3)">${e.date}</td>
+        <td style="display:flex;gap:6px;align-items:center">
+          ${e.invoiceUrl?`<a href="${e.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">📄 View</a>`:''}
+          <button class="btn-del" onclick="delExp('${e.id}')">Remove</button>
+        </td>
+      </tr>`).join('')
+    :`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No expenses logged yet.</td></tr>`;
 
   document.getElementById('taxWrap').innerHTML=`
-    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px;">
-      <div class="kpi"><div class="kl">Gross Income</div><div class="kv g">${$$(gross)}</div><div class="kf">${pys.length} payouts · ${getYr()}</div></div>
-      <div class="kpi"><div class="kl">Total Deductions</div><div class="kv r">${$$(deduct)}</div><div class="kf">Fees + ${exps.length} expenses</div></div>
-      <div class="kpi"><div class="kl">Net Taxable</div><div class="kv ${net>=0?'y':'g'}">${$$(net)}</div><div class="kf">${net<=0?'No taxable income':'Subject to tax'}</div></div>
-      <div class="kpi"><div class="kl">Est. Tax (${jur})</div><div class="kv r">${$$(Math.max(0,tax.total))}</div><div class="kf">${tax.total>0?'Consult a CPA':'—'}</div></div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="kpi"><div class="kl">Gross Income</div><div class="kv g">${$$(gross)}</div><div class="kf">${pys.length} payouts</div></div>
+      <div class="kpi"><div class="kl">Challenge Fees</div><div class="kv r">−${$$(fees)}</div><div class="kf">${chs.length} challenges</div></div>
+      <div class="kpi"><div class="kl">Other Expenses</div><div class="kv r">−${$$(other)}</div><div class="kf">${exps.length} items</div></div>
+      <div class="kpi"><div class="kl">Net P&L</div><div class="kv ${net>=0?'g':'r'}">${$$(net)}</div><div class="kf">${net>=0?'Profitable year':'Net loss'}</div></div>
     </div>
-    ${qHtml}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+
+    <div class="q-row" style="margin-bottom:16px">
+      ${quarters.map(({q,inc,exp,net:qn})=>`
+        <div class="qc">
+          <div class="ql">Q${q}</div>
+          <div class="qv ${qn>=0?'g':'r'}">${qn>=0?'+':''}${$$(qn)}</div>
+          <div class="qd">Income <span style="color:var(--green)">${$$(inc)}</span></div>
+          <div class="qd">Expenses <span style="color:var(--red)">−${$$(exp)}</span></div>
+        </div>`).join('')}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       <div class="tc">
-        <div class="tch"><span class="tct">Income Breakdown</span></div>
-        ${pys.length?pys.slice().reverse().map(p=>`<div class="tax-row"><span class="tax-lbl">${p.firm} · ${p.date} · ${p.meth}</span><span class="tax-val g">${$$(p.amt)}</span></div>`).join(''):'<div style="padding:16px;color:var(--text3);font-size:12px">No payouts</div>'}
-        <div class="tax-tot"><span>Gross Income</span><span class="g">${$$(gross)}</span></div>
+        <div class="tch"><span class="tct">Income</span><span class="tcm">${pys.length} payouts</span></div>
+        ${pys.length?[...pys].reverse().map(p=>`<div class="tax-row"><span class="tax-lbl">${p.firm} · ${p.date}</span><span class="tax-val g">${$$(p.amt)}</span></div>`).join(''):'<div style="padding:16px;color:var(--text3);font-size:12px">No payouts recorded.</div>'}
+        <div class="tax-tot"><span>Total Income</span><span class="g">${$$(gross)}</span></div>
       </div>
       <div class="tc">
-        <div class="tch"><span class="tct">Tax Estimate · ${jur}</span></div>
+        <div class="tch"><span class="tct">Deductions Summary</span></div>
         <div class="tax-row"><span class="tax-lbl">Gross Income</span><span class="tax-val g">${$$(gross)}</span></div>
         <div class="tax-row"><span class="tax-lbl">Challenge Fees</span><span class="tax-val r">−${$$(fees)}</span></div>
         <div class="tax-row"><span class="tax-lbl">Other Expenses</span><span class="tax-val r">−${$$(other)}</span></div>
-        <div class="tax-row" style="border-top:1px solid var(--border)"><span class="tax-lbl">Net Taxable</span><span class="tax-val ${net>=0?'y':'g'}">${$$(net)}</span></div>
-        ${tax.lines.map(l=>`<div class="tax-row"><span class="tax-lbl">${l.l}</span><span class="tax-val ${l.v>=0?'r':''}">${l.v<0?'−'+$$(Math.abs(l.v)):$$(l.v)}</span></div>`).join('')}
-        <div class="tax-tot"><span>Estimated Tax</span><span class="r">${$$(Math.max(0,tax.total))}</span></div>
+        <div class="tax-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px"><span class="tax-lbl" style="font-weight:600">Net P&L</span><span class="tax-val ${net>=0?'g':'r'}" style="font-weight:700">${$$(net)}</span></div>
+        <div class="tax-row" style="margin-top:8px"><span class="tax-lbl" style="font-size:11px;color:var(--text3)">Share this report with your accountant for accurate tax filing.</span></div>
       </div>
     </div>
-    <div class="tax-notice">${notice}</div>
-    <div class="tc" style="margin-top:10px">
-      <div class="tch"><span class="tct">Business Expenses</span><span class="tcm">Challenge fees auto-imported · Add others below</span></div>
+
+    <div class="tc">
+      <div class="tch"><span class="tct">Business Expenses</span>
+        <button class="btn btn-blue btn-xs" onclick="openMo('exp')" style="margin-left:8px">+ Add</button>
+      </div>
       <table><thead><tr><th>Category</th><th>Vendor</th><th>Amount</th><th>Date</th><th></th></tr></thead><tbody>${expRows}</tbody></table>
     </div>`;
-}
-
-function calcUS(net){
-  if(net<=0)return{total:0,lines:[{l:'No taxable income',v:0}]};
-  const base=net*.9235;
-  const cap=168600;
-  const se=base<=cap?base*.153:cap*.153+(base-cap)*.029;
-  const agi=net-se/2;
-  const bk=[[11600,.10],[47150,.12],[100525,.22],[191950,.24],[243725,.32],[609350,.35],[Infinity,.37]];
-  let it=0,prev=0;
-  for(const[lim,rate]of bk){const chunk=Math.min(agi,lim)-prev;if(chunk<=0)break;it+=chunk*rate;prev=lim;if(agi<=lim)break;}
-  return{total:Math.round(se+it),lines:[
-    {l:'Self-Employment Tax',v:Math.round(se)},
-    {l:'SE Deduction (½ SE)',v:-Math.round(se/2)},
-    {l:'Federal Income Tax (est.)',v:Math.round(it)},
-    {l:'Quarterly Payment (÷4)',v:Math.round((se+it)/4)},
-  ]};
-}
-
-function calcUK(net){
-  if(net<=0)return{total:0,lines:[{l:'No taxable income',v:0}]};
-  const PA=12570,taxable=Math.max(0,net-PA);
-  let it=taxable<=37700?taxable*.20:taxable<=125140?37700*.20+(taxable-37700)*.40:37700*.20+(125140-37700)*.40+(taxable-125140)*.45;
-  const niBase=Math.max(0,net-PA);
-  const ni=niBase<=37700?niBase*.06:37700*.06+(niBase-37700)*.02;
-  return{total:Math.round(it+ni+179),lines:[{l:'Personal Allowance',v:-PA},{l:'Income Tax',v:Math.round(it)},{l:'Class 4 NI',v:Math.round(ni)},{l:'Class 2 NI',v:179}]};
 }
 
 // ── INVOICE GENERATION ─────────────────────────────────────────
@@ -1392,16 +1363,13 @@ function openProfile(){
   ['name','biz','addr','city','state','country','zip','email','phone','tax','footer'].forEach(k=>{
     const el=document.getElementById('pr_'+k);if(el)el.value=p[k]||'';
   });
-  document.getElementById('pr_jur').value=S.settings.jur||'US';
+  if(document.getElementById('pr_jur'))document.getElementById('pr_jur').value=S.settings?.jur||'US';
 }
 
 function saveProfile(){
   ['name','biz','addr','city','state','country','zip','email','phone','tax','footer'].forEach(k=>{
     const el=document.getElementById('pr_'+k);if(el)S.profile[k]=el.value.trim();
   });
-  S.settings.jur=document.getElementById('pr_jur').value;
-  jur=S.settings.jur;
-  document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));
   saveS();closeMo('profile');render();
 }
 
@@ -1489,10 +1457,6 @@ function exportCSV(type){
 
 function dl(name,content,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=name;a.click();}
 
-// ── SEG (jurisdiction) ──────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));
-});
 
 // ── TAB NAVIGATION ───────────────────────────────────────────────
 const SECS=['overview','challenges','payouts','firms','tax','breakeven','invoices'];
