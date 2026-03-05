@@ -484,7 +484,7 @@
   <div class="modal">
     <div class="mo-title">Add Challenge</div><div class="mo-desc">Log a new prop firm challenge attempt.</div>
     <div class="fg">
-      <div class="field"><label>Prop Firm</label><input id="ch_firm" list="cl_datalist" placeholder="e.g. FTMO" autocomplete="off"/></div>
+      <div class="field"><label>Prop Firm</label><select id="ch_firm" onchange="if(this.value==='__add__'){closeMo('ch');navTo('propfirms',null)}"></select></div>
       <div class="field"><label>Account Size ($)</label><input type="number" id="ch_sz" placeholder="100000"/></div>
     </div>
     <div class="fg">
@@ -503,7 +503,7 @@
   <div class="modal">
     <div class="mo-title">Log Payout</div><div class="mo-desc">Record a withdrawal from a funded account.</div>
     <div class="fg">
-      <div class="field"><label>Prop Firm</label><input id="py_firm" list="cl_datalist" placeholder="e.g. FTMO" autocomplete="off"/></div>
+      <div class="field"><label>Prop Firm</label><select id="py_firm" onchange="if(this.value==='__add__'){closeMo('py');navTo('propfirms',null)}"></select></div>
       <div class="field"><label>Amount ($)</label><input type="number" id="py_amt" placeholder="1500"/></div>
     </div>
     <div class="fg">
@@ -584,7 +584,6 @@
 
 <!-- PRINT AREA (hidden, used for invoice print) -->
 <div id="printArea"></div>
-<datalist id="cl_datalist"></datalist>
 
 <!-- ═══════════════════════════ JS ═══════════════════════════ -->
 <script>
@@ -1776,7 +1775,22 @@ function saveProfile(){
 }
 
 // ── MODALS ──────────────────────────────────────────────────────
+function populateFirmDropdowns(){
+  const opts=(S.clients.length
+    ? S.clients.map(c=>`<option value="${c.name}">${c.name}</option>`).join('')
+    : '<option value="" disabled>No firms saved yet</option>'
+  )+'<option value="__add__" style="color:var(--blue)">➕ Add a Prop Firm</option>';
+  ['py_firm','ch_firm'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const prev=el.value;
+    el.innerHTML=opts;
+    if(prev&&prev!=='__add__')el.value=prev;
+  });
+}
+
 function openMo(t){
+  if(t==='ch'||t==='py')populateFirmDropdowns();
   if(t==='ch')document.getElementById('ch_date').value=today();
   if(t==='py')document.getElementById('py_date').value=today();
   if(t==='exp')document.getElementById('ex_date').value=today();
@@ -1787,8 +1801,8 @@ function closeMo(t){document.getElementById('ov-'+t).classList.remove('open');}
 document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 
 async function saveCh(){
-  const firm=document.getElementById('ch_firm').value.trim(),fee=document.getElementById('ch_fee').value,date=document.getElementById('ch_date').value;
-  if(!firm||!fee||!date){alert('Firm, Fee, and Date required.');return;}
+  const firm=document.getElementById('ch_firm').value,fee=document.getElementById('ch_fee').value,date=document.getElementById('ch_date').value;
+  if(!firm||firm==='__add__'||!fee||!date){alert('Firm, Fee, and Date required.');return;}
   const id=uid();
   let invoiceUrl='';
   const file=document.getElementById('ch_invoice').files[0];
@@ -1802,8 +1816,8 @@ async function saveCh(){
 }
 
 function savePy(){
-  const firm=document.getElementById('py_firm').value.trim(),amt=document.getElementById('py_amt').value,date=document.getElementById('py_date').value;
-  if(!firm||!amt||!date){alert('Firm, Amount, and Date required.');return;}
+  const firm=document.getElementById('py_firm').value,amt=document.getElementById('py_amt').value,date=document.getElementById('py_date').value;
+  if(!firm||firm==='__add__'||!amt||!date){alert('Firm, Amount, and Date required.');return;}
   S.payouts.push({id:uid(),firm,amt:+amt,date,meth:document.getElementById('py_meth').value,sz:+document.getElementById('py_sz').value||0,notes:document.getElementById('py_notes').value.trim()});
   saveS();closeMo('py');['py_firm','py_amt','py_sz','py_notes'].forEach(i=>document.getElementById(i).value='');render();
 }
