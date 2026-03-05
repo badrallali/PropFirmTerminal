@@ -895,7 +895,7 @@ function renderChallenges(chs){
     <td style="color:var(--text3)">${c.date}</td>
     <td style="color:var(--text3);font-size:11px">${c.notes||'—'}</td>
     <td style="display:flex;gap:6px;align-items:center">
-      ${c.invoiceUrl?`<button class="btn-inv" onclick="window.open('${c.invoiceUrl}','_blank')">📄 Invoice</button>`:''}
+      <button class="btn-inv" onclick="chInvoiceClick('${c.id}')">${c.invoiceUrl?'📄 Invoice':'📎 Attach'}</button>
       <button class="btn-del" onclick="delCh('${c.id}')">Remove</button>
     </td>
   </tr>`).join('');
@@ -1256,6 +1256,25 @@ async function saveExp(){
 function delCh(id){S.challenges=S.challenges.filter(c=>c.id!==id);saveS();render();}
 function delPy(id){S.payouts=S.payouts.filter(p=>p.id!==id);saveS();render();}
 function delExp(id){S.expenses=S.expenses.filter(e=>e.id!==id);saveS();render();}
+
+function chInvoiceClick(id){
+  const c=S.challenges.find(x=>x.id===id); if(!c)return;
+  if(c.invoiceUrl){window.open(c.invoiceUrl,'_blank');return;}
+  if(!currentUser){alert('Sign in to attach invoices.');return;}
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.pdf,.png,.jpg,.jpeg,.webp';
+  inp.onchange=async()=>{
+    const file=inp.files[0]; if(!file)return;
+    const ext=file.name.split('.').pop();
+    const path=`${currentUser.id}/${id}.${ext}`;
+    const {error}=await sb.storage.from('invoices').upload(path,file,{upsert:true});
+    if(error){alert('Upload failed: '+error.message);return;}
+    const {data:pd}=sb.storage.from('invoices').getPublicUrl(path);
+    c.invoiceUrl=pd.publicUrl;
+    saveS();render();
+  };
+  inp.click();
+}
 
 // ── EXPORT ──────────────────────────────────────────────────────
 function exportCSV(type){
