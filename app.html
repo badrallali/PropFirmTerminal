@@ -560,8 +560,9 @@ async function authSubmit(){
 }
 
 async function signOut(){
-  await sb.auth.signOut();
+  try{ await sb.auth.signOut(); }catch(e){ console.warn('signOut error:',e); }
   currentUser=null;
+  localStorage.removeItem(KEY);
   S={challenges:[],payouts:[],expenses:[],invoices:[],
     profile:{name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''},
     settings:{jur:'US'}};
@@ -571,7 +572,7 @@ async function signOut(){
   document.getElementById('appWrap').style.display='none';
 }
 
-// Listen for auth state changes (login / logout / token refresh)
+// Listen for auth state changes (login / logout / token refresh / page load)
 sb.auth.onAuthStateChange(async (event,session)=>{
   currentUser = session?.user??null;
   if(currentUser){
@@ -583,6 +584,10 @@ sb.auth.onAuthStateChange(async (event,session)=>{
     jur=S.settings.jur||'US';
     render();
     setTimeout(()=>{document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));},0);
+  } else {
+    document.getElementById('authWrap').style.display='flex';
+    document.getElementById('appWrap').style.display='none';
+    document.getElementById('userBadge').style.display='none';
   }
 });
 
@@ -1266,23 +1271,7 @@ function $$(n){const a=Math.abs(Number(n));return(n<0?'-':'')+'$'+a.toLocaleStri
 function numF(n){return'$'+Number(n).toLocaleString('en-US');}
 function empty(i,t){return`<div class="empty"><div class="ei">${i}</div><div class="et">${t}</div></div>`;}
 
-// ── INIT ─────────────────────────────────────────────────────────
-(async function init(){
-  // Check for existing session (Supabase stores it in localStorage automatically)
-  const {data:{session}} = await sb.auth.getSession();
-  currentUser = session?.user??null;
-  if(currentUser){
-    document.getElementById('authWrap').style.display='none';
-    document.getElementById('appWrap').style.display='block';
-    document.getElementById('userBadge').style.display='flex';
-    document.getElementById('userEmail').textContent=currentUser.email;
-    await loadS();
-    jur=S.settings.jur||'US';
-    render();
-    setTimeout(()=>{document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));},0);
-  }
-  // If no session, authWrap stays visible (default)
-})();
+// onAuthStateChange handles init — fires with INITIAL_SESSION on page load
 </script>
 
 <!-- seg style (inline, small) -->
