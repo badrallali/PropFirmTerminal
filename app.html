@@ -298,7 +298,7 @@
   </a>
   <nav>
     <a class="na on"  href="#" onclick="navTo('overview',event)">Overview</a>
-    <a class="na"     href="#" onclick="navTo('challenges',event)">Challenges</a>
+    <a class="na"     href="#" onclick="navTo('expenses',event)">Expenses</a>
     <a class="na"     href="#" onclick="navTo('payouts',event)">Payouts</a>
     <a class="na"     href="#" onclick="navTo('firms',event)">Firm Analysis</a>
     <a class="na"     href="#" onclick="navTo('propfirms',event)">Prop Firms</a>
@@ -388,10 +388,10 @@
     </div>
   </section>
 
-  <!-- ── CHALLENGES ── -->
-  <section class="sec" id="challenges">
+  <!-- ── EXPENSES ── -->
+  <section class="sec" id="expenses">
     <div class="sec-hd">
-      <div class="sec-title"><span class="sec-dot"></span>Challenges</div>
+      <div class="sec-title"><span class="sec-dot"></span>Expenses</div>
       <div class="sec-actions">
         <select class="yr period-sel" onchange="setPeriod(this.value)">
           <option value="all">All Time</option>
@@ -402,11 +402,13 @@
           <option value="custom">Custom...</option>
         </select>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('ch')">↓ CSV</button>
-        <button class="btn btn-blue btn-xs" onclick="openMo('ch')">+ Add Challenge</button>
+        <button class="btn btn-blue btn-xs" onclick="openMo('ch')">+ Challenge Fee</button>
+        <button class="btn btn-blue btn-xs" onclick="openMo('exp')">+ Other Expense</button>
       </div>
     </div>
     <div class="kpi-strip" id="chKpi" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"></div>
     <div class="tc" id="chWrap"></div>
+    <div class="tc" id="expWrap" style="margin-top:12px"></div>
   </section>
 
   <!-- ── PAYOUTS ── -->
@@ -504,7 +506,6 @@
         </select>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('tax')">↓ CSV</button>
         <button class="btn btn-ghost btn-xs" onclick="window.print()">🖨 Print</button>
-        <button class="btn btn-blue btn-xs" onclick="openMo('exp')">+ Add Expense</button>
       </div>
     </div>
     <div id="taxWrap"></div>
@@ -1238,7 +1239,7 @@ function render(){
   renderInsight(m,pys);
   renderQS(m,chs,pys);
   renderCharts(chs,pys);
-  renderChallenges(chs);
+  renderExpenses(chs);
   renderPayouts(pys);
   renderFirms(chs,pys);
   renderTax(chs,pys);
@@ -1386,33 +1387,52 @@ function renderCharts(chs,pys){
   }
 }
 
-// ── CHALLENGES TABLE ────────────────────────────────────────────
-function renderChallenges(chs){
+// ── EXPENSES PAGE ────────────────────────────────────────────────
+function renderExpenses(chs){
+  const exps=fy(S.expenses);
   const totalFees=chs.reduce((s,c)=>s+Number(c.fee),0);
-  const avgFee=chs.length?totalFees/chs.length:0;
+  const totalOther=exps.reduce((s,e)=>s+Number(e.amt),0);
   const firms=new Set(chs.map(c=>c.firm)).size;
-  const biggest=chs.length?Math.max(...chs.map(c=>Number(c.fee))):0;
   document.getElementById('chKpi').innerHTML=`
-    <div class="kpi"><div class="kl">Total Attempts</div><div class="kv">${chs.length}</div><div class="kf">${firms} firm${firms!==1?'s':''}</div></div>
-    <div class="kpi"><div class="kl">Total Fees Paid</div><div class="kv" style="color:var(--red)">${$$(totalFees)}</div><div class="kf">across all challenges</div></div>
-    <div class="kpi"><div class="kl">Avg Fee</div><div class="kv">${$$(avgFee)}</div><div class="kf">per challenge</div></div>
-    <div class="kpi"><div class="kl">Largest Fee</div><div class="kv">${$$(biggest)}</div><div class="kf">single challenge</div></div>`;
+    <div class="kpi"><div class="kl">Challenge Attempts</div><div class="kv">${chs.length}</div><div class="kf">${firms} firm${firms!==1?'s':''}</div></div>
+    <div class="kpi"><div class="kl">Challenge Fees</div><div class="kv" style="color:var(--red)">−${$$(totalFees)}</div><div class="kf">${chs.length} entries</div></div>
+    <div class="kpi"><div class="kl">Other Expenses</div><div class="kv" style="color:var(--red)">−${$$(totalOther)}</div><div class="kf">${exps.length} items</div></div>
+    <div class="kpi"><div class="kl">Total Costs</div><div class="kv" style="color:var(--red)">−${$$(totalFees+totalOther)}</div><div class="kf">combined</div></div>`;
+  // Challenge fees table
   const el=document.getElementById('chWrap');
-  if(!chs.length){el.innerHTML=`<div class="tch"><span class="tct">All Challenges</span></div>`+empty('📋','No challenges yet.');return;}
-  const rows=[...chs].reverse().map(c=>`<tr>
-    <td style="color:var(--text);font-weight:600">${c.firm}</td>
-    <td>${numF(c.sz)}</td>
-    <td class="r" style="font-weight:600">${$$(c.fee)}</td>
-    <td style="color:var(--text2)">${c.type}</td>
-    <td style="color:var(--text3)">${c.date}</td>
-    <td style="color:var(--text3);font-size:11px">${c.notes||'—'}</td>
-    <td style="display:flex;gap:6px;align-items:center">
-      <button class="btn-inv" onclick="chInvoiceClick('${c.id}')">${c.invoiceUrl?'📄 Invoice':'📎 Attach'}</button>
-      <button class="btn-del" onclick="delCh('${c.id}')">Remove</button>
-    </td>
-  </tr>`).join('');
-  el.innerHTML=`<div class="tch"><span class="tct">All Challenges</span><span class="tcm">${chs.length} entries</span></div>
-    <table><thead><tr><th>Firm</th><th>Size</th><th>Fee</th><th>Type</th><th>Date</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  if(!chs.length){el.innerHTML=`<div class="tch"><span class="tct">Challenge Fees</span></div>`+empty('📋','No challenge fees yet.');}
+  else{
+    const rows=[...chs].reverse().map(c=>`<tr>
+      <td style="color:var(--text);font-weight:600">${c.firm}</td>
+      <td>${numF(c.sz)}</td>
+      <td class="r" style="font-weight:600">${$$(c.fee)}</td>
+      <td style="color:var(--text2)">${c.type}</td>
+      <td style="color:var(--text3)">${c.date}</td>
+      <td style="color:var(--text3);font-size:11px">${c.notes||'—'}</td>
+      <td style="display:flex;gap:6px;align-items:center">
+        <button class="btn-inv" onclick="chInvoiceClick('${c.id}')">${c.invoiceUrl?'📄 Invoice':'📎 Attach'}</button>
+        <button class="btn-del" onclick="delCh('${c.id}')">Remove</button>
+      </td>
+    </tr>`).join('');
+    el.innerHTML=`<div class="tch"><span class="tct">Challenge Fees</span><span class="tcm">${chs.length} entries</span></div>
+      <table><thead><tr><th>Firm</th><th>Size</th><th>Fee</th><th>Type</th><th>Date</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  // Other expenses table
+  const el2=document.getElementById('expWrap');
+  const expRows=exps.length
+    ?[...exps].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr>
+        <td style="color:var(--text)">${e.cat}</td>
+        <td style="color:var(--text2)">${e.vendor||'—'}</td>
+        <td style="font-weight:600;color:var(--red)">−${$$(e.amt)}</td>
+        <td style="color:var(--text3)">${e.date}</td>
+        <td style="display:flex;gap:6px;align-items:center">
+          ${e.invoiceUrl?`<a href="${e.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">📄 View</a>`:''}
+          <button class="btn-del" onclick="delExp('${e.id}')">Remove</button>
+        </td>
+      </tr>`).join('')
+    :`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No other expenses yet.</td></tr>`;
+  el2.innerHTML=`<div class="tch"><span class="tct">Other Expenses</span><span class="tcm">${exps.length} items</span></div>
+    <table><thead><tr><th>Category</th><th>Vendor</th><th>Amount</th><th>Date</th><th></th></tr></thead><tbody>${expRows}</tbody></table>`;
 }
 
 // ── PAYOUTS TABLE ───────────────────────────────────────────────
@@ -1576,9 +1596,7 @@ function renderTax(chs,pys){
     </div>
 
     <div class="tc">
-      <div class="tch"><span class="tct">Business Expenses</span>
-        <button class="btn btn-blue btn-xs" onclick="openMo('exp')">+ Add</button>
-      </div>
+      <div class="tch"><span class="tct">Business Expenses</span><span class="tcm" style="font-size:11px;color:var(--text3)">manage on Expenses page</span></div>
       <table><thead><tr><th>Category</th><th>Vendor</th><th>Amount</th><th>Date</th><th></th></tr></thead><tbody>${expRows}</tbody></table>
     </div>`;
 }
@@ -1986,7 +2004,7 @@ function dl(name,content,mime){const a=document.createElement('a');a.href=URL.cr
 
 
 // ── TAB NAVIGATION ───────────────────────────────────────────────
-const SECS=['overview','challenges','payouts','firms','propfirms','tax','invoices'];
+const SECS=['overview','expenses','payouts','firms','propfirms','tax','invoices'];
 let activeTab='overview';
 
 function navTo(id,e){
