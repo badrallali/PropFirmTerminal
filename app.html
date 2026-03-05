@@ -416,6 +416,7 @@
     </div>
     <div class="field"><label>Date</label><input type="date" id="ch_date"/></div>
     <div class="field"><label>Notes</label><input id="ch_notes" placeholder="Optional"/></div>
+    <div class="field"><label>Invoice / Receipt <span style="font-weight:400;color:var(--text3)">(PDF or image, optional)</span></label><input type="file" id="ch_invoice" accept=".pdf,.png,.jpg,.jpeg,.webp" style="color:var(--text2);font-size:12px"/></div>
     <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('ch')">Cancel</button><button class="btn btn-blue" onclick="saveCh()">Save</button></div>
   </div>
 </div>
@@ -453,6 +454,7 @@
       <div class="field"><label>Date</label><input type="date" id="ex_date"/></div>
     </div>
     <div class="field"><label>Recurring</label><select id="ex_rec"><option value="no">One-time</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select></div>
+    <div class="field"><label>Invoice / Receipt <span style="font-weight:400;color:var(--text3)">(PDF or image, optional)</span></label><input type="file" id="ex_invoice" accept=".pdf,.png,.jpg,.jpeg,.webp" style="color:var(--text2);font-size:12px"/></div>
     <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('exp')">Cancel</button><button class="btn btn-blue" onclick="saveExp()">Save</button></div>
   </div>
 </div>
@@ -892,7 +894,8 @@ function renderChallenges(chs){
     <td style="color:var(--text2)">${c.type}</td>
     <td style="color:var(--text3)">${c.date}</td>
     <td style="color:var(--text3);font-size:11px">${c.notes||'—'}</td>
-    <td><button class="btn-del" onclick="delCh('${c.id}')">Remove</button></td>
+    <td style="display:flex;gap:6px;align-items:center">${c.invoiceUrl?`<a href="${c.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;white-space:nowrap">📄 View</a>`:''}
+    <button class="btn-del" onclick="delCh('${c.id}')">Remove</button></td>
   </tr>`).join('');
   el.innerHTML=`<div class="tch"><span class="tct">All Challenges</span><span class="tcm">${chs.length} entries</span></div>
     <table><thead><tr><th>Firm</th><th>Size</th><th>Fee</th><th>Type</th><th>Date</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -985,7 +988,7 @@ function renderTax(chs,pys){
     :`<strong>International:</strong> Net taxable income: ${$$(net)}. Tax treatment varies by country. Consult a local tax professional.`;
 
   const expRows=exps.length
-    ?[...exps].reverse().map(e=>`<tr><td style="color:var(--text)">${e.cat}</td><td style="color:var(--text2)">${e.vendor||'—'}</td><td class="r" style="font-weight:600">${$$(e.amt)}</td><td style="color:var(--text3)">${e.date}</td><td><button class="btn-del" onclick="delExp('${e.id}')">Remove</button></td></tr>`).join('')
+    ?[...exps].reverse().map(e=>`<tr><td style="color:var(--text)">${e.cat}</td><td style="color:var(--text2)">${e.vendor||'—'}</td><td class="r" style="font-weight:600">${$$(e.amt)}</td><td style="color:var(--text3)">${e.date}</td><td style="display:flex;gap:6px;align-items:center">${e.invoiceUrl?`<a href="${e.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;white-space:nowrap">📄 View</a>`:''}<button class="btn-del" onclick="delExp('${e.id}')">Remove</button></td></tr>`).join('')
     :`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No additional expenses. Challenge fees are auto-imported above.</td></tr>`;
 
   document.getElementById('taxWrap').innerHTML=`
@@ -1211,11 +1214,19 @@ function openMo(t){
 function closeMo(t){document.getElementById('ov-'+t).classList.remove('open');}
 document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 
-function saveCh(){
+async function saveCh(){
   const firm=document.getElementById('ch_firm').value.trim(),fee=document.getElementById('ch_fee').value,date=document.getElementById('ch_date').value;
   if(!firm||!fee||!date){alert('Firm, Fee, and Date required.');return;}
-  S.challenges.push({id:uid(),firm,sz:+document.getElementById('ch_sz').value||0,fee:+fee,type:document.getElementById('ch_type').value,date,notes:document.getElementById('ch_notes').value.trim()});
-  saveS();closeMo('ch');['ch_firm','ch_sz','ch_fee','ch_notes'].forEach(i=>document.getElementById(i).value='');render();
+  const id=uid();
+  let invoiceUrl='';
+  const file=document.getElementById('ch_invoice').files[0];
+  if(file&&currentUser){
+    const ext=file.name.split('.').pop();
+    const {error}=await sb.storage.from('invoices').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
+    if(!error){const {data:pd}=sb.storage.from('invoices').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
+  }
+  S.challenges.push({id,firm,sz:+document.getElementById('ch_sz').value||0,fee:+fee,type:document.getElementById('ch_type').value,date,notes:document.getElementById('ch_notes').value.trim(),invoiceUrl});
+  saveS();closeMo('ch');['ch_firm','ch_sz','ch_fee','ch_notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('ch_invoice').value='';render();
 }
 
 function savePy(){
@@ -1225,11 +1236,19 @@ function savePy(){
   saveS();closeMo('py');['py_firm','py_amt','py_sz','py_notes'].forEach(i=>document.getElementById(i).value='');render();
 }
 
-function saveExp(){
+async function saveExp(){
   const amt=document.getElementById('ex_amt').value,date=document.getElementById('ex_date').value;
   if(!amt||!date){alert('Amount and Date required.');return;}
-  S.expenses.push({id:uid(),cat:document.getElementById('ex_cat').value,vendor:document.getElementById('ex_vendor').value.trim(),amt:+amt,date,rec:document.getElementById('ex_rec').value});
-  saveS();closeMo('exp');['ex_amt','ex_vendor','ex_date'].forEach(i=>document.getElementById(i).value='');render();
+  const id=uid();
+  let invoiceUrl='';
+  const file=document.getElementById('ex_invoice').files[0];
+  if(file&&currentUser){
+    const ext=file.name.split('.').pop();
+    const {error}=await sb.storage.from('invoices').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
+    if(!error){const {data:pd}=sb.storage.from('invoices').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
+  }
+  S.expenses.push({id,cat:document.getElementById('ex_cat').value,vendor:document.getElementById('ex_vendor').value.trim(),amt:+amt,date,rec:document.getElementById('ex_rec').value,invoiceUrl});
+  saveS();closeMo('exp');['ex_amt','ex_vendor','ex_date'].forEach(i=>document.getElementById(i).value='');document.getElementById('ex_invoice').value='';render();
 }
 
 function delCh(id){S.challenges=S.challenges.filter(c=>c.id!==id);saveS();render();}
