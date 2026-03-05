@@ -505,7 +505,7 @@
           <option value="custom">Custom...</option>
         </select>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('tax')">↓ CSV</button>
-        <button class="btn btn-ghost btn-xs" onclick="window.print()">🖨 Print</button>
+        <button class="btn btn-ghost btn-xs" onclick="printTax()">🖨 Print / PDF</button>
       </div>
     </div>
     <div id="taxWrap"></div>
@@ -1758,6 +1758,70 @@ function printInv(){
   window.print();
 }
 
+function printTax(){
+  const pys=fy(S.payouts),chs=fy(S.challenges),exps=fy(S.expenses);
+  const gross=pys.reduce((s,p)=>s+Number(p.amt),0);
+  const fees=chs.reduce((s,c)=>s+Number(c.fee),0);
+  const other=exps.reduce((s,e)=>s+Number(e.amt),0);
+  const net=gross-fees-other;
+  const periodLabel=_period==='all'?'All Time':_period==='ytd'?'Year to Date':_period==='mtd'?'Month to Date':_period==='week'?'This Week':_period==='today'?'Today':(_periodFrom&&_periodTo)?`${_periodFrom} → ${_periodTo}`:'Custom';
+  const pr=S.profile||{};
+  const trStyle='border-bottom:1px solid #e5e7eb';
+  const thStyle='background:#f9fafb;padding:8px 12px;text-align:left;font-size:12px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db';
+  const tdStyle='padding:8px 12px;font-size:12px;color:#111827';
+
+  const incomeRows=pys.length
+    ?[...pys].sort((a,b)=>b.date.localeCompare(a.date)).map(p=>`<tr style="${trStyle}"><td style="${tdStyle}">Income</td><td style="${tdStyle}">${p.firm}</td><td style="${tdStyle};color:#15803d;font-weight:600">+$${Number(p.amt).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="${tdStyle}">${p.date}</td><td style="${tdStyle}">Payout</td></tr>`).join('')
+    :`<tr><td colspan="5" style="padding:12px;color:#9ca3af;font-size:12px">No payouts in this period.</td></tr>`;
+  const expenseRows=[
+    ...[...chs].sort((a,b)=>b.date.localeCompare(a.date)).map(c=>`<tr style="${trStyle}"><td style="${tdStyle}">Expense</td><td style="${tdStyle}">${c.firm} Challenge Fee</td><td style="${tdStyle};color:#dc2626;font-weight:600">−$${Number(c.fee).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="${tdStyle}">${c.date}</td><td style="${tdStyle}">Challenge Fee</td></tr>`),
+    ...[...exps].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr style="${trStyle}"><td style="${tdStyle}">Expense</td><td style="${tdStyle}">${e.vendor||e.cat}</td><td style="${tdStyle};color:#dc2626;font-weight:600">−$${Number(e.amt).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="${tdStyle}">${e.date}</td><td style="${tdStyle}">${e.cat}</td></tr>`)
+  ].join('')||`<tr><td colspan="5" style="padding:12px;color:#9ca3af;font-size:12px">No expenses in this period.</td></tr>`;
+
+  const html=`<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:900px;margin:0 auto;padding:40px 32px;color:#111827">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #111827">
+      <div>
+        <div style="font-size:22px;font-weight:700;color:#111827">Tax Report</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:4px">Period: ${periodLabel}</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px">Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+      </div>
+      ${pr.name?`<div style="text-align:right;font-size:12px;color:#374151"><div style="font-weight:700;font-size:14px">${pr.name}</div>${pr.biz?`<div>${pr.biz}</div>`:''}${pr.email?`<div>${pr.email}</div>`:''}</div>`:''}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px">
+      ${[['Gross Income','+$'+gross.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),'#15803d'],['Challenge Fees','−$'+fees.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),'#dc2626'],['Other Expenses','−$'+other.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),'#dc2626'],['Net P&L',(net>=0?'+':'')+'$'+Math.abs(net).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),net>=0?'#15803d':'#dc2626']].map(([l,v,c])=>`<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px"><div style="font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">${l}</div><div style="font-size:20px;font-weight:700;color:${c}">${v}</div></div>`).join('')}
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:#111827">Income — Payouts (${pys.length})</div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead><tr><th style="${thStyle}">Type</th><th style="${thStyle}">Description</th><th style="${thStyle}">Amount</th><th style="${thStyle}">Date</th><th style="${thStyle}">Category</th></tr></thead>
+        <tbody>${incomeRows}</tbody>
+        <tfoot><tr style="background:#f9fafb"><td colspan="2" style="padding:8px 12px;font-size:12px;font-weight:700">Total Income</td><td style="padding:8px 12px;font-size:13px;font-weight:700;color:#15803d">+$${gross.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td colspan="2"></td></tr></tfoot>
+      </table>
+    </div>
+
+    <div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:#111827">Expenses — Deductions (${chs.length+exps.length})</div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead><tr><th style="${thStyle}">Type</th><th style="${thStyle}">Description</th><th style="${thStyle}">Amount</th><th style="${thStyle}">Date</th><th style="${thStyle}">Category</th></tr></thead>
+        <tbody>${expenseRows}</tbody>
+        <tfoot><tr style="background:#f9fafb"><td colspan="2" style="padding:8px 12px;font-size:12px;font-weight:700">Total Deductions</td><td style="padding:8px 12px;font-size:13px;font-weight:700;color:#dc2626">−$${(fees+other).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td colspan="2"></td></tr></tfoot>
+      </table>
+    </div>
+
+    <div style="margin-top:28px;padding-top:16px;border-top:2px solid #111827;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;color:#6b7280">Net P&L = Gross Income − Total Deductions</div>
+      <div style="font-size:20px;font-weight:700;color:${net>=0?'#15803d':'#dc2626'}">${net>=0?'+':''}$${Math.abs(net).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>
+  </div>`;
+
+  document.getElementById('printArea').innerHTML=html;
+  window.print();
+  // Clear after print dialog closes
+  setTimeout(()=>{document.getElementById('printArea').innerHTML='';},1000);
+}
+
 function renderInvList(){
   const el=document.getElementById('invListWrap');
   const pys=fy(S.payouts);
@@ -1995,7 +2059,7 @@ function exportCSV(type){
   if(type==='ch'){h=['Firm','Account Size','Fee','Type','Date','Notes','Invoice URL'];rows=S.challenges.map(c=>[c.firm,c.sz,c.fee,c.type,c.date,c.notes,c.invoiceUrl||'']);}
   else if(type==='py'){h=['Firm','Amount','Date','Method','Account Size','Notes'];rows=S.payouts.map(p=>[p.firm,p.amt,p.date,p.meth,p.sz,p.notes]);}
   else if(type==='firms'){const fd=firmD(fy(S.challenges),fy(S.payouts));h=['Firm','Invested','Earned','Net PL','ROI %'];rows=Object.entries(fd).map(([f,d])=>{const n=d.earned-d.spent,roi=d.spent>0?(n/d.spent*100):0;return[f,d.spent,d.earned,n,roi.toFixed(1)];});}
-  else if(type==='tax'){const y=getYr();h=['Type','Description','Amount','Date','Category'];fy(S.payouts).forEach(p=>rows.push(['Income',p.firm,p.amt,p.date,'Payout']));fy(S.challenges).forEach(c=>rows.push(['Expense',c.firm+' Challenge Fee',-c.fee,c.date,'Challenge Fee']));fy(S.expenses).forEach(e=>rows.push(['Expense',e.vendor||e.cat,-e.amt,e.date,e.cat]));}
+  else if(type==='tax'){h=['Type','Description','Amount','Date','Category'];fy(S.payouts).forEach(p=>rows.push(['Income',p.firm,p.amt,p.date,'Payout']));fy(S.challenges).forEach(c=>rows.push(['Expense',c.firm+' Challenge Fee',-c.fee,c.date,'Challenge Fee']));fy(S.expenses).forEach(e=>rows.push(['Expense',e.vendor||e.cat,-e.amt,e.date,e.cat]));}
   const csv=[h,...rows].map(r=>r.map(v=>'"'+(v||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
   dl(`PFT_${type}_${new Date().toISOString().substr(0,10)}.csv`,csv,'text/csv');
 }
