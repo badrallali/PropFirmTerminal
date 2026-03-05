@@ -291,13 +291,13 @@
     <span style="font-size:14px;font-weight:700;letter-spacing:-.4px;color:#fafafa">PropFirm<span style="color:#3b82f6;font-weight:800">Terminal</span></span>
   </a>
   <nav>
-    <a class="na on"  href="#overview">Overview</a>
-    <a class="na"     href="#challenges">Challenges</a>
-    <a class="na"     href="#payouts">Payouts</a>
-    <a class="na"     href="#firms">Firm Analysis</a>
-    <a class="na"     href="#tax">Tax</a>
-    <a class="na"     href="#breakeven">Breakeven</a>
-    <a class="na"     href="#invoices">Invoices</a>
+    <a class="na on"  href="#" onclick="navTo('overview',event)">Overview</a>
+    <a class="na"     href="#" onclick="navTo('challenges',event)">Challenges</a>
+    <a class="na"     href="#" onclick="navTo('payouts',event)">Payouts</a>
+    <a class="na"     href="#" onclick="navTo('firms',event)">Firm Analysis</a>
+    <a class="na"     href="#" onclick="navTo('tax',event)">Tax</a>
+    <a class="na"     href="#" onclick="navTo('breakeven',event)">Breakeven</a>
+    <a class="na"     href="#" onclick="navTo('invoices',event)">Invoices</a>
   </nav>
   <div class="he">
     <select class="yr" id="yrSel" onchange="render()"></select>
@@ -1494,17 +1494,25 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));
 });
 
-// ── NAV HIGHLIGHT ON SCROLL ──────────────────────────────────────
+// ── TAB NAVIGATION ───────────────────────────────────────────────
 const SECS=['overview','challenges','payouts','firms','tax','breakeven','invoices'];
-window.addEventListener('scroll',()=>{
-  const scrollY=window.scrollY+80;
-  let active='overview';
-  SECS.forEach(id=>{const el=document.getElementById(id);if(el&&el.offsetTop<=scrollY)active=id;});
-  document.querySelectorAll('.na').forEach((a,i)=>{
-    const href=a.getAttribute('href');
-    a.classList.toggle('on',href==='#'+active);
+let activeTab='overview';
+
+function navTo(id,e){
+  if(e)e.preventDefault();
+  activeTab=id;
+  SECS.forEach(s=>{
+    const el=document.getElementById(s);
+    if(el)el.style.display=s===id?'block':'none';
   });
-},{passive:true});
+  document.querySelectorAll('.na').forEach(a=>{
+    a.classList.toggle('on',a.getAttribute('onclick')&&a.getAttribute('onclick').includes("'"+id+"'"));
+  });
+  window.scrollTo(0,0);
+}
+
+// Show only overview on init
+SECS.forEach(s=>{const el=document.getElementById(s);if(el&&s!=='overview')el.style.display='none';});
 
 // ── HELPERS ─────────────────────────────────────────────────────
 function $$(n){const a=Math.abs(Number(n));return(n<0?'-':'')+'$'+a.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
