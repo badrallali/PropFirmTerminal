@@ -372,6 +372,7 @@
         <button class="btn btn-blue btn-xs" onclick="openMo('ch')">+ Add Challenge</button>
       </div>
     </div>
+    <div class="kpi-strip" id="chKpi" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"></div>
     <div class="tc" id="chWrap"></div>
   </section>
 
@@ -384,6 +385,7 @@
         <button class="btn btn-blue btn-xs" onclick="openMo('py')">+ Log Payout</button>
       </div>
     </div>
+    <div class="kpi-strip" id="pyKpi" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"></div>
     <div class="tc" id="pyWrap"></div>
   </section>
 
@@ -395,6 +397,7 @@
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('firms')">↓ CSV</button>
       </div>
     </div>
+    <div class="kpi-strip" id="firmKpi" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"></div>
     <div id="firmWrap"></div>
   </section>
 
@@ -959,6 +962,15 @@ function renderCharts(chs,pys){
 
 // ── CHALLENGES TABLE ────────────────────────────────────────────
 function renderChallenges(chs){
+  const totalFees=chs.reduce((s,c)=>s+Number(c.fee),0);
+  const avgFee=chs.length?totalFees/chs.length:0;
+  const firms=new Set(chs.map(c=>c.firm)).size;
+  const biggest=chs.length?Math.max(...chs.map(c=>Number(c.fee))):0;
+  document.getElementById('chKpi').innerHTML=`
+    <div class="kpi"><div class="kl">Total Attempts</div><div class="kv">${chs.length}</div><div class="kf">${firms} firm${firms!==1?'s':''}</div></div>
+    <div class="kpi"><div class="kl">Total Fees Paid</div><div class="kv" style="color:var(--red)">${$$(totalFees)}</div><div class="kf">across all challenges</div></div>
+    <div class="kpi"><div class="kl">Avg Fee</div><div class="kv">${$$(avgFee)}</div><div class="kf">per challenge</div></div>
+    <div class="kpi"><div class="kl">Largest Fee</div><div class="kv">${$$(biggest)}</div><div class="kf">single challenge</div></div>`;
   const el=document.getElementById('chWrap');
   if(!chs.length){el.innerHTML=`<div class="tch"><span class="tct">All Challenges</span></div>`+empty('📋','No challenges yet.');return;}
   const rows=[...chs].reverse().map(c=>`<tr>
@@ -979,6 +991,15 @@ function renderChallenges(chs){
 
 // ── PAYOUTS TABLE ───────────────────────────────────────────────
 function renderPayouts(pys){
+  const total=pys.reduce((s,p)=>s+Number(p.amt),0);
+  const avg=pys.length?total/pys.length:0;
+  const best=pys.length?Math.max(...pys.map(p=>Number(p.amt))):0;
+  const firms=new Set(pys.map(p=>p.firm)).size;
+  document.getElementById('pyKpi').innerHTML=`
+    <div class="kpi"><div class="kl">Total Payouts</div><div class="kv">${pys.length}</div><div class="kf">${firms} firm${firms!==1?'s':''}</div></div>
+    <div class="kpi"><div class="kl">Total Earned</div><div class="kv" style="color:var(--green)">${$$(total)}</div><div class="kf">gross income</div></div>
+    <div class="kpi"><div class="kl">Avg Payout</div><div class="kv">${$$(avg)}</div><div class="kf">per withdrawal</div></div>
+    <div class="kpi"><div class="kl">Best Payout</div><div class="kv" style="color:var(--green)">${$$(best)}</div><div class="kf">single withdrawal</div></div>`;
   const el=document.getElementById('pyWrap');
   if(!pys.length){el.innerHTML=`<div class="tch"><span class="tct">All Payouts</span></div>`+empty('💰','No payouts yet.');return;}
   const rows=[...pys].reverse().map(p=>`<tr>
@@ -1007,6 +1028,14 @@ function firmD(chs,pys){
 
 function renderFirms(chs,pys){
   const fd=firmD(chs,pys),keys=Object.keys(fd);
+  const profitable=keys.filter(f=>fd[f].earned>fd[f].spent).length;
+  const bestFirm=keys.length?keys.reduce((a,b)=>(fd[a].earned-fd[a].spent)>(fd[b].earned-fd[b].spent)?a:b,''):'-';
+  const totalNet=keys.reduce((s,f)=>s+(fd[f].earned-fd[f].spent),0);
+  document.getElementById('firmKpi').innerHTML=`
+    <div class="kpi"><div class="kl">Firms Traded</div><div class="kv">${keys.length}</div><div class="kf">unique firms</div></div>
+    <div class="kpi"><div class="kl">Profitable Firms</div><div class="kv" style="color:var(--green)">${profitable}</div><div class="kf">of ${keys.length} total</div></div>
+    <div class="kpi"><div class="kl">Best Firm</div><div class="kv" style="font-size:15px">${bestFirm||'—'}</div><div class="kf">by net P&L</div></div>
+    <div class="kpi"><div class="kl">Combined Net</div><div class="kv" style="color:${totalNet>=0?'var(--green)':'var(--red)'}">${$$(totalNet)}</div><div class="kf">all firms</div></div>`;
   if(!keys.length){document.getElementById('firmWrap').innerHTML=empty('🏢','No data yet.');return;}
   const maxV=Math.max(...keys.map(f=>Math.max(fd[f].spent,fd[f].earned)),1);
   const sorted=[...keys].sort((a,b)=>{const ra=fd[a].spent>0?(fd[a].earned-fd[a].spent)/fd[a].spent:0,rb=fd[b].spent>0?(fd[b].earned-fd[b].spent)/fd[b].spent:0;return rb-ra;});
