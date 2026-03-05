@@ -215,6 +215,22 @@
     .inv-item-right{display:flex;align-items:center;gap:10px}
     .inv-item-amt{font-size:15px;font-weight:700;color:var(--green)}
 
+    /* ── CALENDAR ── */
+    .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+    .cal-dow span{font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:.4px}
+    .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+    .cal-day{min-height:52px;background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:5px 6px;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+    .cal-day:hover{border-color:var(--border);background:var(--surf)}
+    .cal-day.today{border-color:var(--blue)!important}
+    .cal-day.selected{background:rgba(59,130,246,.08);border-color:var(--blue)}
+    .cal-day.empty{background:transparent;border-color:transparent;cursor:default}
+    .cal-day.other-month .cal-dn{color:var(--text3)!important;opacity:.4}
+    .cal-dn{font-size:11px;font-weight:600;color:var(--text2)}
+    .cal-dots{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px}
+    .cal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .cal-detail-item{padding:8px 0;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px}
+    .cal-detail-item:last-child{border-bottom:none}
+
     @media(max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.ch-row3{grid-template-columns:1fr 1fr}.qs-row{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:700px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.ch-row,.ch-row3,.be-grid{grid-template-columns:1fr}.fg,.fg3{grid-template-columns:1fr}.q-row{grid-template-columns:repeat(2,1fr)}.profile-sections{grid-template-columns:1fr}}
     @media print{
@@ -320,6 +336,30 @@
     <div class="ch-row">
       <div class="cc"><div class="ct">Monthly Cash Flow</div><div class="cw"><canvas id="cMo"></canvas></div></div>
       <div class="cc"><div class="ct">Cumulative Fees vs. Payouts</div><div class="cw"><canvas id="cCum"></canvas></div></div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="ch-row" style="margin-top:10px">
+      <div class="cc" style="flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="ct" style="margin-bottom:0">Activity Calendar</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button onclick="calNav(-1)" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text2);width:26px;height:26px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">‹</button>
+            <span id="calTitle" style="font-size:13px;font-weight:600;color:var(--text);min-width:110px;text-align:center"></span>
+            <button onclick="calNav(1)" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text2);width:26px;height:26px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">›</button>
+          </div>
+        </div>
+        <div id="calGrid"></div>
+        <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Payout</span>
+          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>Challenge fee</span>
+          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--yellow);display:inline-block"></span>Expense</span>
+        </div>
+      </div>
+      <div class="cc" style="flex:0 0 260px;min-width:220px">
+        <div class="ct" style="margin-bottom:12px">Selected Day</div>
+        <div id="calDetail" style="font-size:12px;color:var(--text3)">Click a day to see activity.</div>
+      </div>
     </div>
   </section>
 
@@ -775,6 +815,7 @@ function render(){
   renderFirms(chs,pys);
   renderTax(chs,pys);
   renderInvList();
+  renderCal();
 }
 
 // ── KPI ─────────────────────────────────────────────────────────
@@ -1198,6 +1239,103 @@ function renderInvList(){
 }
 
 function delInv(id){S.invoices=S.invoices.filter(i=>i.id!==id);saveS();renderInvList();}
+
+// ── CALENDAR ─────────────────────────────────────────────────────
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calSelected=null;
+
+function calNav(dir){ calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;} renderCal(); }
+
+function buildCalEvents(){
+  const ev={};
+  const add=(date,type,label,amt)=>{
+    if(!date)return; const k=date.substr(0,10);
+    if(!ev[k])ev[k]=[];
+    ev[k].push({type,label,amt});
+  };
+  S.payouts.forEach(p=>add(p.date,'payout',p.firm,p.amt));
+  S.challenges.forEach(c=>add(c.date,'challenge',c.firm+' fee',-c.fee));
+  S.expenses.forEach(e=>add(e.date,'expense',e.vendor||e.cat,-e.amt));
+  return ev;
+}
+
+function renderCal(){
+  const ev=buildCalEvents();
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calTitle').textContent=months[calMonth]+' '+calYear;
+
+  const today=new Date(); const todayKey=today.toISOString().substr(0,10);
+  const first=new Date(calYear,calMonth,1);
+  const startDow=first.getDay(); // 0=Sun
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+
+  let html='<div class="cal-dow"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="cal-days">';
+
+  // prev month padding
+  for(let i=startDow-1;i>=0;i--){
+    const d=daysInPrev-i;
+    const k=`${calYear}-${String(calMonth===0?12:calMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html+=dayCell(k,d,ev,'other-month');
+  }
+  // current month
+  for(let d=1;d<=daysInMonth;d++){
+    const k=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const classes=(k===todayKey?'today ':'')+(k===calSelected?'selected':'');
+    html+=dayCell(k,d,ev,classes);
+  }
+  // next month padding
+  const total=startDow+daysInMonth;
+  const rem=(7-total%7)%7;
+  for(let d=1;d<=rem;d++){
+    const k=`${calYear}-${String(calMonth+2>12?1:calMonth+2).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html+=dayCell(k,d,ev,'other-month');
+  }
+
+  html+='</div>';
+  document.getElementById('calGrid').innerHTML=html;
+  if(calSelected)renderCalDetail(calSelected,ev);
+}
+
+function dayCell(k,d,ev,cls=''){
+  const items=ev[k]||[];
+  const dots=items.map(i=>`<span class="cal-dot" style="background:${i.type==='payout'?'var(--green)':i.type==='challenge'?'var(--red)':'var(--yellow)'}"></span>`).join('');
+  return `<div class="cal-day ${cls}" onclick="calSelect('${k}')" title="${k}">
+    <div class="cal-dn">${d}</div>
+    <div class="cal-dots">${dots}</div>
+  </div>`;
+}
+
+function calSelect(k){
+  calSelected=k;
+  const ev=buildCalEvents();
+  document.querySelectorAll('.cal-day').forEach(el=>el.classList.toggle('selected',el.title===k));
+  renderCalDetail(k,ev);
+}
+
+function renderCalDetail(k,ev){
+  const items=ev[k]||[];
+  const el=document.getElementById('calDetail');
+  if(!items.length){
+    const d=new Date(k+'T00:00:00');
+    el.innerHTML=`<div style="color:var(--text3);font-size:12px">${d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}<br><br>No activity.</div>`;
+    return;
+  }
+  const d=new Date(k+'T00:00:00');
+  let html=`<div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">${d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>`;
+  items.forEach(i=>{
+    const color=i.type==='payout'?'var(--green)':i.type==='challenge'?'var(--red)':'var(--yellow)';
+    const sign=i.amt>0?'+':'';
+    html+=`<div class="cal-detail-item">
+      <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.label}</div>
+        <div style="font-size:11px;color:var(--text3);text-transform:capitalize">${i.type}</div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:${color};white-space:nowrap">${sign}${$$(i.amt)}</div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
 
 // ── BREAKEVEN ───────────────────────────────────────────────────
 function calcBE(){
