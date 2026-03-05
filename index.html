@@ -118,10 +118,15 @@
     @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
     /* ── 3D FLOATING CARDS SCENE ── */
+    #sceneTiltWrap{
+      perspective:1400px;
+      transform-origin:50% 30%;
+      transform:rotateX(18deg) scale(0.9);
+      will-change:transform;
+    }
     .cards-scene{
       position:relative;width:100%;max-width:1100px;
       height:480px;margin:20px auto 0;
-      perspective:1400px;
       animation:fadeUp .9s .5s ease both;
     }
     /* The scene floor gradient */
@@ -444,6 +449,7 @@
 </section>
 
 <!-- ══ 3D CARDS SCENE ══ -->
+<div id="sceneTiltWrap">
 <div class="cards-scene" id="scene">
   <div class="orb orb-blue"></div>
   <div class="orb orb-violet"></div>
@@ -525,6 +531,7 @@
   </div>
 
   <div class="scene-floor"></div>
+</div>
 </div>
 
 <!-- ══ FIRMS BAR ══ -->
@@ -699,6 +706,17 @@ scene.addEventListener('mouseleave',()=>{
   mainCard.style.transition='transform .8s cubic-bezier(.16,1,.3,1)';
   mainCard.style.transform='translateX(-50%) perspective(1000px) rotateX(4deg) rotateY(-3deg)';
 });
+
+// ContainerScroll — tilt scene on load, flatten as user scrolls down
+const sceneTiltWrap=document.getElementById('sceneTiltWrap');
+function updateSceneTilt(){
+  const progress=Math.max(0,Math.min(1,window.scrollY/380));
+  const tilt=18*(1-progress);
+  const scale=0.9+0.1*progress;
+  sceneTiltWrap.style.transform=`rotateX(${tilt}deg) scale(${scale})`;
+}
+window.addEventListener('scroll',updateSceneTilt,{passive:true});
+updateSceneTilt();
 </script>
 </body>
 </html>
