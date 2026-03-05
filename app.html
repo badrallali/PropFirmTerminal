@@ -579,41 +579,42 @@ async function signOut(){
   // onAuthStateChange SIGNED_OUT handles the UI
 }
 
-let _appLoading = false;
+function showLoad(v){ document.getElementById('loadWrap').style.display=v?'flex':'none'; }
+function showAuth(){ showLoad(false); document.getElementById('authWrap').style.display='flex'; document.getElementById('appWrap').style.display='none'; }
 async function showApp(user){
-  if(_appLoading) return;
-  _appLoading = true;
+  currentUser = user;
   try{
-    currentUser = user;
     await loadS();
-    jur = S.settings.jur||'US';
-    document.getElementById('loadWrap').style.display='none';
-    document.getElementById('authWrap').style.display='none';
-    document.getElementById('appWrap').style.display='block';
-    document.getElementById('userBadge').style.display='flex';
-    document.getElementById('userEmail').textContent=currentUser.email;
-    render();
-    setTimeout(()=>{document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));},0);
-  }finally{ _appLoading=false; }
+  }catch(e){ console.warn('loadS error:',e); }
+  jur = S.settings.jur||'US';
+  showLoad(false);
+  document.getElementById('authWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  document.getElementById('userBadge').style.display='flex';
+  document.getElementById('userEmail').textContent=currentUser.email;
+  try{ render(); }catch(e){ console.warn('render error:',e); }
+  setTimeout(()=>{document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));},0);
 }
+
+// Fallback: if onAuthStateChange never fires within 4s, show auth screen
+const _authTimeout = setTimeout(()=>{ if(document.getElementById('loadWrap').style.display!=='none') showAuth(); }, 4000);
 
 // Listen for auth state changes
 sb.auth.onAuthStateChange(async (event,session)=>{
-  if(event==='INITIAL_SESSION'){
-    if(session?.user){ await showApp(session.user); }
-    else{
-      document.getElementById('loadWrap').style.display='none';
-      document.getElementById('authWrap').style.display='flex';
+  clearTimeout(_authTimeout);
+  try{
+    if(event==='INITIAL_SESSION'){
+      if(session?.user) await showApp(session.user);
+      else showAuth();
+    } else if(event==='SIGNED_IN'){
+      await showApp(session.user);
+    } else if(event==='SIGNED_OUT'){
+      currentUser=null;
+      document.getElementById('appWrap').style.display='none';
+      document.getElementById('userBadge').style.display='none';
+      showAuth();
     }
-  } else if(event==='SIGNED_IN'){
-    await showApp(session.user);
-  } else if(event==='SIGNED_OUT'){
-    currentUser=null;
-    document.getElementById('authWrap').style.display='flex';
-    document.getElementById('appWrap').style.display='none';
-    document.getElementById('userBadge').style.display='none';
-    document.getElementById('loadWrap').style.display='none';
-  }
+  }catch(e){ console.error('auth handler error:',e); showAuth(); }
 });
 
 // ── STATE ──────────────────────────────────────────────────────
