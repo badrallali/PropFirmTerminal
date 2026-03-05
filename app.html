@@ -19,7 +19,14 @@
       --text:#fafafa;--text2:#a1a1aa;--text3:#52525b;
       --font:'Inter',-apple-system,sans-serif;--r:8px;--rl:12px;
     }
+    :root.light{
+      --bg:#f4f4f5;--bg2:#ffffff;--surf:#ffffff;--card:#ffffff;--card2:#f4f4f5;
+      --border:#e4e4e7;--border2:#d4d4d8;
+      --text:#09090b;--text2:#52525b;--text3:#a1a1aa;
+    }
     html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+    :root.light header{background:rgba(244,244,245,.92)}
+    :root.light .ov{background:rgba(0,0,0,.35)}
     ::-webkit-scrollbar{width:5px;height:5px}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
@@ -300,6 +307,7 @@
   </nav>
   <div class="he">
     <select class="yr" id="yrSel" onchange="render()"></select>
+    <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</div>
     <div class="icon-btn" onclick="openMo('profile')" title="Profile & Settings">👤</div>
     <div id="userBadge" style="display:none;align-items:center;gap:6px">
       <span id="userEmail" style="font-size:11px;color:var(--text3);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
@@ -1761,6 +1769,20 @@ SECS.forEach(s=>{const el=document.getElementById(s);if(el&&s!=='overview')el.st
 function $$(n){const a=Math.abs(Number(n));return(n<0?'-':'')+'$'+a.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
 function numF(n){return'$'+Number(n).toLocaleString('en-US');}
 function empty(i,t){return`<div class="empty"><div class="ei">${i}</div><div class="et">${t}</div></div>`;}
+
+// ── THEME ────────────────────────────────────────────────────────
+function applyTheme(light){
+  document.documentElement.classList.toggle('light',light);
+  const btn=document.getElementById('themeBtn');
+  if(btn)btn.textContent=light?'☀️':'🌙';
+}
+function toggleTheme(){
+  const isLight=document.documentElement.classList.toggle('light');
+  localStorage.setItem('theme',isLight?'light':'dark');
+  const btn=document.getElementById('themeBtn');
+  if(btn)btn.textContent=isLight?'☀️':'🌙';
+}
+(function(){applyTheme(localStorage.getItem('theme')==='light');})();
 
 // onAuthStateChange handles init — fires with INITIAL_SESSION on page load
 </script>
