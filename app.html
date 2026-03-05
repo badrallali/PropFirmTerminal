@@ -302,13 +302,13 @@
     <a class="na"     href="#" onclick="navTo('challenges',event)">Challenges</a>
     <a class="na"     href="#" onclick="navTo('payouts',event)">Payouts</a>
     <a class="na"     href="#" onclick="navTo('firms',event)">Firm Analysis</a>
+    <a class="na"     href="#" onclick="navTo('propfirms',event)">Prop Firms</a>
     <a class="na"     href="#" onclick="navTo('tax',event)">Tax</a>
     <a class="na"     href="#" onclick="navTo('invoices',event)">Invoices</a>
   </nav>
   <div class="he">
     <select class="yr" id="yrSel" onchange="render()"></select>
     <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</div>
-    <div class="icon-btn" onclick="openClientMo()" title="Manage Clients / Firms">🏢</div>
     <div class="icon-btn" onclick="openMo('profile')" title="Profile & Settings">👤</div>
     <div id="userBadge" style="display:none;align-items:center;gap:6px">
       <span id="userEmail" style="font-size:11px;color:var(--text3);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
@@ -408,6 +408,45 @@
     </div>
     <div class="kpi-strip" id="firmKpi" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"></div>
     <div id="firmWrap"></div>
+  </section>
+
+  <!-- ── PROP FIRMS ── -->
+  <section class="sec" id="propfirms">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="sec-dot" style="background:var(--purple)"></span>Prop Firms</div>
+      <div class="sec-actions">
+        <button class="btn btn-blue btn-xs" onclick="document.getElementById('addFirmForm').style.display=document.getElementById('addFirmForm').style.display==='none'?'block':'none'">+ Add Firm</button>
+      </div>
+    </div>
+    <!-- Saved clients grid -->
+    <div id="pfGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:20px"></div>
+    <!-- Add form (hidden by default) -->
+    <div id="addFirmForm" style="display:none">
+      <div class="tc" style="padding:20px">
+        <div class="tch" style="margin:-20px -20px 16px"><span class="tct">Add New Firm</span></div>
+        <div class="fg">
+          <div class="field"><label>Firm Name *</label><input id="cl_name" placeholder="e.g. FTMO s.r.o."/></div>
+          <div class="field"><label>Website</label><input id="cl_web" placeholder="e.g. ftmo.com"/></div>
+        </div>
+        <div class="field"><label>Address</label><input id="cl_addr" placeholder="123 Main Street"/></div>
+        <div class="fg">
+          <div class="field"><label>City</label><input id="cl_city" placeholder="Prague"/></div>
+          <div class="field"><label>State / Province</label><input id="cl_state" placeholder="—"/></div>
+        </div>
+        <div class="fg">
+          <div class="field"><label>Country</label><input id="cl_country" placeholder="Czech Republic"/></div>
+          <div class="field"><label>Postal / ZIP Code</label><input id="cl_zip" placeholder="12000"/></div>
+        </div>
+        <div class="fg">
+          <div class="field"><label>Email</label><input type="email" id="cl_email" placeholder="support@ftmo.com"/></div>
+          <div class="field"><label>VAT / Company Reg.</label><input id="cl_tax" placeholder="CZ08452173"/></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-ghost" onclick="document.getElementById('addFirmForm').style.display='none'">Cancel</button>
+          <button class="btn btn-blue" onclick="saveClient()">Save Firm</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ── TAX ── -->
@@ -532,37 +571,6 @@
   </div>
 </div>
 
-<!-- CLIENTS -->
-<div class="ov" id="ov-clients">
-  <div class="modal modal-wide">
-    <div class="mo-title">Prop Firm Clients</div>
-    <div class="mo-desc">Pre-save firm details so invoices automatically fill in the "Bill To" section.</div>
-    <div id="clList" style="margin-bottom:12px"></div>
-    <div class="dl">Add New Client</div>
-    <div class="fg">
-      <div class="field"><label>Firm Name *</label><input id="cl_name" placeholder="e.g. FTMO s.r.o."/></div>
-      <div class="field"><label>Website</label><input id="cl_web" placeholder="e.g. ftmo.com"/></div>
-    </div>
-    <div class="field"><label>Address</label><input id="cl_addr" placeholder="123 Main Street"/></div>
-    <div class="fg">
-      <div class="field"><label>City</label><input id="cl_city" placeholder="Prague"/></div>
-      <div class="field"><label>State / Province</label><input id="cl_state" placeholder="—"/></div>
-    </div>
-    <div class="fg">
-      <div class="field"><label>Country</label><input id="cl_country" placeholder="Czech Republic"/></div>
-      <div class="field"><label>Postal / ZIP Code</label><input id="cl_zip" placeholder="12000"/></div>
-    </div>
-    <div class="fg">
-      <div class="field"><label>Email</label><input type="email" id="cl_email" placeholder="support@ftmo.com"/></div>
-      <div class="field"><label>VAT / Company Reg.</label><input id="cl_tax" placeholder="CZ08452173"/></div>
-    </div>
-    <div class="mo-foot">
-      <button class="btn btn-ghost" onclick="closeMo('clients')">Close</button>
-      <button class="btn btn-blue" onclick="saveClient()">Add Client</button>
-    </div>
-  </div>
-</div>
-
 <!-- INVOICE PREVIEW -->
 <div class="ov" id="ov-inv">
   <div class="modal" style="width:700px;max-width:96vw;padding:0;background:transparent;border:none">
@@ -652,7 +660,7 @@ async function showApp(user){
   document.getElementById('appWrap').style.display='block';
   document.getElementById('userBadge').style.display='flex';
   document.getElementById('userEmail').textContent=currentUser.email;
-  try{ render(); renderClientList(); }catch(e){ console.warn('render error:',e); }
+  try{ render(); }catch(e){ console.warn('render error:',e); }
 }
 
 // Fallback: if onAuthStateChange never fires within 4s, show auth screen
@@ -1104,6 +1112,14 @@ function demo(){
     {id:uid(),cat:'Data Feed',             vendor:'Rithmic Data Feed',  amt:55,   date:'2026-03-01',rec:'monthly'},
     {id:uid(),cat:'Accounting / Legal',    vendor:'CPA Q1 2026',        amt:350,  date:'2026-03-05',rec:'no'},
   ];
+  S.clients=[
+    {id:uid(),name:'FTMO',          web:'ftmo.com',         addr:'Purkyňova 2121/3',       city:'Prague',    state:'',  country:'Czech Republic',  zip:'110 00', email:'support@ftmo.com',           tax:'CZ08452173'},
+    {id:uid(),name:'Apex',          web:'apextraderfunding.com', addr:'2028 E. Ben White Blvd, Suite 240', city:'Austin', state:'TX', country:'United States', zip:'78741', email:'support@apextraderfunding.com', tax:''},
+    {id:uid(),name:'TopStep',       web:'topstep.com',      addr:'141 W Jackson Blvd, Suite 4240', city:'Chicago', state:'IL', country:'United States', zip:'60604', email:'help@topstep.com',          tax:''},
+    {id:uid(),name:'FundedNext',    web:'fundednext.com',   addr:'Office No. 7, AI Robotics HUB, C1 Bldg, AFZ', city:'Ajman', state:'', country:'United Arab Emirates', zip:'', email:'support@fundednext.com', tax:''},
+    {id:uid(),name:'PipFarm',       web:'pipfarm.com',      addr:'',                       city:'',          state:'',  country:'',                zip:'',       email:'support@pipfarm.com',         tax:''},
+    {id:uid(),name:'E8 Funding',    web:'e8markets.com',    addr:'4101 McEwen Rd, Suite 205', city:'Dallas',  state:'TX', country:'United States', zip:'75244', email:'support@e8markets.com',       tax:'13392694'},
+  ];
 }
 
 // ── YEAR FILTER ─────────────────────────────────────────────────
@@ -1144,6 +1160,7 @@ function render(){
   renderFirms(chs,pys);
   renderTax(chs,pys);
   renderInvList();
+  renderClientList();
   renderCal();
 }
 
@@ -1457,29 +1474,36 @@ function renderTax(chs,pys){
     </div>`;
 }
 
-// ── CLIENTS ──────────────────────────────────────────────────────
-function openClientMo(){
-  renderClientList();
-  openMo('clients');
-}
-
+// ── PROP FIRMS (CLIENTS) ─────────────────────────────────────────
 function renderClientList(){
-  const el=document.getElementById('clList');
-  if(!S.clients.length){
-    el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px 0 4px">No clients saved yet.</div>';
-  } else {
-    el.innerHTML='<div class="inv-list">'+S.clients.map(c=>`
-      <div class="inv-item">
-        <div class="inv-item-left">
-          <div class="inv-item-num">${c.name}</div>
-          <div class="inv-item-detail">${[c.addr,c.city,c.country,c.email].filter(Boolean).join(' · ')}</div>
-        </div>
-        <div class="inv-item-right">
-          <button class="btn-del" onclick="delClient('${c.id}')">Remove</button>
-        </div>
-      </div>`).join('')+'</div>';
+  // Update page grid
+  const grid=document.getElementById('pfGrid');
+  if(grid){
+    if(!S.clients.length){
+      grid.innerHTML=`<div class="tc" style="grid-column:1/-1;padding:32px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🏢</div>
+        <div style="color:var(--text2);font-weight:600;margin-bottom:4px">No firms saved yet</div>
+        <div style="color:var(--text3);font-size:12px">Click "+ Add Firm" to pre-save a firm's invoice details.</div>
+      </div>`;
+    } else {
+      grid.innerHTML=S.clients.map(c=>`
+        <div class="tc" style="padding:20px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--text)">${c.name}</div>
+              ${c.web?`<div style="font-size:11px;color:var(--blue);margin-top:2px">${c.web}</div>`:''}
+            </div>
+            <button class="btn-del" onclick="delClient('${c.id}')">Remove</button>
+          </div>
+          <div style="font-size:12px;color:var(--text3);line-height:1.8">
+            ${[c.addr,c.city&&c.state?c.city+', '+c.state:c.city||c.state,c.zip,c.country].filter(Boolean).map(l=>`<div>${l}</div>`).join('')}
+            ${c.email?`<div style="margin-top:4px">${c.email}</div>`:''}
+            ${c.tax?`<div>Reg: ${c.tax}</div>`:''}
+          </div>
+        </div>`).join('');
+    }
   }
-  // refresh datalist
+  // refresh datalist for payout/challenge modals
   const dl=document.getElementById('cl_datalist');
   if(dl) dl.innerHTML=S.clients.map(c=>`<option value="${c.name}">`).join('');
 }
@@ -1501,10 +1525,11 @@ function saveClient(){
   saveS();
   renderClientList();
   ['cl_name','cl_web','cl_addr','cl_city','cl_state','cl_country','cl_zip','cl_email','cl_tax'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('addFirmForm').style.display='none';
 }
 
 function delClient(id){
-  if(!confirm('Remove this client?'))return;
+  if(!confirm('Remove this firm?'))return;
   S.clients=S.clients.filter(c=>c.id!==id);
   saveS();
   renderClientList();
@@ -1836,7 +1861,7 @@ function dl(name,content,mime){const a=document.createElement('a');a.href=URL.cr
 
 
 // ── TAB NAVIGATION ───────────────────────────────────────────────
-const SECS=['overview','challenges','payouts','firms','tax','invoices'];
+const SECS=['overview','challenges','payouts','firms','propfirms','tax','invoices'];
 let activeTab='overview';
 
 function navTo(id,e){
