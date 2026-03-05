@@ -1313,7 +1313,7 @@ function firmD(chs,pys){
 function renderFirms(chs,pys){
   const fd=firmD(chs,pys),keys=Object.keys(fd);
   const profitable=keys.filter(f=>fd[f].earned>fd[f].spent).length;
-  const bestFirm=keys.length?keys.reduce((a,b)=>(fd[a].earned-fd[a].spent)>(fd[b].earned-fd[b].spent)?a:b,''):'-';
+  const bestFirm=keys.length?keys.reduce((a,b)=>(fd[a].earned-fd[a].spent)>(fd[b].earned-fd[b].spent)?a:b):'-';
   const totalNet=keys.reduce((s,f)=>s+(fd[f].earned-fd[f].spent),0);
   document.getElementById('firmKpi').innerHTML=`
     <div class="kpi"><div class="kl">Firms Traded</div><div class="kv">${keys.length}</div><div class="kf">unique firms</div></div>
