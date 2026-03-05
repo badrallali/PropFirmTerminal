@@ -226,15 +226,14 @@
     .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
     .cal-dow span{font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:.4px}
     .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-    .cal-day{min-height:52px;background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:5px 6px;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+    .cal-day{min-height:62px;background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:5px 6px;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
     .cal-day:hover{border-color:var(--border);background:var(--surf)}
     .cal-day.today{border-color:var(--blue)!important}
     .cal-day.selected{background:rgba(59,130,246,.08);border-color:var(--blue)}
     .cal-day.empty{background:transparent;border-color:transparent;cursor:default}
     .cal-day.other-month .cal-dn{color:var(--text3)!important;opacity:.4}
     .cal-dn{font-size:11px;font-weight:600;color:var(--text2)}
-    .cal-dots{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px}
-    .cal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .cal-pnl{font-size:9px;font-weight:700;line-height:1;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cal-detail-item{padding:8px 0;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px}
     .cal-detail-item:last-child{border-bottom:none}
 
@@ -317,6 +316,14 @@
     <div class="hd-meta" id="savedAt"></div>
   </div>
 </header>
+<div id="customPeriodBar" style="display:none;position:sticky;top:64px;z-index:40;background:var(--card);border-bottom:1px solid var(--border2);padding:8px 32px;align-items:center;gap:10px">
+  <span style="font-size:12px;color:var(--text3);flex-shrink:0">Custom range:</span>
+  <input type="date" id="periodFrom" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;padding:5px 9px;outline:none"/>
+  <span style="font-size:12px;color:var(--text3)">→</span>
+  <input type="date" id="periodTo" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;padding:5px 9px;outline:none"/>
+  <button class="btn btn-blue btn-xs" onclick="applyCustomPeriod()">Apply</button>
+  <button class="btn btn-ghost btn-xs" onclick="setPeriod('all')">Clear</button>
+</div>
 
 <!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
 <main id="top">
@@ -325,7 +332,14 @@
   <section class="sec" id="overview">
     <div class="sec-hd">
       <div class="sec-title"><span class="sec-dot" style="background:var(--blue)"></span>Overview</div>
-      <div class="sec-actions"><select class="yr yr-sel" onchange="setYr(this.value)"></select></div>
+      <div class="sec-actions"><select class="yr period-sel" onchange="setPeriod(this.value)">
+          <option value="all">All Time</option>
+          <option value="ytd">Year to Date</option>
+          <option value="mtd">Month to Date</option>
+          <option value="week">This Week</option>
+          <option value="today">Today</option>
+          <option value="custom">Custom...</option>
+        </select></div>
     </div>
     <div class="kpi-strip" id="kpiStrip"></div>
     <div id="insightBox"></div>
@@ -362,10 +376,9 @@
           </div>
         </div>
         <div id="calGrid"></div>
-        <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Payout</span>
-          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>Challenge fee</span>
-          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--yellow);display:inline-block"></span>Expense</span>
+        <div style="display:flex;gap:16px;margin-top:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="color:var(--green);font-weight:700">+$</span>Positive P&L day</span>
+          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="color:var(--red);font-weight:700">-$</span>Negative P&L day</span>
         </div>
       </div>
       <div class="cc" style="flex:0 0 260px;min-width:220px">
@@ -380,7 +393,14 @@
     <div class="sec-hd">
       <div class="sec-title"><span class="sec-dot"></span>Challenges</div>
       <div class="sec-actions">
-        <select class="yr yr-sel" onchange="setYr(this.value)"></select>
+        <select class="yr period-sel" onchange="setPeriod(this.value)">
+          <option value="all">All Time</option>
+          <option value="ytd">Year to Date</option>
+          <option value="mtd">Month to Date</option>
+          <option value="week">This Week</option>
+          <option value="today">Today</option>
+          <option value="custom">Custom...</option>
+        </select>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('ch')">↓ CSV</button>
         <button class="btn btn-blue btn-xs" onclick="openMo('ch')">+ Add Challenge</button>
       </div>
@@ -394,7 +414,14 @@
     <div class="sec-hd">
       <div class="sec-title"><span class="sec-dot" style="background:var(--green)"></span>Payouts</div>
       <div class="sec-actions">
-        <select class="yr yr-sel" onchange="setYr(this.value)"></select>
+        <select class="yr period-sel" onchange="setPeriod(this.value)">
+          <option value="all">All Time</option>
+          <option value="ytd">Year to Date</option>
+          <option value="mtd">Month to Date</option>
+          <option value="week">This Week</option>
+          <option value="today">Today</option>
+          <option value="custom">Custom...</option>
+        </select>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('py')">↓ CSV</button>
         <button class="btn btn-blue btn-xs" onclick="openMo('py')">+ Log Payout</button>
       </div>
@@ -408,7 +435,14 @@
     <div class="sec-hd">
       <div class="sec-title"><span class="sec-dot" style="background:var(--yellow)"></span>Firm Analysis</div>
       <div class="sec-actions">
-        <select class="yr yr-sel" onchange="setYr(this.value)"></select>
+        <select class="yr period-sel" onchange="setPeriod(this.value)">
+          <option value="all">All Time</option>
+          <option value="ytd">Year to Date</option>
+          <option value="mtd">Month to Date</option>
+          <option value="week">This Week</option>
+          <option value="today">Today</option>
+          <option value="custom">Custom...</option>
+        </select>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('firms')">↓ CSV</button>
       </div>
     </div>
@@ -460,7 +494,14 @@
     <div class="sec-hd">
       <div class="sec-title"><span class="sec-dot" style="background:var(--yellow)"></span>Tax Report</div>
       <div class="sec-actions">
-        <select class="yr yr-sel" onchange="setYr(this.value)"></select>
+        <select class="yr period-sel" onchange="setPeriod(this.value)">
+          <option value="all">All Time</option>
+          <option value="ytd">Year to Date</option>
+          <option value="mtd">Month to Date</option>
+          <option value="week">This Week</option>
+          <option value="today">Today</option>
+          <option value="custom">Custom...</option>
+        </select>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('tax')">↓ CSV</button>
         <button class="btn btn-ghost btn-xs" onclick="window.print()">🖨 Print</button>
         <button class="btn btn-blue btn-xs" onclick="openMo('exp')">+ Add Expense</button>
@@ -475,7 +516,14 @@
     <div class="sec-hd">
       <div class="sec-title"><span class="sec-dot" style="background:var(--purple)"></span>Invoices</div>
       <div class="sec-actions">
-        <select class="yr yr-sel" onchange="setYr(this.value)"></select>
+        <select class="yr period-sel" onchange="setPeriod(this.value)">
+          <option value="all">All Time</option>
+          <option value="ytd">Year to Date</option>
+          <option value="mtd">Month to Date</option>
+          <option value="week">This Week</option>
+          <option value="today">Today</option>
+          <option value="custom">Custom...</option>
+        </select>
         <span style="font-size:12px;color:var(--text3)">Click Generate on any payout to create an invoice</span>
       </div>
     </div>
@@ -1129,18 +1177,46 @@ function demo(){
   ];
 }
 
-// ── YEAR FILTER ─────────────────────────────────────────────────
-let _yr='All';
-function getYr(){return _yr;}
-function setYr(val){_yr=val;document.querySelectorAll('.yr-sel').forEach(s=>{s.value=val;});render();}
-function fy(arr){return _yr==='All'?arr:arr.filter(x=>x.date&&x.date.startsWith(_yr));}
+// ── PERIOD FILTER ────────────────────────────────────────────────
+let _period='all'; // 'all'|'ytd'|'mtd'|'week'|'today'|'custom'
+let _periodFrom='', _periodTo='';
+
+function getDateRange(){
+  const t=new Date(), ts=t.toISOString().substr(0,10);
+  switch(_period){
+    case 'today': return {from:ts,to:ts};
+    case 'week':{const dow=t.getDay(),sun=new Date(t);sun.setDate(t.getDate()-dow);return {from:sun.toISOString().substr(0,10),to:ts};}
+    case 'mtd': return {from:`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-01`,to:ts};
+    case 'ytd': return {from:`${t.getFullYear()}-01-01`,to:ts};
+    case 'custom': return (_periodFrom&&_periodTo)?{from:_periodFrom,to:_periodTo}:null;
+    default: return null;
+  }
+}
+
+function fy(arr){
+  const r=getDateRange();
+  if(!r)return arr;
+  return arr.filter(x=>x.date&&x.date>=r.from&&x.date<=r.to);
+}
+
+function setPeriod(val){
+  _period=val;
+  document.querySelectorAll('.period-sel').forEach(s=>s.value=val);
+  const bar=document.getElementById('customPeriodBar');
+  if(val==='custom'){bar.style.display='flex';return;}
+  bar.style.display='none';
+  render();
+}
+
+function applyCustomPeriod(){
+  _periodFrom=document.getElementById('periodFrom').value;
+  _periodTo=document.getElementById('periodTo').value;
+  if(!_periodFrom||!_periodTo){alert('Please select both a start and end date.');return;}
+  render();
+}
 
 function buildYr(){
-  const ys=new Set();
-  [...S.challenges,...S.payouts,...S.expenses].forEach(x=>{if(x.date)ys.add(x.date.substr(0,4));});
-  ys.add(String(new Date().getFullYear()));
-  const optHtml='<option value="All">All Years</option>'+[...ys].sort().reverse().map(y=>`<option value="${y}">${y}</option>`).join('');
-  document.querySelectorAll('.yr-sel').forEach(s=>{s.innerHTML=optHtml;s.value=_yr;});
+  // no-op — period filter doesn't need year options
 }
 
 // ── METRICS ─────────────────────────────────────────────────────
@@ -1726,10 +1802,16 @@ function renderCal(){
 
 function dayCell(k,d,ev,cls=''){
   const items=ev[k]||[];
-  const dots=items.map(i=>`<span class="cal-dot" style="background:${i.type==='payout'?'var(--green)':i.type==='challenge'?'var(--red)':'var(--yellow)'}"></span>`).join('');
+  const pnl=items.reduce((s,i)=>s+Number(i.amt),0);
+  let pnlHtml='';
+  if(items.length){
+    const abs=Math.abs(pnl);
+    const fmt=(pnl>=0?'+':'-')+'$'+(abs>=1000?(abs/1000).toFixed(1)+'k':Math.round(abs).toString());
+    pnlHtml=`<div class="cal-pnl" style="color:${pnl>=0?'var(--green)':'var(--red)'}">${fmt}</div>`;
+  }
   return `<div class="cal-day ${cls}" onclick="calSelect('${k}')" title="${k}">
     <div class="cal-dn">${d}</div>
-    <div class="cal-dots">${dots}</div>
+    ${pnlHtml}
   </div>`;
 }
 
