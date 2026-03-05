@@ -308,6 +308,7 @@
   <div class="he">
     <select class="yr" id="yrSel" onchange="render()"></select>
     <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</div>
+    <div class="icon-btn" onclick="openClientMo()" title="Manage Clients / Firms">🏢</div>
     <div class="icon-btn" onclick="openMo('profile')" title="Profile & Settings">👤</div>
     <div id="userBadge" style="display:none;align-items:center;gap:6px">
       <span id="userEmail" style="font-size:11px;color:var(--text3);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
@@ -444,7 +445,7 @@
   <div class="modal">
     <div class="mo-title">Add Challenge</div><div class="mo-desc">Log a new prop firm challenge attempt.</div>
     <div class="fg">
-      <div class="field"><label>Prop Firm</label><input id="ch_firm" placeholder="e.g. FTMO"/></div>
+      <div class="field"><label>Prop Firm</label><input id="ch_firm" list="cl_datalist" placeholder="e.g. FTMO" autocomplete="off"/></div>
       <div class="field"><label>Account Size ($)</label><input type="number" id="ch_sz" placeholder="100000"/></div>
     </div>
     <div class="fg">
@@ -463,7 +464,7 @@
   <div class="modal">
     <div class="mo-title">Log Payout</div><div class="mo-desc">Record a withdrawal from a funded account.</div>
     <div class="fg">
-      <div class="field"><label>Prop Firm</label><input id="py_firm" placeholder="e.g. FTMO"/></div>
+      <div class="field"><label>Prop Firm</label><input id="py_firm" list="cl_datalist" placeholder="e.g. FTMO" autocomplete="off"/></div>
       <div class="field"><label>Amount ($)</label><input type="number" id="py_amt" placeholder="1500"/></div>
     </div>
     <div class="fg">
@@ -531,6 +532,37 @@
   </div>
 </div>
 
+<!-- CLIENTS -->
+<div class="ov" id="ov-clients">
+  <div class="modal modal-wide">
+    <div class="mo-title">Prop Firm Clients</div>
+    <div class="mo-desc">Pre-save firm details so invoices automatically fill in the "Bill To" section.</div>
+    <div id="clList" style="margin-bottom:12px"></div>
+    <div class="dl">Add New Client</div>
+    <div class="fg">
+      <div class="field"><label>Firm Name *</label><input id="cl_name" placeholder="e.g. FTMO s.r.o."/></div>
+      <div class="field"><label>Website</label><input id="cl_web" placeholder="e.g. ftmo.com"/></div>
+    </div>
+    <div class="field"><label>Address</label><input id="cl_addr" placeholder="123 Main Street"/></div>
+    <div class="fg">
+      <div class="field"><label>City</label><input id="cl_city" placeholder="Prague"/></div>
+      <div class="field"><label>State / Province</label><input id="cl_state" placeholder="—"/></div>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Country</label><input id="cl_country" placeholder="Czech Republic"/></div>
+      <div class="field"><label>Postal / ZIP Code</label><input id="cl_zip" placeholder="12000"/></div>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Email</label><input type="email" id="cl_email" placeholder="support@ftmo.com"/></div>
+      <div class="field"><label>VAT / Company Reg.</label><input id="cl_tax" placeholder="CZ08452173"/></div>
+    </div>
+    <div class="mo-foot">
+      <button class="btn btn-ghost" onclick="closeMo('clients')">Close</button>
+      <button class="btn btn-blue" onclick="saveClient()">Add Client</button>
+    </div>
+  </div>
+</div>
+
 <!-- INVOICE PREVIEW -->
 <div class="ov" id="ov-inv">
   <div class="modal" style="width:700px;max-width:96vw;padding:0;background:transparent;border:none">
@@ -544,6 +576,7 @@
 
 <!-- PRINT AREA (hidden, used for invoice print) -->
 <div id="printArea"></div>
+<datalist id="cl_datalist"></datalist>
 
 <!-- ═══════════════════════════ JS ═══════════════════════════ -->
 <script>
@@ -600,7 +633,7 @@ async function authSubmit(){
 
 async function signOut(){
   localStorage.removeItem(KEY);
-  S={challenges:[],payouts:[],expenses:[],invoices:[],
+  S={challenges:[],payouts:[],expenses:[],invoices:[],clients:[],
     profile:{name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''},
     settings:{jur:'US'}};
   try{ await sb.auth.signOut(); }catch(e){ console.warn('signOut error:',e); }
@@ -619,7 +652,7 @@ async function showApp(user){
   document.getElementById('appWrap').style.display='block';
   document.getElementById('userBadge').style.display='flex';
   document.getElementById('userEmail').textContent=currentUser.email;
-  try{ render(); }catch(e){ console.warn('render error:',e); }
+  try{ render(); renderClientList(); }catch(e){ console.warn('render error:',e); }
 }
 
 // Fallback: if onAuthStateChange never fires within 4s, show auth screen
@@ -644,7 +677,7 @@ sb.auth.onAuthStateChange(async (event,session)=>{
 });
 
 // ── STATE ──────────────────────────────────────────────────────
-let S={challenges:[],payouts:[],expenses:[],invoices:[],
+let S={challenges:[],payouts:[],expenses:[],invoices:[],clients:[],
   profile:{name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''},
   settings:{jur:'US'}};
 const KEY='pft5';
@@ -652,6 +685,7 @@ const KEY='pft5';
 function fixS(){
   if(!S.expenses)S.expenses=[];
   if(!S.invoices)S.invoices=[];
+  if(!S.clients)S.clients=[];
   if(!S.profile)S.profile={name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''};
   if(!S.settings)S.settings={jur:'US'};
 }
@@ -1423,6 +1457,63 @@ function renderTax(chs,pys){
     </div>`;
 }
 
+// ── CLIENTS ──────────────────────────────────────────────────────
+function openClientMo(){
+  renderClientList();
+  openMo('clients');
+}
+
+function renderClientList(){
+  const el=document.getElementById('clList');
+  if(!S.clients.length){
+    el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px 0 4px">No clients saved yet.</div>';
+  } else {
+    el.innerHTML='<div class="inv-list">'+S.clients.map(c=>`
+      <div class="inv-item">
+        <div class="inv-item-left">
+          <div class="inv-item-num">${c.name}</div>
+          <div class="inv-item-detail">${[c.addr,c.city,c.country,c.email].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div class="inv-item-right">
+          <button class="btn-del" onclick="delClient('${c.id}')">Remove</button>
+        </div>
+      </div>`).join('')+'</div>';
+  }
+  // refresh datalist
+  const dl=document.getElementById('cl_datalist');
+  if(dl) dl.innerHTML=S.clients.map(c=>`<option value="${c.name}">`).join('');
+}
+
+function saveClient(){
+  const name=document.getElementById('cl_name').value.trim();
+  if(!name){alert('Firm Name is required.');return;}
+  S.clients.push({
+    id:uid(), name,
+    web:document.getElementById('cl_web').value.trim(),
+    addr:document.getElementById('cl_addr').value.trim(),
+    city:document.getElementById('cl_city').value.trim(),
+    state:document.getElementById('cl_state').value.trim(),
+    country:document.getElementById('cl_country').value.trim(),
+    zip:document.getElementById('cl_zip').value.trim(),
+    email:document.getElementById('cl_email').value.trim(),
+    tax:document.getElementById('cl_tax').value.trim(),
+  });
+  saveS();
+  renderClientList();
+  ['cl_name','cl_web','cl_addr','cl_city','cl_state','cl_country','cl_zip','cl_email','cl_tax'].forEach(i=>document.getElementById(i).value='');
+}
+
+function delClient(id){
+  if(!confirm('Remove this client?'))return;
+  S.clients=S.clients.filter(c=>c.id!==id);
+  saveS();
+  renderClientList();
+}
+
+function clientDetail(firmName){
+  return S.clients.find(c=>c.name.toLowerCase()===firmName.toLowerCase())||null;
+}
+
 // ── INVOICE GENERATION ─────────────────────────────────────────
 function nextInvNum(){
   const yr=new Date().getFullYear();
@@ -1483,8 +1574,7 @@ function showInv(inv){
       </div>
       <div>
         <div class="inv-party-label">Bill To</div>
-        <div class="inv-party-name">${inv.firm}</div>
-        <div class="inv-party-detail">Proprietary Trading Firm</div>
+        ${(()=>{const cl=clientDetail(inv.firm);const billName=cl?cl.name:inv.firm;const billDetail=cl?[cl.addr,cl.city&&cl.state?cl.city+', '+cl.state:cl.city||cl.state,cl.zip,cl.country,cl.email,cl.web,cl.tax?'Reg: '+cl.tax:''].filter(Boolean).join('<br>'):'Proprietary Trading Firm';return`<div class="inv-party-name">${billName}</div><div class="inv-party-detail">${billDetail}</div>`;})()}
       </div>
     </div>
     <table class="inv-table">
