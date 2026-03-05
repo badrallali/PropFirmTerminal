@@ -894,8 +894,10 @@ function renderChallenges(chs){
     <td style="color:var(--text2)">${c.type}</td>
     <td style="color:var(--text3)">${c.date}</td>
     <td style="color:var(--text3);font-size:11px">${c.notes||'—'}</td>
-    <td style="display:flex;gap:6px;align-items:center">${c.invoiceUrl?`<a href="${c.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;white-space:nowrap">📄 View</a>`:''}
-    <button class="btn-del" onclick="delCh('${c.id}')">Remove</button></td>
+    <td style="display:flex;gap:6px;align-items:center">
+      ${c.invoiceUrl?`<button class="btn-inv" onclick="window.open('${c.invoiceUrl}','_blank')">📄 Invoice</button>`:''}
+      <button class="btn-del" onclick="delCh('${c.id}')">Remove</button>
+    </td>
   </tr>`).join('');
   el.innerHTML=`<div class="tch"><span class="tct">All Challenges</span><span class="tcm">${chs.length} entries</span></div>
     <table><thead><tr><th>Firm</th><th>Size</th><th>Fee</th><th>Type</th><th>Date</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -1258,7 +1260,7 @@ function delExp(id){S.expenses=S.expenses.filter(e=>e.id!==id);saveS();render();
 // ── EXPORT ──────────────────────────────────────────────────────
 function exportCSV(type){
   let h=[],rows=[];
-  if(type==='ch'){h=['Firm','Account Size','Fee','Type','Date','Notes'];rows=S.challenges.map(c=>[c.firm,c.sz,c.fee,c.type,c.date,c.notes]);}
+  if(type==='ch'){h=['Firm','Account Size','Fee','Type','Date','Notes','Invoice URL'];rows=S.challenges.map(c=>[c.firm,c.sz,c.fee,c.type,c.date,c.notes,c.invoiceUrl||'']);}
   else if(type==='py'){h=['Firm','Amount','Date','Method','Account Size','Notes'];rows=S.payouts.map(p=>[p.firm,p.amt,p.date,p.meth,p.sz,p.notes]);}
   else if(type==='firms'){const fd=firmD(fy(S.challenges),fy(S.payouts));h=['Firm','Invested','Earned','Net PL','ROI %'];rows=Object.entries(fd).map(([f,d])=>{const n=d.earned-d.spent,roi=d.spent>0?(n/d.spent*100):0;return[f,d.spent,d.earned,n,roi.toFixed(1)];});}
   else if(type==='tax'){const y=getYr();h=['Type','Description','Amount','Date','Category'];fy(S.payouts).forEach(p=>rows.push(['Income',p.firm,p.amt,p.date,'Payout']));fy(S.challenges).forEach(c=>rows.push(['Expense',c.firm+' Challenge Fee',-c.fee,c.date,'Challenge Fee']));fy(S.expenses).forEach(e=>rows.push(['Expense',e.vendor||e.cat,-e.amt,e.date,e.cat]));}
