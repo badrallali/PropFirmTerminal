@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PropFirmTerminal — Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#09090b;--bg2:#0f0f11;--surf:#111113;--card:#131316;--card2:#18181b;
+      --border:#27272a;--border2:#1f1f22;
+      --blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--purple:#a855f7;--cyan:#06b6d4;
+      --text:#fafafa;--text2:#a1a1aa;--text3:#52525b;
+      --font:'Inter',-apple-system,sans-serif;--r:8px;--rl:12px;
+    }
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+    /* ── HEADER ── */
+    header{
+      position:sticky;top:0;z-index:50;height:52px;
+      background:rgba(9,9,11,.92);backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border2);
+      display:flex;align-items:center;padding:0 28px;gap:24px;
+    }
+    .brand{display:flex;align-items:center;gap:9px;flex-shrink:0;text-decoration:none}
+    .bm{width:26px;height:26px;background:var(--blue);border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff}
+    .bn{font-size:14px;font-weight:700;letter-spacing:-.3px;color:var(--text)}
+    .bn em{font-style:normal;color:var(--blue)}
+    nav{display:flex;gap:1px;flex:1;overflow-x:auto}
+    nav::-webkit-scrollbar{display:none}
+    .na{background:none;border:none;color:var(--text3);font-family:var(--font);font-size:13px;font-weight:500;padding:5px 10px;border-radius:var(--r);cursor:pointer;white-space:nowrap;transition:color .15s,background .15s;text-decoration:none;display:inline-block}
+    .na:hover{color:var(--text2);background:var(--card2)}
+    .na.on{color:var(--text);background:var(--card2);font-weight:600}
+    .he{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .yr{background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-family:var(--font);font-size:12px;padding:4px 8px;cursor:pointer;outline:none}
+    .yr:focus{border-color:var(--blue)}
+    .icon-btn{width:32px;height:32px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);display:grid;place-items:center;cursor:pointer;font-size:15px;transition:background .15s;color:var(--text2)}
+    .icon-btn:hover{background:var(--border)}
+    .hd-meta{font-size:11px;color:var(--text3)}
+
+    /* ── LAYOUT ── */
+    main{max-width:1380px;margin:0 auto;padding:0 28px 60px}
+
+    /* ── SECTION ── */
+    .sec{padding-top:40px}
+    .sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border2)}
+    .sec-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:8px}
+    .sec-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0}
+    .sec-actions{display:flex;gap:8px}
+
+    /* ── KPI STRIP ── */
+    .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border2);border:1px solid var(--border2);border-radius:var(--rl);overflow:hidden;margin-bottom:12px}
+    .kpi{background:var(--card);padding:18px 20px}
+    .kl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px}
+    .kv{font-size:22px;font-weight:700;letter-spacing:-.6px;line-height:1}
+    .kf{margin-top:6px;font-size:11px;color:var(--text3)}
+    .kpill{display:inline-flex;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:6px}
+
+    /* ── QUICK STATS ── */
+    .qs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+    .qs{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:16px 18px;display:flex;align-items:center;gap:14px}
+    .qs-icon{font-size:22px;flex-shrink:0}
+    .qs-body{display:flex;flex-direction:column}
+    .qs-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+    .qs-val{font-size:17px;font-weight:700;letter-spacing:-.4px}
+    .qs-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+    /* ── INSIGHT ── */
+    .ins{display:flex;align-items:center;gap:10px;padding:11px 15px;border-radius:var(--r);font-size:13px;font-weight:500;margin-bottom:12px;border:1px solid}
+    .ins-up  {background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.2);color:var(--green)}
+    .ins-dn  {background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2);color:var(--red)}
+    .ins-info{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2);color:var(--blue)}
+    .ins span{color:var(--text2)}.ins strong{color:inherit;font-weight:700}
+
+    /* ── CHARTS ── */
+    .ch-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+    .ch-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+    .cc{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:18px}
+    .ct{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:14px}
+    .cw{position:relative;height:180px}
+
+    /* ── TABLE CARD ── */
+    .tc{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);overflow:hidden}
+    .tch{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border2)}
+    .tct{font-size:13px;font-weight:600}
+    .tcm{font-size:11px;color:var(--text3)}
+    table{width:100%;border-collapse:collapse}
+    thead th{text-align:left;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;padding:8px 14px;background:var(--card2);border-bottom:1px solid var(--border2)}
+    tbody td{padding:10px 14px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border2)}
+    tbody tr:last-child td{border-bottom:none}
+    tbody tr:hover td{background:rgba(255,255,255,.013)}
+
+    /* ── TAX INLINE ── */
+    .tax-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border2);font-size:13px}
+    .tax-row:last-child{border-bottom:none}
+    .tax-lbl{color:var(--text2)}.tax-val{font-weight:600}
+    .tax-tot{display:flex;justify-content:space-between;padding:11px 14px;font-weight:700;font-size:14px;border-top:1px solid var(--border)}
+    .tax-notice{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:var(--r);padding:11px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-top:10px}
+    .tax-notice strong{color:var(--blue);font-weight:600}
+    .q-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+    .qc{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:13px}
+    .ql{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px}
+    .qv{font-size:16px;font-weight:700;letter-spacing:-.4px}
+    .qd{font-size:10px;color:var(--text3);margin-top:3px}
+
+    /* ── BREAKEVEN ── */
+    .be-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .be-inputs{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:20px}
+    .res-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);overflow:hidden}
+    .res-sec{padding:8px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);background:var(--card2);border-bottom:1px solid var(--border2)}
+    .res-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border2);font-size:13px}
+    .res-row:last-child{border-bottom:none}
+    .rl{color:var(--text2)}
+
+    /* ── BADGES ── */
+    .badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+    .bg2{background:rgba(34,197,94,.12);color:var(--green)}
+    .br2{background:rgba(239,68,68,.12);color:var(--red)}
+    .bb2{background:rgba(59,130,246,.12);color:var(--blue)}
+    .by2{background:rgba(234,179,8,.12);color:var(--yellow)}
+
+    /* ── COLORS ── */
+    .g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}.y{color:var(--yellow)}.p{color:var(--purple)}
+    .pg{background:rgba(34,197,94,.12);color:var(--green)}
+    .pr{background:rgba(239,68,68,.12);color:var(--red)}
+
+    /* ── BUTTONS ── */
+    .btn{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:var(--r);padding:7px 13px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;white-space:nowrap}
+    .btn:hover{opacity:.82}.btn:active{transform:scale(.97)}
+    .btn-blue {background:var(--blue);color:#fff}
+    .btn-ghost{background:var(--card2);color:var(--text2);border:1px solid var(--border)}
+    .btn-inv  {background:rgba(168,85,247,.12);color:var(--purple);border:1px solid rgba(168,85,247,.2);border-radius:5px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+    .btn-inv:hover{background:rgba(168,85,247,.22)}
+    .btn-del  {background:rgba(239,68,68,.1);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:600;cursor:pointer}
+    .btn-del:hover{background:rgba(239,68,68,.2)}
+    .btn-xs{padding:5px 10px;font-size:12px}
+
+    /* ── FORM ── */
+    .field{margin-bottom:12px}
+    .field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px}
+    .field input,.field select,.field textarea{
+      width:100%;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);
+      color:var(--text);font-family:var(--font);font-size:13px;padding:8px 11px;outline:none;transition:border-color .15s
+    }
+    .field input::placeholder{color:var(--text3)}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}
+    .field select option{background:var(--card2)}
+    .field textarea{resize:vertical;min-height:60px}
+    .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+    /* ── OVERLAY / MODAL ── */
+    .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;padding:16px}
+    .ov.open{display:flex}
+    .modal{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:24px;width:480px;max-width:100%;max-height:90vh;overflow-y:auto}
+    .modal-wide{width:560px}
+    .mo-title{font-size:15px;font-weight:700;letter-spacing:-.2px;margin-bottom:3px}
+    .mo-desc{font-size:12px;color:var(--text2);margin-bottom:18px}
+    .mo-foot{display:flex;gap:8px;justify-content:flex-end;padding-top:14px;margin-top:14px;border-top:1px solid var(--border2)}
+    .dl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin:14px 0 10px}
+
+    /* ── INVOICE PRINT ── */
+    .inv-sheet{background:#fff;color:#111;border-radius:var(--rl);padding:40px 48px;max-width:660px;margin:0 auto;font-family:'Inter',sans-serif}
+    .inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px}
+    .inv-from-name{font-size:20px;font-weight:800;color:#111}
+    .inv-from-detail{font-size:12px;color:#555;line-height:1.7;margin-top:6px}
+    .inv-badge{text-align:right}
+    .inv-word{font-size:28px;font-weight:800;color:#111;letter-spacing:-1px}
+    .inv-num{font-size:13px;color:#888;margin-top:4px}
+    .inv-date{font-size:12px;color:#888;margin-top:2px}
+    .inv-parties{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px}
+    .inv-party-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#999;margin-bottom:8px}
+    .inv-party-name{font-size:14px;font-weight:700;color:#111}
+    .inv-party-detail{font-size:12px;color:#555;line-height:1.7;margin-top:4px}
+    .inv-table{width:100%;border-collapse:collapse;margin-bottom:24px}
+    .inv-table thead th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#999;padding:8px 0;border-bottom:2px solid #eee}
+    .inv-table tbody td{padding:14px 0;font-size:13px;color:#333;border-bottom:1px solid #f0f0f0}
+    .inv-table tbody td:last-child{text-align:right;font-weight:700;color:#111}
+    .inv-totals{margin-left:auto;width:260px}
+    .inv-total-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#555}
+    .inv-total-row.big{font-size:16px;font-weight:800;color:#111;border-top:2px solid #111;padding-top:12px;margin-top:4px}
+    .inv-footer{margin-top:40px;padding-top:20px;border-top:1px solid #eee;font-size:11px;color:#aaa;text-align:center;line-height:1.8}
+
+    /* ── EMPTY ── */
+    .empty{padding:44px 20px;text-align:center;color:var(--text3)}
+    .ei{font-size:26px;margin-bottom:8px;opacity:.4}
+    .et{font-size:12px}
+
+    /* ── MINI BAR ── */
+    .mb{display:flex;align-items:center;gap:7px}
+    .mb+.mb{margin-top:5px}
+    .mbl{font-size:10px;color:var(--text3);width:18px;text-align:right}
+    .mbt{flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+    .mbf{height:100%;border-radius:2px}
+
+    /* ── PROFILE GRID ── */
+    .profile-sections{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .ps{background:var(--card2);border:1px solid var(--border);border-radius:var(--rl);padding:20px}
+    .ps-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:16px}
+
+    /* ── INV LIST ── */
+    .inv-list{display:flex;flex-direction:column;gap:8px}
+    .inv-item{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+    .inv-item-left{display:flex;flex-direction:column;gap:3px}
+    .inv-item-num{font-size:12px;font-weight:700;color:var(--text);letter-spacing:.3px}
+    .inv-item-detail{font-size:11px;color:var(--text3)}
+    .inv-item-right{display:flex;align-items:center;gap:10px}
+    .inv-item-amt{font-size:15px;font-weight:700;color:var(--green)}
+
+    @media(max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.ch-row3{grid-template-columns:1fr 1fr}.qs-row{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:700px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.ch-row,.ch-row3,.be-grid{grid-template-columns:1fr}.fg,.fg3{grid-template-columns:1fr}.q-row{grid-template-columns:repeat(2,1fr)}.profile-sections{grid-template-columns:1fr}}
+    @media print{
+      header,nav,.sec-actions,.btn-inv,.btn-del,.btn,.icon-btn,.ov,.na{display:none!important}
+      body{background:#fff}.inv-sheet{border-radius:0;padding:24px;box-shadow:none}
+      main,.modal,.ov.open{display:none!important}
+      #printArea{display:block!important}
+    }
+    #printArea{display:none}
+  </style>
+</head>
+<body>
+
+<!-- ══ AUTH SCREEN ══ -->
+<div id="authWrap" style="position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px">
+  <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
+    <div class="bm">PT</div>
+    <div class="bn">PropFirm<em>Terminal</em></div>
+  </div>
+  <div style="width:100%;max-width:380px;background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:28px;display:flex;flex-direction:column;gap:14px">
+    <div>
+      <div style="font-size:18px;font-weight:700;color:var(--text)" id="authTitle">Sign In</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:3px">Track your prop firm ROI. Data synced across devices.</div>
+    </div>
+    <div id="authErr" style="display:none;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:var(--r);padding:9px 12px;font-size:12px;color:#ef4444"></div>
+    <div id="authOk"  style="display:none;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:var(--r);padding:9px 12px;font-size:12px;color:#22c55e"></div>
+    <div class="field"><label>Email</label><input type="email" id="au_email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')authSubmit()"/></div>
+    <div class="field"><label>Password</label><input type="password" id="au_pw" placeholder="Min. 6 characters" onkeydown="if(event.key==='Enter')authSubmit()"/></div>
+    <button class="btn btn-blue" style="width:100%;padding:10px;font-size:14px" id="authBtn" onclick="authSubmit()">Sign In</button>
+    <div style="text-align:center;font-size:12px;color:var(--text3)">
+      <span id="authToggleTxt">No account?</span>
+      <a href="#" onclick="toggleAuthMode(event)" id="authToggleLink" style="color:var(--blue);text-decoration:none;margin-left:4px">Create one free</a>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--text3)">Your data is private and encrypted · Never shared</div>
+</div>
+
+<!-- ══ APP WRAPPER (hidden until auth) ══ -->
+<div id="appWrap" style="display:none">
+
+<!-- ══ HEADER ══ -->
+<header>
+  <a class="brand" href="#top"><div class="bm">PT</div><div class="bn">PropFirm<em>Terminal</em></div></a>
+  <nav>
+    <a class="na on"  href="#overview">Overview</a>
+    <a class="na"     href="#challenges">Challenges</a>
+    <a class="na"     href="#payouts">Payouts</a>
+    <a class="na"     href="#firms">Firm Analysis</a>
+    <a class="na"     href="#tax">Tax</a>
+    <a class="na"     href="#breakeven">Breakeven</a>
+    <a class="na"     href="#invoices">Invoices</a>
+  </nav>
+  <div class="he">
+    <select class="yr" id="yrSel" onchange="render()"></select>
+    <div class="icon-btn" onclick="openMo('profile')" title="Profile & Settings">👤</div>
+    <div id="userBadge" style="display:none;align-items:center;gap:6px">
+      <span id="userEmail" style="font-size:11px;color:var(--text3);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <button class="btn btn-ghost btn-xs" onclick="signOut()" style="font-size:11px;padding:3px 8px">Sign Out</button>
+    </div>
+    <div class="hd-meta" id="savedAt"></div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<main id="top">
+
+  <!-- ── OVERVIEW ── -->
+  <section class="sec" id="overview">
+    <div class="kpi-strip" id="kpiStrip"></div>
+    <div id="insightBox"></div>
+
+    <!-- Quick Stats -->
+    <div class="qs-row" id="qsRow"></div>
+
+    <!-- Charts row 1 -->
+    <div class="ch-row">
+      <div class="cc"><div class="ct">Cumulative P&L</div><div class="cw"><canvas id="cPL"></canvas></div></div>
+      <div class="cc"><div class="ct">Fee Distribution by Firm</div><div class="cw"><canvas id="cOut"></canvas></div></div>
+    </div>
+    <!-- Charts row 2 -->
+    <div class="ch-row3">
+      <div class="cc"><div class="ct">Spend vs. Payouts by Firm</div><div class="cw"><canvas id="cFirm"></canvas></div></div>
+      <div class="cc"><div class="ct">Payment Method</div><div class="cw"><canvas id="cMethod"></canvas></div></div>
+      <div class="cc"><div class="ct">Quarterly P&L</div><div class="cw"><canvas id="cQ"></canvas></div></div>
+    </div>
+    <!-- Charts row 3 -->
+    <div class="ch-row">
+      <div class="cc"><div class="ct">Monthly Cash Flow</div><div class="cw"><canvas id="cMo"></canvas></div></div>
+      <div class="cc"><div class="ct">Cumulative Fees vs. Payouts</div><div class="cw"><canvas id="cCum"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ── CHALLENGES ── -->
+  <section class="sec" id="challenges">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="sec-dot"></span>Challenges</div>
+      <div class="sec-actions">
+        <button class="btn btn-ghost btn-xs" onclick="exportCSV('ch')">↓ CSV</button>
+        <button class="btn btn-blue btn-xs" onclick="openMo('ch')">+ Add Challenge</button>
+      </div>
+    </div>
+    <div class="tc" id="chWrap"></div>
+  </section>
+
+  <!-- ── PAYOUTS ── -->
+  <section class="sec" id="payouts">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="sec-dot" style="background:var(--green)"></span>Payouts</div>
+      <div class="sec-actions">
+        <button class="btn btn-ghost btn-xs" onclick="exportCSV('py')">↓ CSV</button>
+        <button class="btn btn-blue btn-xs" onclick="openMo('py')">+ Log Payout</button>
+      </div>
+    </div>
+    <div class="tc" id="pyWrap"></div>
+  </section>
+
+  <!-- ── FIRM ANALYSIS ── -->
+  <section class="sec" id="firms">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="sec-dot" style="background:var(--yellow)"></span>Firm Analysis</div>
+      <div class="sec-actions">
+        <button class="btn btn-ghost btn-xs" onclick="exportCSV('firms')">↓ CSV</button>
+      </div>
+    </div>
+    <div id="firmWrap"></div>
+  </section>
+
+  <!-- ── TAX ── -->
+  <section class="sec" id="tax">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="sec-dot" style="background:var(--yellow)"></span>Tax Summary</div>
+      <div class="sec-actions">
+        <div class="seg" id="jurSeg">
+          <button onclick="setJur('US')"    class="active">🇺🇸 US</button>
+          <button onclick="setJur('UK')">🇬🇧 UK</button>
+          <button onclick="setJur('OTHER')">🌍 Other</button>
+        </div>
+        <button class="btn btn-ghost btn-xs" onclick="exportCSV('tax')">↓ CSV</button>
+        <button class="btn btn-ghost btn-xs" onclick="window.print()">🖨 Print</button>
+        <button class="btn btn-blue btn-xs" onclick="openMo('exp')">+ Add Expense</button>
+      </div>
+    </div>
+    <div id="taxWrap"></div>
+  </section>
+
+  <!-- ── BREAKEVEN ── -->
+  <section class="sec" id="breakeven">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="sec-dot" style="background:var(--purple)"></span>Breakeven Calculator</div>
+    </div>
+    <div class="be-grid">
+      <div class="be-inputs">
+        <div class="fg">
+          <div class="field"><label>Challenge Fee ($)</label><input type="number" id="b_fee" placeholder="149" oninput="calcBE()"/></div>
+          <div class="field"><label>Account Size ($)</label><input type="number" id="b_sz"  placeholder="100000" oninput="calcBE()"/></div>
+          <div class="field"><label>Profit Split (%)</label><input type="number" id="b_sp"  placeholder="80" oninput="calcBE()"/></div>
+          <div class="field"><label>Profit Target (%)</label><input type="number" id="b_tg" placeholder="10" oninput="calcBE()"/></div>
+        </div>
+        <div class="field"><label>Expected Monthly Return on Funded (%)</label><input type="number" id="b_mo" placeholder="5" oninput="calcBE()"/></div>
+      </div>
+      <div id="beOut"><div style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:20px;color:var(--text3);font-size:13px;text-align:center;margin-top:0">Fill in the parameters to see your analysis.</div></div>
+    </div>
+  </section>
+
+  <!-- ── INVOICES ── -->
+  <section class="sec" id="invoices">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="sec-dot" style="background:var(--purple)"></span>Invoices</div>
+      <div class="sec-actions">
+        <span style="font-size:12px;color:var(--text3)">Generate invoices from any payout row above ↑</span>
+      </div>
+    </div>
+    <div id="invListWrap"></div>
+  </section>
+
+</main>
+</div><!-- /appWrap -->
+
+<!-- ═════════════════════════════ MODALS ═════════════════════════════ -->
+
+<!-- CHALLENGE -->
+<div class="ov" id="ov-ch">
+  <div class="modal">
+    <div class="mo-title">Add Challenge</div><div class="mo-desc">Log a new prop firm challenge attempt.</div>
+    <div class="fg">
+      <div class="field"><label>Prop Firm</label><input id="ch_firm" placeholder="e.g. FTMO"/></div>
+      <div class="field"><label>Account Size ($)</label><input type="number" id="ch_sz" placeholder="100000"/></div>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Fee ($)</label><input type="number" id="ch_fee" placeholder="149"/></div>
+      <div class="field"><label>Type</label><select id="ch_type"><option>1-Stage</option><option>2-Stage</option><option>Instant</option><option>3-Stage</option></select></div>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="ch_date"/></div>
+    <div class="field"><label>Notes</label><input id="ch_notes" placeholder="Optional"/></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('ch')">Cancel</button><button class="btn btn-blue" onclick="saveCh()">Save</button></div>
+  </div>
+</div>
+
+<!-- PAYOUT -->
+<div class="ov" id="ov-py">
+  <div class="modal">
+    <div class="mo-title">Log Payout</div><div class="mo-desc">Record a withdrawal from a funded account.</div>
+    <div class="fg">
+      <div class="field"><label>Prop Firm</label><input id="py_firm" placeholder="e.g. FTMO"/></div>
+      <div class="field"><label>Amount ($)</label><input type="number" id="py_amt" placeholder="1500"/></div>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Date</label><input type="date" id="py_date"/></div>
+      <div class="field"><label>Method</label><select id="py_meth"><option>Rise</option><option>USDT (Tron)</option><option>Skrill</option><option>Bank Wire</option><option>Crypto</option><option>PayPal</option><option>Other</option></select></div>
+    </div>
+    <div class="field"><label>Account Size ($) — reference</label><input type="number" id="py_sz" placeholder="100000"/></div>
+    <div class="field"><label>Notes</label><input id="py_notes" placeholder="Optional"/></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('py')">Cancel</button><button class="btn btn-blue" onclick="savePy()">Save</button></div>
+  </div>
+</div>
+
+<!-- EXPENSE -->
+<div class="ov" id="ov-exp">
+  <div class="modal">
+    <div class="mo-title">Add Business Expense</div><div class="mo-desc">Log deductible expenses (challenge fees are auto-imported).</div>
+    <div class="fg">
+      <div class="field"><label>Category</label>
+        <select id="ex_cat"><option>TradingView / Platform</option><option>VPS / Hosting</option><option>EA / Automation</option><option>Education / Course</option><option>Data Feed</option><option>Hardware</option><option>Accounting / Legal</option><option>Other</option></select>
+      </div>
+      <div class="field"><label>Amount ($)</label><input type="number" id="ex_amt" placeholder="15"/></div>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Vendor</label><input id="ex_vendor" placeholder="e.g. TradingView Pro"/></div>
+      <div class="field"><label>Date</label><input type="date" id="ex_date"/></div>
+    </div>
+    <div class="field"><label>Recurring</label><select id="ex_rec"><option value="no">One-time</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('exp')">Cancel</button><button class="btn btn-blue" onclick="saveExp()">Save</button></div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="ov" id="ov-profile">
+  <div class="modal modal-wide">
+    <div class="mo-title">Profile & Settings</div>
+    <div class="mo-desc">Your details appear on auto-generated invoices.</div>
+    <div class="dl">Personal / Business</div>
+    <div class="fg">
+      <div class="field"><label>Full Name</label><input id="pr_name" placeholder="John Doe"/></div>
+      <div class="field"><label>Business Name (optional)</label><input id="pr_biz" placeholder="JD Trading Ltd."/></div>
+    </div>
+    <div class="field"><label>Address Line</label><input id="pr_addr" placeholder="123 Main Street"/></div>
+    <div class="fg">
+      <div class="field"><label>City</label><input id="pr_city" placeholder="Miami"/></div>
+      <div class="field"><label>State / Province</label><input id="pr_state" placeholder="FL"/></div>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Country</label><input id="pr_country" placeholder="United States"/></div>
+      <div class="field"><label>Postal Code</label><input id="pr_zip" placeholder="33101"/></div>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Email</label><input type="email" id="pr_email" placeholder="john@example.com"/></div>
+      <div class="field"><label>Phone (optional)</label><input id="pr_phone" placeholder="+1 305 000 0000"/></div>
+    </div>
+    <div class="dl">Tax & Invoice</div>
+    <div class="fg">
+      <div class="field"><label>Tax ID / EIN / VAT / UTR</label><input id="pr_tax" placeholder="EIN: XX-XXXXXXX"/></div>
+      <div class="field"><label>Default Jurisdiction</label>
+        <select id="pr_jur"><option value="US">🇺🇸 United States</option><option value="UK">🇬🇧 United Kingdom</option><option value="OTHER">🌍 Other</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Invoice Footer / Bank Details (appears on invoices)</label><textarea id="pr_footer" placeholder="Bank: Chase Bank&#10;Account: XXXX-XXXX&#10;Routing: XXXXXXXXX"></textarea></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('profile')">Cancel</button><button class="btn btn-blue" onclick="saveProfile()">Save Profile</button></div>
+  </div>
+</div>
+
+<!-- INVOICE PREVIEW -->
+<div class="ov" id="ov-inv">
+  <div class="modal" style="width:700px;max-width:96vw;padding:0;background:transparent;border:none">
+    <div id="invPreview"></div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+      <button class="btn btn-ghost" onclick="closeMo('inv')">Close</button>
+      <button class="btn btn-blue" onclick="printInv()">🖨 Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT AREA (hidden, used for invoice print) -->
+<div id="printArea"></div>
+
+<!-- ═══════════════════════════ JS ═══════════════════════════ -->
+<script>
+// ── SUPABASE CONFIG ─────────────────────────────────────────────
+// TODO: Replace these two values with your actual project credentials from
+// Supabase → Project Settings → API
+const SUPABASE_URL  = 'https://YOUR_PROJECT_REF.supabase.co';
+const SUPABASE_ANON = 'YOUR_ANON_KEY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+let currentUser = null;
+
+// ── AUTH FUNCTIONS ──────────────────────────────────────────────
+let authMode = 'signin';
+
+function toggleAuthMode(e){
+  if(e)e.preventDefault();
+  authMode = authMode==='signin'?'signup':'signin';
+  const isSign = authMode==='signin';
+  document.getElementById('authTitle').textContent      = isSign?'Sign In':'Create Account';
+  document.getElementById('authBtn').textContent        = isSign?'Sign In':'Create Account';
+  document.getElementById('authToggleTxt').textContent  = isSign?'No account?':'Have an account?';
+  document.getElementById('authToggleLink').textContent = isSign?'Create one free':'Sign in';
+  document.getElementById('authErr').style.display='none';
+  document.getElementById('authOk').style.display='none';
+}
+
+async function authSubmit(){
+  const email = document.getElementById('au_email').value.trim();
+  const pw    = document.getElementById('au_pw').value;
+  const btn   = document.getElementById('authBtn');
+  const err   = document.getElementById('authErr');
+  const ok    = document.getElementById('authOk');
+  err.style.display='none'; ok.style.display='none';
+  if(!email||!pw){err.style.display='block';err.textContent='Email and password are required.';return;}
+  if(pw.length<6){err.style.display='block';err.textContent='Password must be at least 6 characters.';return;}
+  btn.textContent='Please wait…'; btn.disabled=true;
+  const fn = authMode==='signin'
+    ? sb.auth.signInWithPassword({email,password:pw})
+    : sb.auth.signUp({email,password:pw});
+  const {data,error} = await fn;
+  btn.disabled=false;
+  btn.textContent = authMode==='signin'?'Sign In':'Create Account';
+  if(error){err.style.display='block';err.textContent=error.message;return;}
+  if(authMode==='signup'&&!data?.session){
+    ok.style.display='block';
+    ok.textContent='Account created! Check your email to confirm, then sign in.';
+    authMode='signin';
+    document.getElementById('authTitle').textContent='Sign In';
+    document.getElementById('authBtn').textContent='Sign In';
+    return;
+  }
+  // onAuthStateChange handles the rest
+}
+
+async function signOut(){
+  await sb.auth.signOut();
+  currentUser=null;
+  S={challenges:[],payouts:[],expenses:[],invoices:[],
+    profile:{name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''},
+    settings:{jur:'US'}};
+  document.getElementById('userBadge').style.display='none';
+  document.getElementById('userEmail').textContent='';
+  document.getElementById('authWrap').style.display='flex';
+  document.getElementById('appWrap').style.display='none';
+}
+
+// Listen for auth state changes (login / logout / token refresh)
+sb.auth.onAuthStateChange(async (event,session)=>{
+  currentUser = session?.user??null;
+  if(currentUser){
+    document.getElementById('authWrap').style.display='none';
+    document.getElementById('appWrap').style.display='block';
+    document.getElementById('userBadge').style.display='flex';
+    document.getElementById('userEmail').textContent=currentUser.email;
+    await loadS();
+    jur=S.settings.jur||'US';
+    render();
+    setTimeout(()=>{document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));},0);
+  }
+});
+
+// ── STATE ──────────────────────────────────────────────────────
+let S={challenges:[],payouts:[],expenses:[],invoices:[],
+  profile:{name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''},
+  settings:{jur:'US'}};
+const KEY='pft5';
+
+async function loadS(){
+  // Always load from localStorage first (fast, works offline)
+  try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r);}catch(e){}
+  if(!S.expenses)S.expenses=[];
+  if(!S.invoices)S.invoices=[];
+  if(!S.profile)S.profile={name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''};
+  if(!S.settings)S.settings={jur:'US'};
+
+  // If logged in, try to load from Supabase (cloud takes priority)
+  if(currentUser){
+    try{
+      const {data,error}=await sb.from('user_data').select('data').eq('user_id',currentUser.id).maybeSingle();
+      if(data?.data){
+        S=data.data;
+        if(!S.expenses)S.expenses=[];
+        if(!S.invoices)S.invoices=[];
+        if(!S.profile)S.profile={name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''};
+        if(!S.settings)S.settings={jur:'US'};
+        localStorage.setItem(KEY,JSON.stringify(S)); // keep local in sync
+      } else {
+        // New user — upload any existing localStorage data to Supabase
+        if(S.challenges.length||S.payouts.length)await syncSB();
+      }
+    }catch(e){console.warn('Supabase load error:',e);}
+  }
+
+  if(!S.challenges.length&&!S.payouts.length&&!currentUser)demo();
+  buildYr();
+}
+
+function saveS(){
+  localStorage.setItem(KEY,JSON.stringify(S));
+  document.getElementById('savedAt').textContent='Saving…';
+  if(currentUser)syncSB().then(()=>{
+    const t=new Date();
+    document.getElementById('savedAt').textContent='Saved '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }).catch(()=>{document.getElementById('savedAt').textContent='Sync error';});
+  else{
+    const t=new Date();
+    document.getElementById('savedAt').textContent='Saved '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+async function syncSB(){
+  if(!currentUser)return;
+  await sb.from('user_data').upsert(
+    {user_id:currentUser.id, data:S, updated_at:new Date().toISOString()},
+    {onConflict:'user_id'}
+  );
+}
+
+function uid(){return Math.random().toString(36).substr(2,9);}
+function today(){return new Date().toISOString().substr(0,10);}
+
+function demo(){
+  S.challenges=[
+    {id:uid(),firm:'FTMO',       sz:100000,fee:540, type:'2-Stage',date:'2024-09-01',notes:''},
+    {id:uid(),firm:'FTMO',       sz:100000,fee:540, type:'2-Stage',date:'2024-11-10',notes:'Trailing DD'},
+    {id:uid(),firm:'FundedNext', sz:50000, fee:249, type:'2-Stage',date:'2024-10-05',notes:''},
+    {id:uid(),firm:'FundedNext', sz:50000, fee:249, type:'2-Stage',date:'2024-12-01',notes:''},
+    {id:uid(),firm:'Apex',       sz:50000, fee:167, type:'1-Stage',date:'2024-08-15',notes:'News violation'},
+    {id:uid(),firm:'Apex',       sz:50000, fee:167, type:'1-Stage',date:'2024-09-20',notes:''},
+    {id:uid(),firm:'TopStep',    sz:150000,fee:375, type:'1-Stage',date:'2024-11-01',notes:''},
+    {id:uid(),firm:'PipFarm',    sz:25000, fee:119, type:'2-Stage',date:'2025-01-10',notes:''},
+  ];
+  S.payouts=[
+    {id:uid(),firm:'FTMO',       amt:2100,date:'2024-10-15',meth:'Rise',       sz:100000,notes:'1st payout'},
+    {id:uid(),firm:'FTMO',       amt:3200,date:'2024-11-05',meth:'Rise',       sz:100000,notes:'2nd payout'},
+    {id:uid(),firm:'FundedNext', amt:890, date:'2024-11-20',meth:'USDT (Tron)',sz:50000, notes:''},
+    {id:uid(),firm:'Apex',       amt:1450,date:'2024-10-28',meth:'Bank Wire',  sz:50000, notes:''},
+    {id:uid(),firm:'TopStep',    amt:1800,date:'2024-12-05',meth:'Rise',       sz:150000,notes:'First payout'},
+    {id:uid(),firm:'FTMO',       amt:2700,date:'2025-01-10',meth:'Rise',       sz:100000,notes:''},
+  ];
+  S.expenses=[
+    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro',amt:14.95,date:'2024-09-01',rec:'monthly'},
+    {id:uid(),cat:'VPS / Hosting',vendor:'ForexVPS',amt:29.99,date:'2024-09-01',rec:'monthly'},
+    {id:uid(),cat:'EA / Automation',vendor:'Smart Money EA',amt:197,date:'2024-10-15',rec:'no'},
+  ];
+  saveS();
+}
+
+// ── YEAR FILTER ─────────────────────────────────────────────────
+function buildYr(){
+  const ys=new Set();
+  [...S.challenges,...S.payouts,...S.expenses].forEach(x=>{if(x.date)ys.add(x.date.substr(0,4));});
+  ys.add(String(new Date().getFullYear()));
+  const el=document.getElementById('yrSel'),cur=el.value||'All';
+  el.innerHTML='<option value="All">All Years</option>';
+  [...ys].sort().reverse().forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;el.appendChild(o);});
+  if([...ys].includes(cur))el.value=cur;
+}
+
+function getYr(){return document.getElementById('yrSel').value;}
+function fy(arr){const y=getYr();return y==='All'?arr:arr.filter(x=>x.date&&x.date.startsWith(y));}
+
+// ── METRICS ─────────────────────────────────────────────────────
+function met(chs,pys){
+  const spent=chs.reduce((s,c)=>s+Number(c.fee),0);
+  const earned=pys.reduce((s,p)=>s+Number(p.amt),0);
+  const net=earned-spent,roi=spent>0?(net/spent*100):0;
+  return{spent,earned,net,roi,total:chs.length,
+    avgFee:chs.length?spent/chs.length:0,
+    avgPayout:pys.length?earned/pys.length:0};
+}
+
+// ── RENDER ──────────────────────────────────────────────────────
+function render(){
+  buildYr();
+  const chs=fy(S.challenges),pys=fy(S.payouts);
+  const m=met(chs,pys);
+  renderKPI(m,pys);
+  renderInsight(m,pys);
+  renderQS(m,chs,pys);
+  renderCharts(chs,pys);
+  renderChallenges(chs);
+  renderPayouts(pys);
+  renderFirms(chs,pys);
+  renderTax(chs,pys);
+  renderInvList();
+}
+
+// ── KPI ─────────────────────────────────────────────────────────
+function renderKPI(m,pys){
+  document.getElementById('kpiStrip').innerHTML=`
+    <div class="kpi"><div class="kl">Total Invested</div><div class="kv r">${$$(m.spent)}</div><div class="kf">${m.total} challenges · avg ${$$(m.avgFee)}</div></div>
+    <div class="kpi"><div class="kl">Total Earned</div><div class="kv g">${$$(m.earned)}</div><div class="kf">${pys.length} payouts</div></div>
+    <div class="kpi"><div class="kl">Net P&amp;L</div><div class="kv ${m.net>=0?'g':'r'}">${m.net>=0?'+':''}${$$(m.net)}</div><span class="kpill ${m.net>=0?'pg':'pr'}">${m.net>=0?'↑ Profit':'↓ Underwater'}</span></div>
+    <div class="kpi"><div class="kl">ROI</div><div class="kv ${m.roi>=0?'g':'r'}">${m.roi>=0?'+':''}${m.roi.toFixed(1)}%</div><div class="kf">On total fee spend</div></div>
+    <div class="kpi"><div class="kl">Avg Payout</div><div class="kv g">${$$(m.avgPayout)}</div><div class="kf">Per payout received</div></div>`;
+}
+
+// ── INSIGHT ─────────────────────────────────────────────────────
+function renderInsight(m,pys){
+  const box=document.getElementById('insightBox');
+  if(!m.total){box.innerHTML='';return;}
+  const ft={};pys.forEach(p=>{ft[p.firm]=(ft[p.firm]||0)+Number(p.amt);});
+  const over=Object.entries(ft).filter(([,v])=>v>600).map(([f])=>f);
+  const crypto=pys.filter(p=>p.meth.includes('USDT')||p.meth.includes('Crypto')).length;
+  let extra='';
+  if(over.length&&S.settings.jur==='US')extra+=` <strong>${over.join(', ')}</strong> may issue a 1099 (over $600).`;
+  if(crypto)extra+=` ${crypto} crypto payout${crypto>1?'s':''} — confirm USD value at date of receipt.`;
+  if(m.net>=0){
+    box.innerHTML=`<div class="ins ins-up"><span>✦</span><span>You are <strong>+${$$(m.net)} in profit</strong>. ROI <strong>${m.roi.toFixed(1)}%</strong> · ${pys.length} payouts totalling <strong>${$$(m.earned)}</strong>.${extra}</span></div>`;
+  }else{
+    const owed=Math.abs(m.net),avg=pys.length?m.earned/pys.length:0;
+    box.innerHTML=`<div class="ins ins-dn"><span>⚠</span><span>You are <strong>${$$(owed)} underwater</strong>. Spent <strong>${$$(m.spent)}</strong> in fees, recovered <strong>${$$(m.earned)}</strong>.${avg>0?` ~<strong>${Math.ceil(owed/avg)} more payouts</strong> to break even.`:''}${extra}</span></div>`;
+  }
+}
+
+// ── QUICK STATS ─────────────────────────────────────────────────
+function renderQS(m,chs,pys){
+  // Best firm by ROI
+  const fd=firmD(chs,pys);
+  const bestFirm=Object.keys(fd).sort((a,b)=>{
+    const ra=fd[a].spent>0?(fd[a].earned-fd[a].spent)/fd[a].spent:0;
+    const rb=fd[b].spent>0?(fd[b].earned-fd[b].spent)/fd[b].spent:0;
+    return rb-ra;
+  })[0];
+  const bfRoi=bestFirm&&fd[bestFirm].spent>0?((fd[bestFirm].earned-fd[bestFirm].spent)/fd[bestFirm].spent*100):0;
+
+  // Biggest payout
+  const bigPay=pys.length?Math.max(...pys.map(p=>Number(p.amt))):0;
+  const bigPayFirm=pys.length?pys.find(p=>Number(p.amt)===bigPay)?.firm:'—';
+
+  // Best month
+  const monthly={};
+  pys.forEach(p=>{const k=p.date.substr(0,7);monthly[k]=(monthly[k]||0)+Number(p.amt);});
+  chs.forEach(c=>{const k=c.date.substr(0,7);monthly[k]=(monthly[k]||0)-Number(c.fee);});
+  const bestMo=Object.keys(monthly).sort((a,b)=>monthly[b]-monthly[a])[0];
+  const bestMoVal=bestMo?monthly[bestMo]:0;
+
+  // Profit consistency (% of months with positive net)
+  const moKeys=Object.keys(monthly);
+  const profitableMos=moKeys.filter(k=>monthly[k]>0).length;
+  const consistency=moKeys.length?Math.round(profitableMos/moKeys.length*100):0;
+
+  document.getElementById('qsRow').innerHTML=`
+    <div class="qs"><div class="qs-icon">🏆</div><div class="qs-body"><div class="qs-label">Best Firm (ROI)</div><div class="qs-val ${bfRoi>=0?'g':'r'}">${bestFirm||'—'}</div><div class="qs-sub">${bfRoi>=0?'+':''}${bfRoi.toFixed(1)}% return on fees</div></div></div>
+    <div class="qs"><div class="qs-icon">💰</div><div class="qs-body"><div class="qs-label">Biggest Payout</div><div class="qs-val g">${$$(bigPay)}</div><div class="qs-sub">${bigPayFirm}</div></div></div>
+    <div class="qs"><div class="qs-icon">📅</div><div class="qs-body"><div class="qs-label">Best Month</div><div class="qs-val ${bestMoVal>=0?'g':'r'}">${bestMo?bestMoVal>=0?'+':''+''+$$(bestMoVal):'—'}</div><div class="qs-sub">${bestMo||'No data'}</div></div></div>
+    <div class="qs"><div class="qs-icon">📊</div><div class="qs-body"><div class="qs-label">Profit Consistency</div><div class="qs-val ${consistency>=60?'g':consistency>=40?'y':'r'}">${consistency}%</div><div class="qs-sub">${profitableMos}/${moKeys.length} months positive</div></div></div>`;
+}
+
+// ── CHARTS ──────────────────────────────────────────────────────
+const CC={};
+const GR='#27272a',MU='#52525b',TF={family:"'Inter',sans-serif",size:11};
+function kc(id){if(CC[id]){CC[id].destroy();delete CC[id];}}
+const GC=id=>document.getElementById(id).getContext('2d');
+function sc(){return{x:{grid:{color:GR,drawBorder:false},ticks:{color:MU,font:TF}},y:{grid:{color:GR,drawBorder:false},ticks:{color:MU,font:TF,callback:v=>'$'+Number(v).toLocaleString()}}};}
+
+function renderCharts(chs,pys){
+  // P&L
+  kc('pl');
+  const ev=[...chs.map(c=>({d:c.date,v:-Number(c.fee)})),...pys.map(p=>({d:p.date,v:Number(p.amt)}))].sort((a,b)=>a.d.localeCompare(b.d));
+  if(ev.length){
+    let run=0;const lb=[],da=[];
+    ev.forEach(e=>{run+=e.v;lb.push(e.d.substr(5));da.push(run);});
+    const pos=da[da.length-1]>=0,col=pos?'#22c55e':'#ef4444';
+    CC['pl']=new Chart(GC('cPL'),{type:'line',data:{labels:lb,datasets:[{data:da,borderColor:col,backgroundColor:pos?'rgba(34,197,94,.07)':'rgba(239,68,68,.07)',fill:true,tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:da.map(v=>v>=0?'#22c55e':'#ef4444')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:sc()}});
+  }
+
+  // Fee Distribution by Firm
+  kc('out');
+  const fd2=firmD(chs,pys);const fk2=Object.keys(fd2);
+  if(fk2.length){
+    const FCOLS=['#3b82f6','#22c55e','#a855f7','#eab308','#ef4444','#f97316','#06b6d4'];
+    CC['out']=new Chart(GC('cOut'),{type:'doughnut',data:{labels:fk2,datasets:[{data:fk2.map(f=>fd2[f].spent),backgroundColor:fk2.map((_,i)=>FCOLS[i%FCOLS.length]),borderColor:'#131316',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{display:true,position:'bottom',labels:{color:MU,font:TF,padding:10,boxWidth:9}}}}});
+  }
+
+  // Firm bar
+  kc('firm');
+  const fd=firmD(chs,pys);const fk=Object.keys(fd);
+  if(fk.length){
+    CC['firm']=new Chart(GC('cFirm'),{type:'bar',data:{labels:fk,datasets:[{label:'Fees',data:fk.map(f=>fd[f].spent),backgroundColor:'rgba(239,68,68,.6)',borderRadius:4},{label:'Payouts',data:fk.map(f=>fd[f].earned),backgroundColor:'rgba(34,197,94,.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
+  }
+
+  // Payment method
+  kc('meth');
+  const mths={};pys.forEach(p=>{mths[p.meth]=(mths[p.meth]||0)+Number(p.amt);});
+  const mk=Object.keys(mths);
+  if(mk.length){
+    const COLS=['#3b82f6','#22c55e','#a855f7','#eab308','#ef4444','#f97316','#06b6d4'];
+    CC['meth']=new Chart(GC('cMethod'),{type:'doughnut',data:{labels:mk,datasets:[{data:mk.map(k=>mths[k]),backgroundColor:mk.map((_,i)=>COLS[i%COLS.length]),borderColor:'#131316',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:MU,font:TF,padding:8,boxWidth:8}}}}});
+  }
+
+  // Quarterly
+  kc('q');
+  const qtr={};
+  [...chs.map(c=>({d:c.date,v:-Number(c.fee)})),...pys.map(p=>({d:p.date,v:Number(p.amt)}))].forEach(e=>{
+    if(!e.d)return;const q=Math.ceil(parseInt(e.d.substr(5,2))/3);const k=`${e.d.substr(0,4)} Q${q}`;
+    qtr[k]=(qtr[k]||0)+e.v;
+  });
+  const qk=Object.keys(qtr).sort();
+  if(qk.length){
+    CC['q']=new Chart(GC('cQ'),{type:'bar',data:{labels:qk,datasets:[{data:qk.map(k=>qtr[k]),backgroundColor:qk.map(k=>qtr[k]>=0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:sc()}});
+  }
+
+  // Monthly cash flow
+  kc('mo');
+  const mo={};
+  chs.forEach(c=>{const k=c.date.substr(0,7);if(!mo[k])mo[k]={s:0,e:0};mo[k].s+=Number(c.fee);});
+  pys.forEach(p=>{const k=p.date.substr(0,7);if(!mo[k])mo[k]={s:0,e:0};mo[k].e+=Number(p.amt);});
+  const mok=Object.keys(mo).sort();
+  if(mok.length){
+    CC['mo']=new Chart(GC('cMo'),{type:'bar',data:{labels:mok,datasets:[{label:'Fees Out',data:mok.map(k=>-mo[k].s),backgroundColor:'rgba(239,68,68,.5)',borderRadius:4},{label:'Payouts In',data:mok.map(k=>mo[k].e),backgroundColor:'rgba(34,197,94,.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
+  }
+
+  // Cumulative fees vs payouts
+  kc('cum');
+  const sorted=[...chs.map(c=>({d:c.date,fee:Number(c.fee),pay:0})),...pys.map(p=>({d:p.date,fee:0,pay:Number(p.amt)}))].sort((a,b)=>a.d.localeCompare(b.d));
+  if(sorted.length){
+    let cf=0,cp=0;const lb2=[],df=[],dp2=[];
+    sorted.forEach(e=>{cf+=e.fee;cp+=e.pay;lb2.push(e.d.substr(5));df.push(cf);dp2.push(cp);});
+    CC['cum']=new Chart(GC('cCum'),{type:'line',data:{labels:lb2,datasets:[
+      {label:'Cumulative Fees',data:df,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.05)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
+      {label:'Cumulative Payouts',data:dp2,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.05)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
+  }
+}
+
+// ── CHALLENGES TABLE ────────────────────────────────────────────
+function renderChallenges(chs){
+  const el=document.getElementById('chWrap');
+  if(!chs.length){el.innerHTML=`<div class="tch"><span class="tct">All Challenges</span></div>`+empty('📋','No challenges yet.');return;}
+  const rows=[...chs].reverse().map(c=>`<tr>
+    <td style="color:var(--text);font-weight:600">${c.firm}</td>
+    <td>${numF(c.sz)}</td>
+    <td class="r" style="font-weight:600">${$$(c.fee)}</td>
+    <td style="color:var(--text2)">${c.type}</td>
+    <td style="color:var(--text3)">${c.date}</td>
+    <td style="color:var(--text3);font-size:11px">${c.notes||'—'}</td>
+    <td><button class="btn-del" onclick="delCh('${c.id}')">Remove</button></td>
+  </tr>`).join('');
+  el.innerHTML=`<div class="tch"><span class="tct">All Challenges</span><span class="tcm">${chs.length} entries</span></div>
+    <table><thead><tr><th>Firm</th><th>Size</th><th>Fee</th><th>Type</th><th>Date</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── PAYOUTS TABLE ───────────────────────────────────────────────
+function renderPayouts(pys){
+  const el=document.getElementById('pyWrap');
+  if(!pys.length){el.innerHTML=`<div class="tch"><span class="tct">All Payouts</span></div>`+empty('💰','No payouts yet.');return;}
+  const rows=[...pys].reverse().map(p=>`<tr>
+    <td style="color:var(--text);font-weight:600">${p.firm}</td>
+    <td class="g" style="font-weight:700">${$$(p.amt)}</td>
+    <td style="color:var(--text3)">${p.date}</td>
+    <td style="color:var(--text2)">${p.meth}</td>
+    <td style="color:var(--text3)">${p.sz?numF(p.sz):'—'}</td>
+    <td style="color:var(--text3);font-size:11px">${p.notes||'—'}</td>
+    <td style="display:flex;gap:6px;align-items:center">
+      <button class="btn-inv" onclick="genInv('${p.id}')">📄 Invoice</button>
+      <button class="btn-del" onclick="delPy('${p.id}')">Remove</button>
+    </td>
+  </tr>`).join('');
+  el.innerHTML=`<div class="tch"><span class="tct">All Payouts</span><span class="tcm">${pys.length} entries</span></div>
+    <table><thead><tr><th>Firm</th><th>Amount</th><th>Date</th><th>Method</th><th>Account</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── FIRM ANALYSIS ───────────────────────────────────────────────
+function firmD(chs,pys){
+  const fd={};
+  chs.forEach(c=>{if(!fd[c.firm])fd[c.firm]={spent:0,earned:0};fd[c.firm].spent+=Number(c.fee);});
+  pys.forEach(p=>{if(!fd[p.firm])fd[p.firm]={spent:0,earned:0};fd[p.firm].earned+=Number(p.amt);});
+  return fd;
+}
+
+function renderFirms(chs,pys){
+  const fd=firmD(chs,pys),keys=Object.keys(fd);
+  if(!keys.length){document.getElementById('firmWrap').innerHTML=empty('🏢','No data yet.');return;}
+  const maxV=Math.max(...keys.map(f=>Math.max(fd[f].spent,fd[f].earned)),1);
+  const sorted=[...keys].sort((a,b)=>{const ra=fd[a].spent>0?(fd[a].earned-fd[a].spent)/fd[a].spent:0,rb=fd[b].spent>0?(fd[b].earned-fd[b].spent)/fd[b].spent:0;return rb-ra;});
+  const medals=['🥇','🥈','🥉'];
+  const rows=sorted.map((f,i)=>{
+    const d=fd[f],net=d.earned-d.spent,roi=d.spent>0?(net/d.spent*100):0;
+    const sp=(d.spent/maxV*100).toFixed(1),ep=(d.earned/maxV*100).toFixed(1);
+    return `<tr>
+      <td style="color:var(--text);font-weight:700">${medals[i]||''} ${f}</td>
+      <td class="r">${$$(d.spent)}</td><td class="g">${$$(d.earned)}</td>
+      <td style="font-weight:700;color:${net>=0?'var(--green)':'var(--red)'}">${net>=0?'+':''}${$$(net)}</td>
+      <td style="font-weight:700;color:${roi>=0?'var(--green)':'var(--red)'}">${roi>=0?'+':''}${roi.toFixed(1)}%</td>
+      <td style="min-width:90px">
+        <div class="mb"><span class="mbl r">out</span><div class="mbt"><div class="mbf" style="width:${sp}%;background:var(--red);opacity:.7"></div></div></div>
+        <div class="mb"><span class="mbl g">in</span><div class="mbt"><div class="mbf" style="width:${ep}%;background:var(--green)"></div></div></div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('firmWrap').innerHTML=`<div class="tc"><div class="tch"><span class="tct">ROI by Firm</span><span class="tcm">Ranked by return on fees</span></div>
+    <table><thead><tr><th>Firm</th><th>Invested</th><th>Earned</th><th>Net P&L</th><th>ROI</th><th>Ratio</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+// ── TAX ─────────────────────────────────────────────────────────
+let jur=S.settings.jur||'US';
+function setJur(j){jur=j;S.settings.jur=j;saveS();document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===j));renderTax(fy(S.challenges),fy(S.payouts));}
+
+function renderTax(chs,pys){
+  chs=chs||fy(S.challenges);pys=pys||fy(S.payouts);
+  const exps=fy(S.expenses);
+  const gross=pys.reduce((s,p)=>s+Number(p.amt),0);
+  const fees=chs.reduce((s,c)=>s+Number(c.fee),0);
+  const other=exps.reduce((s,e)=>s+Number(e.amt),0);
+  const deduct=fees+other,net=gross-deduct;
+  const tax=jur==='US'?calcUS(net):jur==='UK'?calcUK(net):{total:Math.max(0,net*0.25),lines:[{l:'Estimated (25% placeholder)',v:Math.max(0,net*0.25)}]};
+  const ft={};pys.forEach(p=>{ft[p.firm]=(ft[p.firm]||0)+Number(p.amt);});
+  const over600=Object.entries(ft).filter(([,v])=>v>600).map(([f])=>f);
+
+  // Quarterly income (US only)
+  let qHtml='';
+  if(jur==='US'){
+    const dues=['Apr 15','Jun 15','Sep 15','Jan 15'];
+    qHtml=`<div class="q-row">${[1,2,3,4].map((q,i)=>{
+      const ms=[(q-1)*3+1,(q-1)*3+2,(q-1)*3+3];
+      const qi=pys.filter(p=>parseInt(p.date.substr(5,2))>=ms[0]&&parseInt(p.date.substr(5,2))<=ms[2]).reduce((s,p)=>s+Number(p.amt),0);
+      const qf=chs.filter(c=>parseInt(c.date.substr(5,2))>=ms[0]&&parseInt(c.date.substr(5,2))<=ms[2]).reduce((s,c)=>s+Number(c.fee),0);
+      const qn=qi-qf;
+      return `<div class="qc"><div class="ql">Q${q}</div><div class="qv ${qn>=0?'g':'r'}">${qn>=0?'+':''}${$$(qn)}</div><div class="qd">Income ${$$(qi)} · Fees ${$$(qf)}</div><div class="qd" style="color:var(--yellow)">Est. due: ${dues[i]}</div></div>`;
+    }).join('')}</div>`;
+  }
+
+  let notice=jur==='US'
+    ?`<strong>US:</strong> Prop payouts are generally <strong>ordinary self-employment income</strong>, not capital gains (Schedule C). Challenge fees are deductible. USDT payouts are taxable at USD value on date of receipt. If you expect to owe >$1,000 this year, make quarterly estimated payments. ${over600.length?`<span style="color:var(--yellow)">⚠ ${over600.join(', ')} may issue a 1099-NEC (over $600).</span>`:''} Always consult a CPA.`
+    :jur==='UK'
+    ?`<strong>UK:</strong> Prop trading income is generally <strong>trading income</strong> subject to Income Tax and NI (not gambling or CGT). Challenge fees are likely allowable deductions. UK tax year: 6 Apr–5 Apr. Self Assessment deadline: 31 Jan. Consult an accountant.`
+    :`<strong>International:</strong> Net taxable income: ${$$(net)}. Tax treatment varies by country. Consult a local tax professional.`;
+
+  const expRows=exps.length
+    ?[...exps].reverse().map(e=>`<tr><td style="color:var(--text)">${e.cat}</td><td style="color:var(--text2)">${e.vendor||'—'}</td><td class="r" style="font-weight:600">${$$(e.amt)}</td><td style="color:var(--text3)">${e.date}</td><td><button class="btn-del" onclick="delExp('${e.id}')">Remove</button></td></tr>`).join('')
+    :`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No additional expenses. Challenge fees are auto-imported above.</td></tr>`;
+
+  document.getElementById('taxWrap').innerHTML=`
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px;">
+      <div class="kpi"><div class="kl">Gross Income</div><div class="kv g">${$$(gross)}</div><div class="kf">${pys.length} payouts · ${getYr()}</div></div>
+      <div class="kpi"><div class="kl">Total Deductions</div><div class="kv r">${$$(deduct)}</div><div class="kf">Fees + ${exps.length} expenses</div></div>
+      <div class="kpi"><div class="kl">Net Taxable</div><div class="kv ${net>=0?'y':'g'}">${$$(net)}</div><div class="kf">${net<=0?'No taxable income':'Subject to tax'}</div></div>
+      <div class="kpi"><div class="kl">Est. Tax (${jur})</div><div class="kv r">${$$(Math.max(0,tax.total))}</div><div class="kf">${tax.total>0?'Consult a CPA':'—'}</div></div>
+    </div>
+    ${qHtml}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div class="tc">
+        <div class="tch"><span class="tct">Income Breakdown</span></div>
+        ${pys.length?pys.slice().reverse().map(p=>`<div class="tax-row"><span class="tax-lbl">${p.firm} · ${p.date} · ${p.meth}</span><span class="tax-val g">${$$(p.amt)}</span></div>`).join(''):'<div style="padding:16px;color:var(--text3);font-size:12px">No payouts</div>'}
+        <div class="tax-tot"><span>Gross Income</span><span class="g">${$$(gross)}</span></div>
+      </div>
+      <div class="tc">
+        <div class="tch"><span class="tct">Tax Estimate · ${jur}</span></div>
+        <div class="tax-row"><span class="tax-lbl">Gross Income</span><span class="tax-val g">${$$(gross)}</span></div>
+        <div class="tax-row"><span class="tax-lbl">Challenge Fees</span><span class="tax-val r">−${$$(fees)}</span></div>
+        <div class="tax-row"><span class="tax-lbl">Other Expenses</span><span class="tax-val r">−${$$(other)}</span></div>
+        <div class="tax-row" style="border-top:1px solid var(--border)"><span class="tax-lbl">Net Taxable</span><span class="tax-val ${net>=0?'y':'g'}">${$$(net)}</span></div>
+        ${tax.lines.map(l=>`<div class="tax-row"><span class="tax-lbl">${l.l}</span><span class="tax-val ${l.v>=0?'r':''}">${l.v<0?'−'+$$(Math.abs(l.v)):$$(l.v)}</span></div>`).join('')}
+        <div class="tax-tot"><span>Estimated Tax</span><span class="r">${$$(Math.max(0,tax.total))}</span></div>
+      </div>
+    </div>
+    <div class="tax-notice">${notice}</div>
+    <div class="tc" style="margin-top:10px">
+      <div class="tch"><span class="tct">Business Expenses</span><span class="tcm">Challenge fees auto-imported · Add others below</span></div>
+      <table><thead><tr><th>Category</th><th>Vendor</th><th>Amount</th><th>Date</th><th></th></tr></thead><tbody>${expRows}</tbody></table>
+    </div>`;
+}
+
+function calcUS(net){
+  if(net<=0)return{total:0,lines:[{l:'No taxable income',v:0}]};
+  const base=net*.9235;
+  const cap=168600;
+  const se=base<=cap?base*.153:cap*.153+(base-cap)*.029;
+  const agi=net-se/2;
+  const bk=[[11600,.10],[47150,.12],[100525,.22],[191950,.24],[243725,.32],[609350,.35],[Infinity,.37]];
+  let it=0,prev=0;
+  for(const[lim,rate]of bk){const chunk=Math.min(agi,lim)-prev;if(chunk<=0)break;it+=chunk*rate;prev=lim;if(agi<=lim)break;}
+  return{total:Math.round(se+it),lines:[
+    {l:'Self-Employment Tax',v:Math.round(se)},
+    {l:'SE Deduction (½ SE)',v:-Math.round(se/2)},
+    {l:'Federal Income Tax (est.)',v:Math.round(it)},
+    {l:'Quarterly Payment (÷4)',v:Math.round((se+it)/4)},
+  ]};
+}
+
+function calcUK(net){
+  if(net<=0)return{total:0,lines:[{l:'No taxable income',v:0}]};
+  const PA=12570,taxable=Math.max(0,net-PA);
+  let it=taxable<=37700?taxable*.20:taxable<=125140?37700*.20+(taxable-37700)*.40:37700*.20+(125140-37700)*.40+(taxable-125140)*.45;
+  const niBase=Math.max(0,net-PA);
+  const ni=niBase<=37700?niBase*.06:37700*.06+(niBase-37700)*.02;
+  return{total:Math.round(it+ni+179),lines:[{l:'Personal Allowance',v:-PA},{l:'Income Tax',v:Math.round(it)},{l:'Class 4 NI',v:Math.round(ni)},{l:'Class 2 NI',v:179}]};
+}
+
+// ── INVOICE GENERATION ─────────────────────────────────────────
+function nextInvNum(){
+  const yr=new Date().getFullYear();
+  const existing=S.invoices.filter(i=>i.num.includes(String(yr)));
+  const n=existing.length+1;
+  return `INV-${yr}-${String(n).padStart(3,'0')}`;
+}
+
+function genInv(payoutId){
+  const p=S.payouts.find(x=>x.id===payoutId); if(!p)return;
+  const pr=S.profile;
+  if(!pr.name){
+    alert('Please fill in your Profile first (click the 👤 icon in the top right) — your name and details appear on the invoice.');
+    openMo('profile');return;
+  }
+  // Check if invoice for this payout already exists
+  const existing=S.invoices.find(i=>i.payoutId===payoutId);
+  if(existing){showInv(existing);return;}
+  const inv={
+    id:uid(),payoutId,
+    num:nextInvNum(),
+    date:p.date,
+    firm:p.firm,
+    amt:p.amt,
+    meth:p.meth,
+    notes:p.notes,
+    createdAt:new Date().toISOString(),
+  };
+  S.invoices.push(inv);
+  saveS();renderInvList();
+  showInv(inv);
+}
+
+function showInv(inv){
+  const pr=S.profile;
+  const fromName=pr.biz||pr.name;
+  const fromDetail=[pr.addr,pr.city&&pr.state?`${pr.city}, ${pr.state}`:pr.city||pr.state,pr.zip,pr.country,pr.email,pr.phone,pr.tax?`Tax ID: ${pr.tax}`:''].filter(Boolean).join('<br>');
+  const dateF=new Date(inv.date+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const moLabel=new Date(inv.date+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long'});
+
+  const html=`<div class="inv-sheet">
+    <div class="inv-header">
+      <div>
+        <div class="inv-from-name">${fromName}</div>
+        <div class="inv-from-detail">${fromDetail}</div>
+      </div>
+      <div class="inv-badge">
+        <div class="inv-word">INVOICE</div>
+        <div class="inv-num">${inv.num}</div>
+        <div class="inv-date">Date: ${dateF}</div>
+      </div>
+    </div>
+    <div class="inv-parties">
+      <div>
+        <div class="inv-party-label">From</div>
+        <div class="inv-party-name">${fromName}</div>
+        <div class="inv-party-detail">${fromDetail}</div>
+      </div>
+      <div>
+        <div class="inv-party-label">Bill To</div>
+        <div class="inv-party-name">${inv.firm}</div>
+        <div class="inv-party-detail">Proprietary Trading Firm</div>
+      </div>
+    </div>
+    <table class="inv-table">
+      <thead><tr><th>Description</th><th>Date</th><th>Method</th><th>Amount</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Trading Performance Fee — ${moLabel}${inv.notes?`<br><span style="font-size:11px;color:#888">${inv.notes}</span>`:''}</td>
+          <td>${dateF}</td>
+          <td>${inv.meth}</td>
+          <td>$${Number(inv.amt).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="inv-totals">
+      <div class="inv-total-row"><span>Subtotal</span><span>$${Number(inv.amt).toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
+      <div class="inv-total-row"><span>Tax</span><span>$0.00</span></div>
+      <div class="inv-total-row big"><span>Total</span><span>$${Number(inv.amt).toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
+    </div>
+    ${pr.footer?`<div class="inv-footer">${pr.footer.replace(/\n/g,'<br>')}</div>`:''}
+    <div class="inv-footer" style="margin-top:${pr.footer?'12px':'40px'}">Generated by PropFirmTerminal.com &nbsp;·&nbsp; ${inv.num} &nbsp;·&nbsp; ${dateF}</div>
+  </div>`;
+
+  document.getElementById('invPreview').innerHTML=html;
+  document.getElementById('printArea').innerHTML=html;
+  openMo('inv');
+}
+
+function printInv(){
+  window.print();
+}
+
+function renderInvList(){
+  const el=document.getElementById('invListWrap');
+  if(!S.invoices.length){
+    el.innerHTML=`<div class="tc">${empty('📄','No invoices yet. Click "📄 Invoice" on any payout row to generate one.')}</div>`;
+    return;
+  }
+  const items=[...S.invoices].reverse().map(inv=>`
+    <div class="inv-item">
+      <div class="inv-item-left">
+        <div class="inv-item-num">${inv.num}</div>
+        <div class="inv-item-detail">${inv.firm} · ${inv.date} · ${inv.meth}</div>
+      </div>
+      <div class="inv-item-right">
+        <div class="inv-item-amt">${$$(inv.amt)}</div>
+        <button class="btn btn-ghost btn-xs" onclick="showInv(S.invoices.find(i=>i.id==='${inv.id}'))">View</button>
+        <button class="btn-del" onclick="delInv('${inv.id}')">Remove</button>
+      </div>
+    </div>`).join('');
+  el.innerHTML=`<div class="inv-list">${items}</div>`;
+}
+
+function delInv(id){S.invoices=S.invoices.filter(i=>i.id!==id);saveS();renderInvList();}
+
+// ── BREAKEVEN ───────────────────────────────────────────────────
+function calcBE(){
+  const fee=+document.getElementById('b_fee').value||0,sz=+document.getElementById('b_sz').value||0,
+        sp=+document.getElementById('b_sp').value||0,tg=+document.getElementById('b_tg').value||0,
+        mo=+document.getElementById('b_mo').value||0;
+  if(!fee||!sz||!sp||!mo){document.getElementById('beOut').innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:20px;color:var(--text3);font-size:13px;text-align:center">Fill in the parameters to see your analysis.</div>`;return;}
+  const pp=sz*(tg/100)*(sp/100),mp=sz*(mo/100)*(sp/100),mths=mp>0?Math.ceil(fee/mp):Infinity,mx=Math.floor(pp/fee);
+  const sc=[1,2,3,5].map(n=>`<div class="res-row"><span class="rl">${n} fail${n>1?'s':''} + 1 pass</span><span style="font-weight:600;color:${(pp-fee*n)>=0?'var(--green)':'var(--red)'}">${(pp-fee*n)>=0?'+':''}${$$(pp-fee*n)}</span></div>`).join('');
+  document.getElementById('beOut').innerHTML=`<div class="res-card">
+    <div class="res-sec">Single Pass</div>
+    <div class="res-row"><span class="rl">Profit on pass</span><span style="font-weight:600;color:var(--green)">+${$$(pp)}</span></div>
+    <div class="res-row"><span class="rl">Monthly payout estimate</span><span style="font-weight:600;color:var(--green)">+${$$(mp)}</span></div>
+    <div class="res-row"><span class="rl">Months to recover fee</span><span style="font-weight:600;color:${isFinite(mths)&&mths<=2?'var(--green)':'var(--red)'}">${isFinite(mths)?mths+' mo':'∞'}</span></div>
+    <div class="res-row"><span class="rl">Fee as % of profit target</span><span style="font-weight:600">${(fee/(sz*tg/100)*100).toFixed(1)}%</span></div>
+    <div class="res-sec">Failure Scenarios</div>
+    ${sc}
+    <div class="res-row"><span class="rl">Max fails before profit wiped</span><span style="font-weight:700;color:var(--red)">${mx} failure${mx!==1?'s':''}</span></div>
+  </div>`;
+}
+
+// ── PROFILE ─────────────────────────────────────────────────────
+function openProfile(){
+  const p=S.profile;
+  ['name','biz','addr','city','state','country','zip','email','phone','tax','footer'].forEach(k=>{
+    const el=document.getElementById('pr_'+k);if(el)el.value=p[k]||'';
+  });
+  document.getElementById('pr_jur').value=S.settings.jur||'US';
+}
+
+function saveProfile(){
+  ['name','biz','addr','city','state','country','zip','email','phone','tax','footer'].forEach(k=>{
+    const el=document.getElementById('pr_'+k);if(el)S.profile[k]=el.value.trim();
+  });
+  S.settings.jur=document.getElementById('pr_jur').value;
+  jur=S.settings.jur;
+  document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));
+  saveS();closeMo('profile');render();
+}
+
+// ── MODALS ──────────────────────────────────────────────────────
+function openMo(t){
+  if(t==='ch')document.getElementById('ch_date').value=today();
+  if(t==='py')document.getElementById('py_date').value=today();
+  if(t==='exp')document.getElementById('ex_date').value=today();
+  if(t==='profile')openProfile();
+  document.getElementById('ov-'+t).classList.add('open');
+}
+function closeMo(t){document.getElementById('ov-'+t).classList.remove('open');}
+document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+function saveCh(){
+  const firm=document.getElementById('ch_firm').value.trim(),fee=document.getElementById('ch_fee').value,date=document.getElementById('ch_date').value;
+  if(!firm||!fee||!date){alert('Firm, Fee, and Date required.');return;}
+  S.challenges.push({id:uid(),firm,sz:+document.getElementById('ch_sz').value||0,fee:+fee,type:document.getElementById('ch_type').value,date,notes:document.getElementById('ch_notes').value.trim()});
+  saveS();closeMo('ch');['ch_firm','ch_sz','ch_fee','ch_notes'].forEach(i=>document.getElementById(i).value='');render();
+}
+
+function savePy(){
+  const firm=document.getElementById('py_firm').value.trim(),amt=document.getElementById('py_amt').value,date=document.getElementById('py_date').value;
+  if(!firm||!amt||!date){alert('Firm, Amount, and Date required.');return;}
+  S.payouts.push({id:uid(),firm,amt:+amt,date,meth:document.getElementById('py_meth').value,sz:+document.getElementById('py_sz').value||0,notes:document.getElementById('py_notes').value.trim()});
+  saveS();closeMo('py');['py_firm','py_amt','py_sz','py_notes'].forEach(i=>document.getElementById(i).value='');render();
+}
+
+function saveExp(){
+  const amt=document.getElementById('ex_amt').value,date=document.getElementById('ex_date').value;
+  if(!amt||!date){alert('Amount and Date required.');return;}
+  S.expenses.push({id:uid(),cat:document.getElementById('ex_cat').value,vendor:document.getElementById('ex_vendor').value.trim(),amt:+amt,date,rec:document.getElementById('ex_rec').value});
+  saveS();closeMo('exp');['ex_amt','ex_vendor','ex_date'].forEach(i=>document.getElementById(i).value='');render();
+}
+
+function delCh(id){S.challenges=S.challenges.filter(c=>c.id!==id);saveS();render();}
+function delPy(id){S.payouts=S.payouts.filter(p=>p.id!==id);saveS();render();}
+function delExp(id){S.expenses=S.expenses.filter(e=>e.id!==id);saveS();render();}
+
+// ── EXPORT ──────────────────────────────────────────────────────
+function exportCSV(type){
+  let h=[],rows=[];
+  if(type==='ch'){h=['Firm','Account Size','Fee','Type','Date','Notes'];rows=S.challenges.map(c=>[c.firm,c.sz,c.fee,c.type,c.date,c.notes]);}
+  else if(type==='py'){h=['Firm','Amount','Date','Method','Account Size','Notes'];rows=S.payouts.map(p=>[p.firm,p.amt,p.date,p.meth,p.sz,p.notes]);}
+  else if(type==='firms'){const fd=firmD(fy(S.challenges),fy(S.payouts));h=['Firm','Invested','Earned','Net PL','ROI %'];rows=Object.entries(fd).map(([f,d])=>{const n=d.earned-d.spent,roi=d.spent>0?(n/d.spent*100):0;return[f,d.spent,d.earned,n,roi.toFixed(1)];});}
+  else if(type==='tax'){const y=getYr();h=['Type','Description','Amount','Date','Category'];fy(S.payouts).forEach(p=>rows.push(['Income',p.firm,p.amt,p.date,'Payout']));fy(S.challenges).forEach(c=>rows.push(['Expense',c.firm+' Challenge Fee',-c.fee,c.date,'Challenge Fee']));fy(S.expenses).forEach(e=>rows.push(['Expense',e.vendor||e.cat,-e.amt,e.date,e.cat]));}
+  const csv=[h,...rows].map(r=>r.map(v=>'"'+(v||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  dl(`PFT_${type}_${new Date().toISOString().substr(0,10)}.csv`,csv,'text/csv');
+}
+
+function dl(name,content,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=name;a.click();}
+
+// ── SEG (jurisdiction) ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));
+});
+
+// ── NAV HIGHLIGHT ON SCROLL ──────────────────────────────────────
+const SECS=['overview','challenges','payouts','firms','tax','breakeven','invoices'];
+window.addEventListener('scroll',()=>{
+  const scrollY=window.scrollY+80;
+  let active='overview';
+  SECS.forEach(id=>{const el=document.getElementById(id);if(el&&el.offsetTop<=scrollY)active=id;});
+  document.querySelectorAll('.na').forEach((a,i)=>{
+    const href=a.getAttribute('href');
+    a.classList.toggle('on',href==='#'+active);
+  });
+},{passive:true});
+
+// ── HELPERS ─────────────────────────────────────────────────────
+function $$(n){const a=Math.abs(Number(n));return(n<0?'-':'')+'$'+a.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function numF(n){return'$'+Number(n).toLocaleString('en-US');}
+function empty(i,t){return`<div class="empty"><div class="ei">${i}</div><div class="et">${t}</div></div>`;}
+
+// ── INIT ─────────────────────────────────────────────────────────
+(async function init(){
+  // Check for existing session (Supabase stores it in localStorage automatically)
+  const {data:{session}} = await sb.auth.getSession();
+  currentUser = session?.user??null;
+  if(currentUser){
+    document.getElementById('authWrap').style.display='none';
+    document.getElementById('appWrap').style.display='block';
+    document.getElementById('userBadge').style.display='flex';
+    document.getElementById('userEmail').textContent=currentUser.email;
+    await loadS();
+    jur=S.settings.jur||'US';
+    render();
+    setTimeout(()=>{document.querySelectorAll('#jurSeg button').forEach((b,i)=>b.classList.toggle('active',['US','UK','OTHER'][i]===jur));},0);
+  }
+  // If no session, authWrap stays visible (default)
+})();
+</script>
+
+<!-- seg style (inline, small) -->
+<style>
+.seg{display:flex;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.seg button{background:none;border:none;color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;padding:5px 12px;cursor:pointer;transition:background .15s,color .15s}
+.seg button.active{background:var(--blue);color:#fff;font-weight:600}
+</style>
+</body>
+</html>
