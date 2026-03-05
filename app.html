@@ -420,7 +420,7 @@
     <div class="sec-hd">
       <div class="sec-title"><span class="sec-dot" style="background:var(--purple)"></span>Invoices</div>
       <div class="sec-actions">
-        <span style="font-size:12px;color:var(--text3)">Generate invoices from any payout row above ↑</span>
+        <span style="font-size:12px;color:var(--text3)">Click Generate on any payout to create an invoice</span>
       </div>
     </div>
     <div id="invListWrap"></div>
@@ -1510,22 +1510,29 @@ function printInv(){
 
 function renderInvList(){
   const el=document.getElementById('invListWrap');
-  if(!S.invoices.length){
-    el.innerHTML=`<div class="tc">${empty('📄','No invoices yet. Click "📄 Invoice" on any payout row to generate one.')}</div>`;
+  const pys=fy(S.payouts);
+  if(!pys.length){
+    el.innerHTML=`<div class="tc">${empty('📄','No payouts yet. Add payouts to generate invoices.')}</div>`;
     return;
   }
-  const items=[...S.invoices].reverse().map(inv=>`
-    <div class="inv-item">
+  const sorted=[...pys].sort((a,b)=>b.date.localeCompare(a.date));
+  const items=sorted.map(p=>{
+    const inv=S.invoices.find(i=>i.payoutId===p.id);
+    return `<div class="inv-item">
       <div class="inv-item-left">
-        <div class="inv-item-num">${inv.num}</div>
-        <div class="inv-item-detail">${inv.firm} · ${inv.date} · ${inv.meth}</div>
+        <div class="inv-item-num">${inv?inv.num:'—'}</div>
+        <div class="inv-item-detail">${p.firm} · ${p.date} · ${p.meth||''}</div>
       </div>
       <div class="inv-item-right">
-        <div class="inv-item-amt">${$$(inv.amt)}</div>
-        <button class="btn btn-ghost btn-xs" onclick="showInv(S.invoices.find(i=>i.id==='${inv.id}'))">View</button>
-        <button class="btn-del" onclick="delInv('${inv.id}')">Remove</button>
+        <div class="inv-item-amt">${$$(p.amt)}</div>
+        ${inv
+          ?`<button class="btn btn-ghost btn-xs" onclick="showInv(S.invoices.find(i=>i.id==='${inv.id}'))">View</button>
+             <button class="btn-del" onclick="delInv('${inv.id}')">Remove</button>`
+          :`<button class="btn btn-blue btn-xs" onclick="genInv('${p.id}')">Generate</button>`
+        }
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   el.innerHTML=`<div class="inv-list">${items}</div>`;
 }
 
