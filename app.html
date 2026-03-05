@@ -296,7 +296,6 @@
     <a class="na"     href="#" onclick="navTo('payouts',event)">Payouts</a>
     <a class="na"     href="#" onclick="navTo('firms',event)">Firm Analysis</a>
     <a class="na"     href="#" onclick="navTo('tax',event)">Tax</a>
-    <a class="na"     href="#" onclick="navTo('breakeven',event)">Breakeven</a>
     <a class="na"     href="#" onclick="navTo('invoices',event)">Invoices</a>
   </nav>
   <div class="he">
@@ -414,24 +413,6 @@
     <div id="taxWrap"></div>
   </section>
 
-  <!-- ── BREAKEVEN ── -->
-  <section class="sec" id="breakeven">
-    <div class="sec-hd">
-      <div class="sec-title"><span class="sec-dot" style="background:var(--purple)"></span>Breakeven Calculator</div>
-    </div>
-    <div class="be-grid">
-      <div class="be-inputs">
-        <div class="fg">
-          <div class="field"><label>Challenge Fee ($)</label><input type="number" id="b_fee" placeholder="149" oninput="calcBE()"/></div>
-          <div class="field"><label>Account Size ($)</label><input type="number" id="b_sz"  placeholder="100000" oninput="calcBE()"/></div>
-          <div class="field"><label>Profit Split (%)</label><input type="number" id="b_sp"  placeholder="80" oninput="calcBE()"/></div>
-          <div class="field"><label>Profit Target (%)</label><input type="number" id="b_tg" placeholder="10" oninput="calcBE()"/></div>
-        </div>
-        <div class="field"><label>Expected Monthly Return on Funded (%)</label><input type="number" id="b_mo" placeholder="5" oninput="calcBE()"/></div>
-      </div>
-      <div id="beOut"><div style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:20px;color:var(--text3);font-size:13px;text-align:center;margin-top:0">Fill in the parameters to see your analysis.</div></div>
-    </div>
-  </section>
 
   <!-- ── INVOICES ── -->
   <section class="sec" id="invoices">
@@ -722,52 +703,57 @@ function uid(){return Math.random().toString(36).substr(2,9);}
 function today(){return new Date().toISOString().substr(0,10);}
 
 function demo(){
+  // Realistic trader journey: starts with $25k PipFarm, fails once, passes,
+  // grows to FTMO $100k, consistent monthly payouts across 2024–2025
   S.challenges=[
-    {id:uid(),firm:'FTMO',        sz:100000,fee:540, type:'2-Stage',date:'2024-01-08',notes:''},
-    {id:uid(),firm:'FTMO',        sz:100000,fee:540, type:'2-Stage',date:'2024-04-15',notes:'Trailing DD'},
-    {id:uid(),firm:'FTMO',        sz:200000,fee:1080,type:'2-Stage',date:'2024-09-01',notes:'Scaled up'},
-    {id:uid(),firm:'FundedNext',  sz:50000, fee:249, type:'2-Stage',date:'2024-02-10',notes:''},
-    {id:uid(),firm:'FundedNext',  sz:100000,fee:499, type:'2-Stage',date:'2024-07-20',notes:''},
-    {id:uid(),firm:'Apex',        sz:50000, fee:167, type:'1-Stage',date:'2024-03-05',notes:'News violation'},
-    {id:uid(),firm:'Apex',        sz:50000, fee:167, type:'1-Stage',date:'2024-05-18',notes:''},
-    {id:uid(),firm:'Apex',        sz:100000,fee:287, type:'1-Stage',date:'2024-10-02',notes:''},
-    {id:uid(),firm:'TopStep',     sz:150000,fee:375, type:'1-Stage',date:'2024-06-01',notes:''},
-    {id:uid(),firm:'TopStep',     sz:150000,fee:375, type:'1-Stage',date:'2024-11-10',notes:''},
-    {id:uid(),firm:'PipFarm',     sz:25000, fee:119, type:'2-Stage',date:'2024-08-14',notes:''},
-    {id:uid(),firm:'PipFarm',     sz:50000, fee:219, type:'2-Stage',date:'2025-01-10',notes:''},
-    {id:uid(),firm:'MyForexFunds',sz:100000,fee:499, type:'2-Stage',date:'2024-03-22',notes:''},
-    {id:uid(),firm:'E8 Funding',  sz:100000,fee:588, type:'2-Stage',date:'2024-12-05',notes:''},
+    {id:uid(),firm:'PipFarm',  sz:25000, fee:119,  type:'2-Stage',date:'2024-01-05',notes:'First attempt — failed Phase 2'},
+    {id:uid(),firm:'PipFarm',  sz:25000, fee:119,  type:'2-Stage',date:'2024-02-12',notes:'Passed — funded'},
+    {id:uid(),firm:'FTMO',     sz:50000, fee:299,  type:'2-Stage',date:'2024-04-03',notes:'Failed Phase 1 — news trade'},
+    {id:uid(),firm:'FTMO',     sz:50000, fee:299,  type:'2-Stage',date:'2024-05-14',notes:'Passed — funded'},
+    {id:uid(),firm:'PipFarm',  sz:50000, fee:219,  type:'2-Stage',date:'2024-07-08',notes:'Scale-up account'},
+    {id:uid(),firm:'FTMO',     sz:100000,fee:540,  type:'2-Stage',date:'2024-09-02',notes:'Scale-up to $100k'},
+    {id:uid(),firm:'Apex',     sz:50000, fee:167,  type:'1-Stage',date:'2024-11-18',notes:'Diversifying firms'},
+    {id:uid(),firm:'PipFarm',  sz:100000,fee:399,  type:'2-Stage',date:'2025-01-06',notes:'$100k PipFarm'},
   ];
   S.payouts=[
-    {id:uid(),firm:'FTMO',        amt:1850, date:'2024-02-18',meth:'Rise',        sz:100000,notes:'1st payout'},
-    {id:uid(),firm:'FTMO',        amt:2400, date:'2024-03-10',meth:'Rise',        sz:100000,notes:'2nd payout'},
-    {id:uid(),firm:'FundedNext',  amt:780,  date:'2024-03-25',meth:'USDT (Tron)', sz:50000, notes:''},
-    {id:uid(),firm:'MyForexFunds',amt:1200, date:'2024-04-30',meth:'Rise',        sz:100000,notes:''},
-    {id:uid(),firm:'FTMO',        amt:3100, date:'2024-05-12',meth:'Rise',        sz:100000,notes:''},
-    {id:uid(),firm:'Apex',        amt:1450, date:'2024-06-08',meth:'Bank Wire',   sz:50000, notes:''},
-    {id:uid(),firm:'TopStep',     amt:2200, date:'2024-07-15',meth:'Rise',        sz:150000,notes:'1st payout'},
-    {id:uid(),firm:'FundedNext',  amt:1650, date:'2024-08-03',meth:'USDT (Tron)', sz:100000,notes:''},
-    {id:uid(),firm:'FTMO',        amt:4200, date:'2024-09-20',meth:'Rise',        sz:200000,notes:'Scaled account'},
-    {id:uid(),firm:'PipFarm',     amt:890,  date:'2024-10-05',meth:'Rise',        sz:25000, notes:''},
-    {id:uid(),firm:'Apex',        amt:2100, date:'2024-10-28',meth:'Bank Wire',   sz:100000,notes:''},
-    {id:uid(),firm:'TopStep',     amt:2800, date:'2024-11-18',meth:'Rise',        sz:150000,notes:''},
-    {id:uid(),firm:'FTMO',        amt:3800, date:'2024-12-10',meth:'Rise',        sz:200000,notes:''},
-    {id:uid(),firm:'E8 Funding',  amt:1500, date:'2025-01-14',meth:'USDT (Tron)', sz:100000,notes:'1st payout'},
-    {id:uid(),firm:'PipFarm',     amt:1200, date:'2025-01-28',meth:'Rise',        sz:50000, notes:''},
-    {id:uid(),firm:'FTMO',        amt:4500, date:'2025-02-08',meth:'Rise',        sz:200000,notes:''},
+    // PipFarm $25k — 80% split, ~5% monthly = $1,000/mo gross → $800 net
+    {id:uid(),firm:'PipFarm',  amt:800,  date:'2024-03-10',meth:'Rise',       sz:25000, notes:'Month 1'},
+    {id:uid(),firm:'PipFarm',  amt:950,  date:'2024-04-09',meth:'Rise',       sz:25000, notes:'Month 2'},
+    // FTMO $50k — 80% split, ~4% monthly = $1,600/mo gross → $1,280 net
+    {id:uid(),firm:'FTMO',     amt:1280, date:'2024-06-14',meth:'Rise',       sz:50000, notes:'Month 1'},
+    {id:uid(),firm:'PipFarm',  amt:1100, date:'2024-06-20',meth:'Rise',       sz:25000, notes:'Month 3'},
+    {id:uid(),firm:'FTMO',     amt:1520, date:'2024-07-12',meth:'Rise',       sz:50000, notes:'Month 2'},
+    // PipFarm $50k scale-up
+    {id:uid(),firm:'PipFarm',  amt:1600, date:'2024-08-08',meth:'Rise',       sz:50000, notes:'Scale-up month 1'},
+    {id:uid(),firm:'FTMO',     amt:1680, date:'2024-08-15',meth:'Rise',       sz:50000, notes:'Month 3'},
+    {id:uid(),firm:'PipFarm',  amt:1850, date:'2024-09-10',meth:'Rise',       sz:50000, notes:''},
+    // FTMO $100k scale-up
+    {id:uid(),firm:'FTMO',     amt:3200, date:'2024-10-11',meth:'Rise',       sz:100000,notes:'$100k — month 1'},
+    {id:uid(),firm:'PipFarm',  amt:1920, date:'2024-10-18',meth:'USDT (Tron)',sz:50000, notes:''},
+    {id:uid(),firm:'FTMO',     amt:3600, date:'2024-11-14',meth:'Rise',       sz:100000,notes:''},
+    // Apex $50k
+    {id:uid(),firm:'Apex',     amt:1400, date:'2024-12-20',meth:'USDT (Tron)',sz:50000, notes:'Month 1'},
+    {id:uid(),firm:'FTMO',     amt:4100, date:'2024-12-12',meth:'Rise',       sz:100000,notes:'Strong month'},
+    // 2025
+    {id:uid(),firm:'PipFarm',  amt:2200, date:'2025-01-16',meth:'Rise',       sz:50000, notes:''},
+    {id:uid(),firm:'FTMO',     amt:3800, date:'2025-01-20',meth:'Rise',       sz:100000,notes:''},
+    {id:uid(),firm:'Apex',     amt:1650, date:'2025-02-07',meth:'USDT (Tron)',sz:50000, notes:''},
+    {id:uid(),firm:'PipFarm',  amt:3100, date:'2025-02-14',meth:'Rise',       sz:100000,notes:'$100k month 1'},
+    {id:uid(),firm:'FTMO',     amt:4400, date:'2025-02-21',meth:'Rise',       sz:100000,notes:''},
   ];
   S.expenses=[
-    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro',  amt:14.95,date:'2024-01-01',rec:'monthly'},
-    {id:uid(),cat:'VPS / Hosting',         vendor:'ForexVPS',         amt:29.99,date:'2024-01-01',rec:'monthly'},
-    {id:uid(),cat:'EA / Automation',       vendor:'Smart Money EA',   amt:197,  date:'2024-02-10',rec:'no'},
-    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro',  amt:14.95,date:'2024-02-01',rec:'monthly'},
-    {id:uid(),cat:'VPS / Hosting',         vendor:'ForexVPS',         amt:29.99,date:'2024-02-01',rec:'monthly'},
-    {id:uid(),cat:'EA / Automation',       vendor:'Prop Firm EA Suite',amt:97,  date:'2024-05-15',rec:'no'},
-    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro',  amt:14.95,date:'2024-06-01',rec:'monthly'},
-    {id:uid(),cat:'VPS / Hosting',         vendor:'ForexVPS',         amt:29.99,date:'2024-06-01',rec:'monthly'},
-    {id:uid(),cat:'Education',             vendor:'Inner Circle Trader',amt:299,date:'2024-07-01',rec:'no'},
-    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro',  amt:14.95,date:'2025-01-01',rec:'monthly'},
-    {id:uid(),cat:'VPS / Hosting',         vendor:'ForexVPS',         amt:29.99,date:'2025-01-01',rec:'monthly'},
+    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro+', amt:14.95,date:'2024-01-01',rec:'monthly'},
+    {id:uid(),cat:'VPS / Hosting',         vendor:'Forex VPS',        amt:29.99,date:'2024-01-01',rec:'monthly'},
+    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro+', amt:14.95,date:'2024-02-01',rec:'monthly'},
+    {id:uid(),cat:'VPS / Hosting',         vendor:'Forex VPS',        amt:29.99,date:'2024-02-01',rec:'monthly'},
+    {id:uid(),cat:'Education / Course',    vendor:'ICT Mentorship',   amt:299,  date:'2024-03-15',rec:'no'},
+    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro+', amt:14.95,date:'2024-04-01',rec:'monthly'},
+    {id:uid(),cat:'VPS / Hosting',         vendor:'Forex VPS',        amt:29.99,date:'2024-04-01',rec:'monthly'},
+    {id:uid(),cat:'EA / Automation',       vendor:'Prop Firm EA v2',  amt:149,  date:'2024-06-10',rec:'no'},
+    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro+', amt:14.95,date:'2024-07-01',rec:'monthly'},
+    {id:uid(),cat:'VPS / Hosting',         vendor:'Forex VPS',        amt:29.99,date:'2024-07-01',rec:'monthly'},
+    {id:uid(),cat:'TradingView / Platform',vendor:'TradingView Pro+', amt:14.95,date:'2025-01-01',rec:'monthly'},
+    {id:uid(),cat:'VPS / Hosting',         vendor:'Forex VPS',        amt:29.99,date:'2025-01-01',rec:'monthly'},
   ];
   // Demo data is display-only — do not sync to Supabase
   localStorage.setItem(KEY,JSON.stringify(S));
@@ -1337,25 +1323,6 @@ function renderCalDetail(k,ev){
   el.innerHTML=html;
 }
 
-// ── BREAKEVEN ───────────────────────────────────────────────────
-function calcBE(){
-  const fee=+document.getElementById('b_fee').value||0,sz=+document.getElementById('b_sz').value||0,
-        sp=+document.getElementById('b_sp').value||0,tg=+document.getElementById('b_tg').value||0,
-        mo=+document.getElementById('b_mo').value||0;
-  if(!fee||!sz||!sp||!mo){document.getElementById('beOut').innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:20px;color:var(--text3);font-size:13px;text-align:center">Fill in the parameters to see your analysis.</div>`;return;}
-  const pp=sz*(tg/100)*(sp/100),mp=sz*(mo/100)*(sp/100),mths=mp>0?Math.ceil(fee/mp):Infinity,mx=Math.floor(pp/fee);
-  const sc=[1,2,3,5].map(n=>`<div class="res-row"><span class="rl">${n} fail${n>1?'s':''} + 1 pass</span><span style="font-weight:600;color:${(pp-fee*n)>=0?'var(--green)':'var(--red)'}">${(pp-fee*n)>=0?'+':''}${$$(pp-fee*n)}</span></div>`).join('');
-  document.getElementById('beOut').innerHTML=`<div class="res-card">
-    <div class="res-sec">Single Pass</div>
-    <div class="res-row"><span class="rl">Profit on pass</span><span style="font-weight:600;color:var(--green)">+${$$(pp)}</span></div>
-    <div class="res-row"><span class="rl">Monthly payout estimate</span><span style="font-weight:600;color:var(--green)">+${$$(mp)}</span></div>
-    <div class="res-row"><span class="rl">Months to recover fee</span><span style="font-weight:600;color:${isFinite(mths)&&mths<=2?'var(--green)':'var(--red)'}">${isFinite(mths)?mths+' mo':'∞'}</span></div>
-    <div class="res-row"><span class="rl">Fee as % of profit target</span><span style="font-weight:600">${(fee/(sz*tg/100)*100).toFixed(1)}%</span></div>
-    <div class="res-sec">Failure Scenarios</div>
-    ${sc}
-    <div class="res-row"><span class="rl">Max fails before profit wiped</span><span style="font-weight:700;color:var(--red)">${mx} failure${mx!==1?'s':''}</span></div>
-  </div>`;
-}
 
 // ── PROFILE ─────────────────────────────────────────────────────
 function openProfile(){
@@ -1459,7 +1426,7 @@ function dl(name,content,mime){const a=document.createElement('a');a.href=URL.cr
 
 
 // ── TAB NAVIGATION ───────────────────────────────────────────────
-const SECS=['overview','challenges','payouts','firms','tax','breakeven','invoices'];
+const SECS=['overview','challenges','payouts','firms','tax','invoices'];
 let activeTab='overview';
 
 function navTo(id,e){
