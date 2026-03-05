@@ -1491,22 +1491,36 @@ function renderTax(chs,pys){
   const gross=pys.reduce((s,p)=>s+Number(p.amt),0);
   const fees=chs.reduce((s,c)=>s+Number(c.fee),0);
   const other=exps.reduce((s,e)=>s+Number(e.amt),0);
-  const deduct=fees+other, net=gross-deduct;
+  const net=gross-fees-other;
 
-  // Quarterly breakdown
-  const quarters=[1,2,3,4].map(q=>{
+  // Get distinct years present in filtered data
+  const yrs=[...new Set([
+    ...pys.map(p=>p.date.substr(0,4)),
+    ...chs.map(c=>c.date.substr(0,4)),
+    ...exps.map(e=>e.date.substr(0,4))
+  ])].filter(Boolean).sort().reverse();
+
+  // Year × Quarter breakdown
+  const inQY=(arr,yr,q)=>{
     const ms=[(q-1)*3+1,(q-1)*3+2,(q-1)*3+3];
-    const inc=pys.filter(p=>{const m=parseInt(p.date.substr(5,2));return m>=ms[0]&&m<=ms[2];}).reduce((s,p)=>s+Number(p.amt),0);
-    const exp=chs.filter(c=>{const m=parseInt(c.date.substr(5,2));return m>=ms[0]&&m<=ms[2];}).reduce((s,c)=>s+Number(c.fee),0)
-              +exps.filter(e=>{const m=parseInt(e.date.substr(5,2));return m>=ms[0]&&m<=ms[2];}).reduce((s,e)=>s+Number(e.amt),0);
-    return{q,inc,exp,net:inc-exp};
+    return arr.filter(x=>x.date.substr(0,4)===yr&&ms.includes(parseInt(x.date.substr(5,2))));
+  };
+  const yrRows=yrs.map(yr=>{
+    const qs=[1,2,3,4].map(q=>{
+      const inc=inQY(pys,yr,q).reduce((s,p)=>s+Number(p.amt),0);
+      const exp=inQY(chs,yr,q).reduce((s,c)=>s+Number(c.fee),0)+inQY(exps,yr,q).reduce((s,e)=>s+Number(e.amt),0);
+      return {q,inc,exp,net:inc-exp};
+    });
+    const yrGross=qs.reduce((s,q)=>s+q.inc,0);
+    const yrExp=qs.reduce((s,q)=>s+q.exp,0);
+    return {yr,qs,yrGross,yrExp,yrNet:yrGross-yrExp};
   });
 
   const expRows=exps.length
-    ?[...exps].reverse().map(e=>`<tr>
+    ?[...exps].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr>
         <td style="color:var(--text)">${e.cat}</td>
         <td style="color:var(--text2)">${e.vendor||'—'}</td>
-        <td class="r" style="font-weight:600;color:var(--red)">${$$(e.amt)}</td>
+        <td style="font-weight:600;color:var(--red)">−${$$(e.amt)}</td>
         <td style="color:var(--text3)">${e.date}</td>
         <td style="display:flex;gap:6px;align-items:center">
           ${e.invoiceUrl?`<a href="${e.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">📄 View</a>`:''}
@@ -1515,43 +1529,55 @@ function renderTax(chs,pys){
       </tr>`).join('')
     :`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No expenses logged yet.</td></tr>`;
 
+  const yrBreakdown=yrs.length?yrRows.map(({yr,qs,yrGross,yrExp,yrNet})=>`
+    <div class="tc" style="margin-bottom:12px">
+      <div class="tch">
+        <span class="tct">${yr}</span>
+        <span class="tcm" style="color:${yrNet>=0?'var(--green)':'var(--red)'};font-weight:700">${yrNet>=0?'+':''}${$$(yrNet)} net</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border2)">
+        ${qs.map(({q,inc,exp,net:qn})=>`
+          <div style="background:var(--card);padding:14px 16px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:8px">Q${q}</div>
+            <div style="font-size:16px;font-weight:700;color:${qn>=0?'var(--green)':'var(--red)'}">${qn>=0?'+':''}${$$(qn)}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">In <span style="color:var(--green)">${$$(inc)}</span></div>
+            <div style="font-size:11px;color:var(--text3)">Out <span style="color:var(--red)">−${$$(exp)}</span></div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('')
+    :`<div class="tc" style="margin-bottom:12px">${empty('📊','No data for selected period.')}</div>`;
+
   document.getElementById('taxWrap').innerHTML=`
     <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
       <div class="kpi"><div class="kl">Gross Income</div><div class="kv g">${$$(gross)}</div><div class="kf">${pys.length} payouts</div></div>
       <div class="kpi"><div class="kl">Challenge Fees</div><div class="kv r">−${$$(fees)}</div><div class="kf">${chs.length} challenges</div></div>
       <div class="kpi"><div class="kl">Other Expenses</div><div class="kv r">−${$$(other)}</div><div class="kf">${exps.length} items</div></div>
-      <div class="kpi"><div class="kl">Net P&L</div><div class="kv ${net>=0?'g':'r'}">${$$(net)}</div><div class="kf">${net>=0?'Profitable year':'Net loss'}</div></div>
+      <div class="kpi"><div class="kl">Net P&L</div><div class="kv ${net>=0?'g':'r'}">${net>=0?'+':''}${$$(net)}</div><div class="kf">${net>=0?'Profitable':'Net loss'}</div></div>
     </div>
 
-    <div class="q-row" style="margin-bottom:16px">
-      ${quarters.map(({q,inc,exp,net:qn})=>`
-        <div class="qc">
-          <div class="ql">Q${q}</div>
-          <div class="qv ${qn>=0?'g':'r'}">${qn>=0?'+':''}${$$(qn)}</div>
-          <div class="qd">Income <span style="color:var(--green)">${$$(inc)}</span></div>
-          <div class="qd">Expenses <span style="color:var(--red)">−${$$(exp)}</span></div>
-        </div>`).join('')}
-    </div>
+    ${yrBreakdown}
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
       <div class="tc">
         <div class="tch"><span class="tct">Income</span><span class="tcm">${pys.length} payouts</span></div>
-        ${pys.length?[...pys].reverse().map(p=>`<div class="tax-row"><span class="tax-lbl">${p.firm} · ${p.date}</span><span class="tax-val g">${$$(p.amt)}</span></div>`).join(''):'<div style="padding:16px;color:var(--text3);font-size:12px">No payouts recorded.</div>'}
-        <div class="tax-tot"><span>Total Income</span><span class="g">${$$(gross)}</span></div>
+        ${pys.length?[...pys].sort((a,b)=>b.date.localeCompare(a.date)).map(p=>`<div class="tax-row"><span class="tax-lbl">${p.firm} · ${p.date}</span><span class="tax-val g">${$$(p.amt)}</span></div>`).join(''):'<div style="padding:16px;color:var(--text3);font-size:12px">No payouts recorded.</div>'}
+        <div class="tax-tot"><span>Total</span><span class="g">${$$(gross)}</span></div>
       </div>
       <div class="tc">
         <div class="tch"><span class="tct">Deductions Summary</span></div>
         <div class="tax-row"><span class="tax-lbl">Gross Income</span><span class="tax-val g">${$$(gross)}</span></div>
         <div class="tax-row"><span class="tax-lbl">Challenge Fees</span><span class="tax-val r">−${$$(fees)}</span></div>
         <div class="tax-row"><span class="tax-lbl">Other Expenses</span><span class="tax-val r">−${$$(other)}</span></div>
-        <div class="tax-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px"><span class="tax-lbl" style="font-weight:600">Net P&L</span><span class="tax-val ${net>=0?'g':'r'}" style="font-weight:700">${$$(net)}</span></div>
-        <div class="tax-row" style="margin-top:8px"><span class="tax-lbl" style="font-size:11px;color:var(--text3)">Share this report with your accountant for accurate tax filing.</span></div>
+        <div class="tax-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+          <span class="tax-lbl" style="font-weight:600">Net P&L</span>
+          <span class="tax-val ${net>=0?'g':'r'}" style="font-weight:700">${net>=0?'+':''}${$$(net)}</span>
+        </div>
       </div>
     </div>
 
     <div class="tc">
       <div class="tch"><span class="tct">Business Expenses</span>
-        <button class="btn btn-blue btn-xs" onclick="openMo('exp')" style="margin-left:8px">+ Add</button>
+        <button class="btn btn-blue btn-xs" onclick="openMo('exp')">+ Add</button>
       </div>
       <table><thead><tr><th>Category</th><th>Vendor</th><th>Amount</th><th>Date</th><th></th></tr></thead><tbody>${expRows}</tbody></table>
     </div>`;
