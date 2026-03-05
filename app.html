@@ -1249,8 +1249,8 @@ async function saveCh(){
   const file=document.getElementById('ch_invoice').files[0];
   if(file&&currentUser){
     const ext=file.name.split('.').pop();
-    const {error}=await sb.storage.from('invoices').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
-    if(!error){const {data:pd}=sb.storage.from('invoices').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
+    const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
+    if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
   }
   S.challenges.push({id,firm,sz:+document.getElementById('ch_sz').value||0,fee:+fee,type:document.getElementById('ch_type').value,date,notes:document.getElementById('ch_notes').value.trim(),invoiceUrl});
   saveS();closeMo('ch');['ch_firm','ch_sz','ch_fee','ch_notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('ch_invoice').value='';render();
@@ -1271,8 +1271,8 @@ async function saveExp(){
   const file=document.getElementById('ex_invoice').files[0];
   if(file&&currentUser){
     const ext=file.name.split('.').pop();
-    const {error}=await sb.storage.from('invoices').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
-    if(!error){const {data:pd}=sb.storage.from('invoices').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
+    const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
+    if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
   }
   S.expenses.push({id,cat:document.getElementById('ex_cat').value,vendor:document.getElementById('ex_vendor').value.trim(),amt:+amt,date,rec:document.getElementById('ex_rec').value,invoiceUrl});
   saveS();closeMo('exp');['ex_amt','ex_vendor','ex_date'].forEach(i=>document.getElementById(i).value='');document.getElementById('ex_invoice').value='';render();
@@ -1292,9 +1292,9 @@ function chInvoiceClick(id){
     const file=inp.files[0]; if(!file)return;
     const ext=file.name.split('.').pop();
     const path=`${currentUser.id}/${id}.${ext}`;
-    const {error}=await sb.storage.from('invoices').upload(path,file,{upsert:true});
+    const {error}=await sb.storage.from('INVOICES').upload(path,file,{upsert:true});
     if(error){alert('Upload failed: '+error.message);return;}
-    const {data:pd}=sb.storage.from('invoices').getPublicUrl(path);
+    const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(path);
     c.invoiceUrl=pd.publicUrl;
     saveS();render();
   };
