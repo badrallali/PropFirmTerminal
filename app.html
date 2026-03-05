@@ -247,6 +247,15 @@
       #printArea{display:block!important}
     }
     #printArea{display:none}
+    /* ── CERT GRID ── */
+    .cert-firm-section{margin-bottom:36px}
+    .cert-firm-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+    .cert-cards-row{display:flex;flex-wrap:wrap;gap:14px}
+    .cert-mini-card{width:200px;height:250px;background:#06060b;border:1px solid rgba(255,255,255,0.07);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px;cursor:pointer;position:relative;overflow:hidden;transition:border-color .2s,transform .18s,box-shadow .2s;font-family:var(--font);text-align:center;flex-shrink:0}
+    .cert-mini-card:hover{border-color:rgba(255,255,255,0.2);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.6)}
+    .cert-mini-card:hover .cmso{opacity:1}
+    .cmso{position:absolute;inset:0;background:rgba(0,0,0,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;opacity:0;transition:opacity .18s;border-radius:14px}
+    .cmso-label{font-size:11px;font-weight:700;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
   </style>
 </head>
 <body>
@@ -537,79 +546,10 @@
   <!-- ── CERTIFICATES ── -->
   <section class="sec" id="certificates">
     <div class="sec-hd">
-      <div class="sec-title"><span class="sec-dot" style="background:#f59e0b"></span>Certificates</div>
-      <div class="sec-actions">
-        <select id="certFirmSel" onchange="buildCertPreview()" class="yr">
-          <option value="all">All Firms</option>
-        </select>
-        <select id="certPeriodSel" onchange="onCertPeriodChange(this.value)" class="yr">
-          <option value="all">All Time</option>
-          <option value="ytd">Year to Date</option>
-          <option value="mtd">Month to Date</option>
-          <option value="week">This Week</option>
-          <option value="today">Today</option>
-          <option value="custom">Custom...</option>
-        </select>
-        <div id="certCustomRange" style="display:none;align-items:center;gap:6px">
-          <input type="date" id="certFrom" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:12px"/>
-          <span style="color:var(--text3)">→</span>
-          <input type="date" id="certTo" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:12px"/>
-          <button class="btn btn-blue btn-xs" onclick="buildCertPreview()">Apply</button>
-        </div>
-        <button class="btn btn-xs" onclick="downloadCert()" style="background:linear-gradient(135deg,#f59e0b,#d97706);border-color:#f59e0b;color:#000;font-weight:700">⬇ Download PNG</button>
-      </div>
+      <div class="sec-title"><span class="sec-dot" style="background:var(--text2)"></span>Certificates</div>
     </div>
-    <p style="font-size:13px;color:var(--text3);margin-bottom:24px">Filter by firm and period to generate a shareable achievement certificate. Download as a high-resolution PNG.</p>
-    <!-- Certificate preview -->
-    <div style="display:flex;justify-content:center">
-      <div style="transform:scale(0.82);transform-origin:top center;width:800px;height:656px;flex-shrink:0">
-        <div id="certEl" style="width:800px;height:800px;background:#050507;position:relative;overflow:hidden;font-family:'Inter','Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 15% 15%,rgba(34,197,94,0.07) 0%,transparent 70%),radial-gradient(ellipse 50% 40% at 85% 85%,rgba(59,130,246,0.05) 0%,transparent 70%)"></div>
-          <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.04) 1px,transparent 1px);background-size:28px 28px"></div>
-          <div style="position:absolute;inset:18px;border:1px solid rgba(255,255,255,0.08)"></div>
-          <div style="position:absolute;inset:24px;border:1px solid rgba(34,197,94,0.18)"></div>
-          <div style="position:absolute;top:18px;left:18px;width:32px;height:32px;border-top:2px solid #f59e0b;border-left:2px solid #f59e0b"></div>
-          <div style="position:absolute;top:18px;right:18px;width:32px;height:32px;border-top:2px solid #f59e0b;border-right:2px solid #f59e0b"></div>
-          <div style="position:absolute;bottom:18px;left:18px;width:32px;height:32px;border-bottom:2px solid #f59e0b;border-left:2px solid #f59e0b"></div>
-          <div style="position:absolute;bottom:18px;right:18px;width:32px;height:32px;border-bottom:2px solid #f59e0b;border-right:2px solid #f59e0b"></div>
-          <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:0 56px;text-align:center;width:100%">
-            <div style="font-size:13px;font-weight:700;letter-spacing:5px;color:rgba(245,158,11,0.9);text-transform:uppercase;margin-bottom:6px">PropFirm Terminal</div>
-            <div style="width:110px;height:1px;background:linear-gradient(90deg,transparent,#f59e0b,transparent);margin-bottom:14px"></div>
-            <div style="font-size:13px;font-weight:700;letter-spacing:4px;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:20px">Achievement Certificate</div>
-            <div style="font-size:11px;font-weight:600;letter-spacing:3px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin-bottom:6px">This certifies that</div>
-            <div id="cert-name" style="font-size:36px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:1.1;margin-bottom:16px">—</div>
-            <div style="font-size:11px;font-weight:600;letter-spacing:3px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin-bottom:6px">Has achieved</div>
-            <div id="cert-roi" style="font-size:88px;font-weight:900;color:#22c55e;letter-spacing:-4px;line-height:1;text-shadow:0 0 30px rgba(34,197,94,0.6),0 0 70px rgba(34,197,94,0.25);margin-bottom:4px">—</div>
-            <div id="cert-roi-label" style="font-size:11px;font-weight:700;letter-spacing:5px;color:rgba(34,197,94,0.7);text-transform:uppercase;margin-bottom:22px">Return on Investment</div>
-            <div style="width:300px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);margin-bottom:20px"></div>
-            <div style="display:flex;align-items:center;gap:0;margin-bottom:22px;width:100%;max-width:580px;justify-content:center">
-              <div style="flex:1;text-align:center;padding:0 14px">
-                <div id="cert-net" style="font-size:21px;font-weight:700;color:#22c55e;line-height:1">—</div>
-                <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin-top:6px">Net P&L</div>
-              </div>
-              <div style="width:1px;height:34px;background:rgba(255,255,255,0.1)"></div>
-              <div style="flex:1;text-align:center;padding:0 14px">
-                <div id="cert-earned" style="font-size:21px;font-weight:700;color:rgba(255,255,255,0.85);line-height:1">—</div>
-                <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin-top:6px">Total Earned</div>
-              </div>
-              <div style="width:1px;height:34px;background:rgba(255,255,255,0.1)"></div>
-              <div style="flex:1;text-align:center;padding:0 14px">
-                <div id="cert-fees" style="font-size:21px;font-weight:700;color:rgba(255,255,255,0.85);line-height:1">—</div>
-                <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin-top:6px">Fees Paid</div>
-              </div>
-              <div style="width:1px;height:34px;background:rgba(255,255,255,0.1)"></div>
-              <div style="flex:1;text-align:center;padding:0 14px">
-                <div id="cert-count" style="font-size:21px;font-weight:700;color:rgba(255,255,255,0.85);line-height:1">—</div>
-                <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin-top:6px">Payouts</div>
-              </div>
-            </div>
-            <div id="cert-badge" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:8px 26px;font-size:11px;font-weight:700;letter-spacing:2.5px;color:rgba(255,255,255,0.45);text-transform:uppercase;margin-bottom:18px">—</div>
-            <div style="width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);margin-bottom:12px"></div>
-            <div id="cert-footer" style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.2);text-transform:uppercase">propfirmterminal.com</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:28px">Your achievement certificates, auto-generated for every firm and period. Click any card to share or download.</p>
+    <div id="certGrid"></div>
   </section>
 
 </main>
@@ -716,6 +656,69 @@
     <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
       <button class="btn btn-ghost" onclick="closeMo('inv')">Close</button>
       <button class="btn btn-blue" onclick="printInv()">🖨 Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- CERTIFICATE SHARE MODAL -->
+<div class="ov" id="ov-certShare">
+  <div class="modal" style="width:900px;max-width:96vw;padding:28px;background:var(--bg2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div class="mo-title" style="margin:0">Share Certificate</div>
+      <button class="btn btn-ghost btn-xs" onclick="closeMo('certShare')">✕</button>
+    </div>
+    <!-- Certificate at ~560px display -->
+    <div style="display:flex;justify-content:center;margin-bottom:20px">
+      <div style="transform:scale(0.7);transform-origin:top center;width:800px;height:560px;flex-shrink:0">
+        <div id="certShareEl" style="width:800px;height:800px;background:#08080e;position:relative;overflow:hidden;font-family:'Inter','Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <!-- Dot grid -->
+          <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.022) 1px,transparent 1px);background-size:32px 32px"></div>
+          <!-- Soft center glow -->
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(255,255,255,0.018) 0%,transparent 65%)"></div>
+          <!-- Content -->
+          <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:0 72px;text-align:center;width:100%">
+            <div style="font-size:10px;font-weight:600;letter-spacing:6px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-bottom:28px">PROPFIRM TERMINAL</div>
+            <div style="width:100%;height:1px;background:rgba(255,255,255,0.06);margin-bottom:32px"></div>
+            <div style="font-size:10px;font-weight:500;letter-spacing:4px;color:rgba(255,255,255,0.18);text-transform:uppercase;margin-bottom:10px">THIS CERTIFIES THAT</div>
+            <div id="cs-name" style="font-size:40px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1;margin-bottom:28px">—</div>
+            <div style="font-size:10px;font-weight:500;letter-spacing:4px;color:rgba(255,255,255,0.18);text-transform:uppercase;margin-bottom:10px">HAS ACHIEVED</div>
+            <div id="cs-roi" style="font-size:100px;font-weight:900;color:#fff;letter-spacing:-6px;line-height:1;margin-bottom:8px">—</div>
+            <div id="cs-roi-sub" style="font-size:10px;font-weight:600;letter-spacing:6px;color:rgba(255,255,255,0.25);text-transform:uppercase;margin-bottom:36px">RETURN ON INVESTMENT</div>
+            <div style="width:100%;height:1px;background:rgba(255,255,255,0.06);margin-bottom:28px"></div>
+            <div style="display:flex;width:100%;margin-bottom:36px">
+              <div style="flex:1;text-align:center">
+                <div id="cs-net" style="font-size:22px;font-weight:700;color:#fff">—</div>
+                <div style="font-size:9px;font-weight:500;letter-spacing:2px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-top:7px">NET P&L</div>
+              </div>
+              <div style="width:1px;background:rgba(255,255,255,0.06)"></div>
+              <div style="flex:1;text-align:center">
+                <div id="cs-earned" style="font-size:22px;font-weight:700;color:#fff">—</div>
+                <div style="font-size:9px;font-weight:500;letter-spacing:2px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-top:7px">TOTAL EARNED</div>
+              </div>
+              <div style="width:1px;background:rgba(255,255,255,0.06)"></div>
+              <div style="flex:1;text-align:center">
+                <div id="cs-fees" style="font-size:22px;font-weight:700;color:#fff">—</div>
+                <div style="font-size:9px;font-weight:500;letter-spacing:2px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-top:7px">FEES PAID</div>
+              </div>
+              <div style="width:1px;background:rgba(255,255,255,0.06)"></div>
+              <div style="flex:1;text-align:center">
+                <div id="cs-count" style="font-size:22px;font-weight:700;color:#fff">—</div>
+                <div style="font-size:9px;font-weight:500;letter-spacing:2px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-top:7px">PAYOUTS</div>
+              </div>
+            </div>
+            <div id="cs-badge" style="border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:9px 28px;font-size:10px;font-weight:600;letter-spacing:3px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin-bottom:28px">—</div>
+            <div id="cs-footer" style="font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.12);text-transform:uppercase">PROPFIRMTERMINAL.COM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Share / Download actions -->
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="downloadCert()" style="font-weight:700;min-width:140px">⬇ Download PNG</button>
+      <button class="btn btn-ghost" onclick="shareCert('x')" style="gap:6px">𝕏 Share on X</button>
+      <button class="btn btn-ghost" onclick="shareCert('facebook')" style="gap:6px">Facebook</button>
+      <button class="btn btn-ghost" onclick="shareCert('linkedin')" style="gap:6px">LinkedIn</button>
+      <button class="btn btn-ghost" onclick="shareCert('instagram')" style="gap:6px">📸 Save for Instagram</button>
     </div>
   </div>
 </div>
@@ -2176,32 +2179,21 @@ function chInvoiceClick(id){
 }
 
 // ── CERTIFICATE ─────────────────────────────────────────────────
-function openCertMo(){ buildCertPreview(); }
+let _certActiveFirm='all', _certActivePeriod='all';
 
-function onCertPeriodChange(val){
-  const bar=document.getElementById('certCustomRange');
-  bar.style.display=val==='custom'?'flex':'none';
-  if(val!=='custom') buildCertPreview();
-}
+const CERT_PERIODS=[
+  {key:'all',  label:'All Time'},
+  {key:'ytd',  label:'Year to Date'},
+  {key:'mtd',  label:'This Month'},
+  {key:'week', label:'This Week'},
+];
 
-function populateCertFirms(){
-  const sel=document.getElementById('certFirmSel');
-  if(!sel) return;
-  const prev=sel.value;
-  const firms=[...new Set([...S.payouts.map(p=>p.firm),...S.challenges.map(c=>c.firm)])].filter(Boolean).sort();
-  sel.innerHTML='<option value="all">All Firms</option>'+firms.map(f=>`<option value="${f}">${f}</option>`).join('');
-  if(prev&&prev!=='all'&&firms.includes(prev)) sel.value=prev;
-}
-
-function getCertRange(){
-  const p=document.getElementById('certPeriodSel').value;
+function certRangeForKey(key){
   const t=new Date(),ts=t.toISOString().substr(0,10);
-  if(p==='today') return {from:ts,to:ts,label:'Today · '+ts};
-  if(p==='week'){const s=new Date(t);s.setDate(t.getDate()-t.getDay());return {from:s.toISOString().substr(0,10),to:ts,label:'This Week'};}
-  if(p==='mtd'){const f=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-01`;return {from:f,to:ts,label:`${t.toLocaleString('en-US',{month:'long'})} ${t.getFullYear()}`};}
-  if(p==='ytd') return {from:`${t.getFullYear()}-01-01`,to:ts,label:`Year to Date ${t.getFullYear()}`};
-  if(p==='custom'){const f=document.getElementById('certFrom').value,to=document.getElementById('certTo').value;return f&&to?{from:f,to,label:`${f} → ${to}`}:null;}
-  return {from:null,to:null,label:'All Time'};
+  if(key==='week'){const s=new Date(t);s.setDate(t.getDate()-t.getDay());return{from:s.toISOString().substr(0,10),to:ts};}
+  if(key==='mtd') return{from:`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-01`,to:ts};
+  if(key==='ytd') return{from:`${t.getFullYear()}-01-01`,to:ts};
+  return{from:null,to:null};
 }
 
 function filterCert(arr,r){
@@ -2209,60 +2201,103 @@ function filterCert(arr,r){
   return arr.filter(x=>x.date&&x.date>=r.from&&x.date<=r.to);
 }
 
-function buildCertPreview(){
-  const r=getCertRange();
-  if(!r) return;
-  const firm=document.getElementById('certFirmSel')?.value||'all';
+function certStats(firm,periodKey){
+  const r=certRangeForKey(periodKey);
   const byFirm=arr=>firm==='all'?arr:arr.filter(x=>x.firm===firm);
   const pys=byFirm(filterCert(S.payouts,r));
   const chs=byFirm(filterCert(S.challenges,r));
-  // Other expenses are not firm-specific; include only when showing all firms
   const exps=firm==='all'?filterCert(S.expenses,r):[];
   const gross=pys.reduce((s,p)=>s+Number(p.amt),0);
   const fees=chs.reduce((s,c)=>s+Number(c.fee),0);
-  const otherCosts=exps.reduce((s,e)=>s+Number(e.amt),0);
-  const costs=fees+otherCosts;
+  const other=exps.reduce((s,e)=>s+Number(e.amt),0);
+  const costs=fees+other;
   const net=gross-costs;
   const roi=costs>0?((net/costs)*100):gross>0?null:0;
-  const roiStr=roi!=null?(roi>=0?'+':'')+roi.toFixed(1)+'%':(gross>0?'+∞%':'0%');
+  const roiStr=roi!=null?(roi>=0?'+':'')+roi.toFixed(1)+'%':(gross>0?'+∞%':'—');
+  return{gross,costs,net,roi,roiStr,count:pys.length,hasData:pys.length>0||chs.length>0};
+}
+
+function renderCertGrid(){
+  const grid=document.getElementById('certGrid');
+  if(!grid) return;
+  const firms=['all',...[...new Set([...S.payouts.map(p=>p.firm),...S.challenges.map(c=>c.firm)])].filter(Boolean).sort()];
+  const fmt=n=>n>=1000?(n/1000).toFixed(0)+'k':Math.round(n).toString();
+  grid.innerHTML=firms.map(firm=>{
+    const label=firm==='all'?'Overall — All Firms':firm;
+    const cards=CERT_PERIODS.map(p=>{
+      const d=certStats(firm,p.key);
+      const color=d.net>=0?'#22c55e':'#ef4444';
+      const roi=d.hasData?d.roiStr:'—';
+      const net=d.hasData?(d.net>=0?'+':'-')+'$'+fmt(Math.abs(d.net)):'—';
+      return `<div class="cert-mini-card" onclick="openCertShare('${firm}','${p.key}')">
+        <div style="font-size:7px;font-weight:600;letter-spacing:3px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-bottom:10px">PROPFIRM TERMINAL</div>
+        <div style="width:32px;height:1px;background:rgba(255,255,255,0.08);margin-bottom:14px"></div>
+        <div style="font-size:40px;font-weight:900;letter-spacing:-2px;line-height:1;color:${color};margin-bottom:4px">${roi}</div>
+        <div style="font-size:7px;letter-spacing:3px;color:rgba(255,255,255,0.18);text-transform:uppercase;margin-bottom:14px">ROI</div>
+        <div style="font-size:13px;font-weight:600;color:${color};margin-bottom:12px">${net}</div>
+        <div style="font-size:7px;letter-spacing:2px;border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:3px 10px;color:rgba(255,255,255,0.25);text-transform:uppercase">${p.label}</div>
+        <div class="cmso"><div class="cmso-icon">↗</div><div class="cmso-label">Share</div></div>
+      </div>`;
+    }).join('');
+    return `<div class="cert-firm-section"><div class="cert-firm-label">${label}</div><div class="cert-cards-row">${cards}</div></div>`;
+  }).join('');
+}
+
+function openCertShare(firm,periodKey){
+  _certActiveFirm=firm;
+  _certActivePeriod=periodKey;
+  buildFullCert(firm,periodKey);
+  openMo('certShare');
+}
+
+function buildFullCert(firm,periodKey){
+  const d=certStats(firm,periodKey);
+  const period=CERT_PERIODS.find(p=>p.key===periodKey)||{label:'All Time'};
   const fmt=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const pr=S.profile||{};
   const name=pr.name||(pr.biz||'Trader');
-  const date=new Date().toLocaleDateString('en-US',{month:'short',year:'numeric'});
-  const badgeParts=[firm!=='all'?firm.toUpperCase():null,r.label.toUpperCase()].filter(Boolean);
-
-  document.getElementById('cert-name').textContent=name;
-  document.getElementById('cert-roi').textContent=roiStr;
-  document.getElementById('cert-roi').style.color=net>=0?'#22c55e':'#ef4444';
-  document.getElementById('cert-roi').style.textShadow=net>=0
-    ?'0 0 30px rgba(34,197,94,0.6),0 0 70px rgba(34,197,94,0.25)'
-    :'0 0 30px rgba(239,68,68,0.6),0 0 70px rgba(239,68,68,0.25)';
-  document.getElementById('cert-roi-label').style.color=net>=0?'rgba(34,197,94,0.7)':'rgba(239,68,68,0.7)';
-  document.getElementById('cert-net').textContent=(net>=0?'+':'')+fmt(net);
-  document.getElementById('cert-net').style.color=net>=0?'#22c55e':'#ef4444';
-  document.getElementById('cert-earned').textContent=fmt(gross);
-  document.getElementById('cert-fees').textContent=costs>0?fmt(costs):'—';
-  document.getElementById('cert-count').textContent=pys.length;
-  document.getElementById('cert-badge').textContent=badgeParts.join(' · ');
-  document.getElementById('cert-footer').textContent=`propfirmterminal.com · ${date}`;
+  const date=new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const color=d.net>=0?'#22c55e':'#ef4444';
+  const glow=d.net>=0?'0 0 60px rgba(34,197,94,0.35)':'0 0 60px rgba(239,68,68,0.35)';
+  const badge=[firm!=='all'?firm:'All Firms',period.label].join(' · ').toUpperCase();
+  document.getElementById('cs-name').textContent=name;
+  document.getElementById('cs-roi').textContent=d.roiStr;
+  document.getElementById('cs-roi').style.color=color;
+  document.getElementById('cs-roi').style.textShadow=glow;
+  document.getElementById('cs-roi-sub').textContent='RETURN ON INVESTMENT';
+  document.getElementById('cs-net').textContent=(d.net>=0?'+':'')+fmt(d.net);
+  document.getElementById('cs-net').style.color=color;
+  document.getElementById('cs-earned').textContent=fmt(d.gross);
+  document.getElementById('cs-fees').textContent=d.costs>0?fmt(d.costs):'—';
+  document.getElementById('cs-count').textContent=d.count;
+  document.getElementById('cs-badge').textContent=badge;
+  document.getElementById('cs-footer').textContent=`PROPFIRMTERMINAL.COM · ${date.toUpperCase()}`;
 }
 
 function downloadCert(){
-  const el=document.getElementById('certEl');
+  const el=document.getElementById('certShareEl');
   const wrapper=el.parentElement;
-  const origStyle=wrapper.style.cssText;
-  wrapper.style.transform='none';
-  wrapper.style.height='800px';
-  wrapper.style.width='800px';
-  html2canvas(el,{scale:2,backgroundColor:'#050507',useCORS:true,logging:false,width:800,height:800}).then(canvas=>{
-    wrapper.style.cssText=origStyle;
-    const firm=document.getElementById('certFirmSel')?.value||'all';
-    const firmPart=firm!=='all'?`_${firm.replace(/\s+/g,'')}`:'';
+  const orig=wrapper.style.cssText;
+  wrapper.style.cssText='transform:none;width:800px;height:800px;flex-shrink:0';
+  html2canvas(el,{scale:2,backgroundColor:'#08080e',useCORS:true,logging:false,width:800,height:800}).then(canvas=>{
+    wrapper.style.cssText=orig;
+    const firmPart=_certActiveFirm!=='all'?`_${_certActiveFirm.replace(/\s+/g,'')}`:''
     const a=document.createElement('a');
-    a.download=`PropFirmTerminal_Certificate${firmPart}_${new Date().toISOString().substr(0,10)}.png`;
+    a.download=`PFT_Certificate${firmPart}_${_certActivePeriod}_${new Date().toISOString().substr(0,10)}.png`;
     a.href=canvas.toDataURL('image/png');
     a.click();
-  }).catch(()=>{wrapper.style.cssText=origStyle;alert('Download failed — try again.');});
+  }).catch(()=>{wrapper.style.cssText=orig;alert('Download failed — try again.');});
+}
+
+function shareCert(platform){
+  const d=certStats(_certActiveFirm,_certActivePeriod);
+  const firmLabel=_certActiveFirm==='all'?'prop trading':_certActiveFirm;
+  const period=CERT_PERIODS.find(p=>p.key===_certActivePeriod)||{label:'All Time'};
+  const text=`I achieved ${d.roiStr} ROI ${period.label} trading with ${firmLabel} 🚀 Track your prop firm performance at PropFirmTerminal`;
+  if(platform==='x') window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,'_blank');
+  else if(platform==='facebook') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://propfirmterminal.com')}&quote=${encodeURIComponent(text)}`,'_blank');
+  else if(platform==='linkedin') window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://propfirmterminal.com')}`,'_blank');
+  else if(platform==='instagram') downloadCert(); // download PNG, user uploads manually
 }
 
 // ── EXPORT ──────────────────────────────────────────────────────
@@ -2294,7 +2329,7 @@ function navTo(id,e){
     a.classList.toggle('on',a.getAttribute('onclick')&&a.getAttribute('onclick').includes("'"+id+"'"));
   });
   window.scrollTo(0,0);
-  if(id==='certificates'){populateCertFirms();buildCertPreview();}
+  if(id==='certificates') renderCertGrid();
 }
 
 // Show only overview on init
