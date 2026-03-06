@@ -108,8 +108,12 @@
     .ch-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
     .ch-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
     .cc{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:22px}
-    .ct{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:16px}
-    .cw{position:relative;height:240px}
+    .ct-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .ct{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:16px}
+    .ct-row>.ct{margin-bottom:0}
+    .chart-per{background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-family:var(--font);font-size:11px;padding:3px 8px;cursor:pointer;outline:none;transition:border-color .15s}
+    .chart-per:focus{border-color:var(--blue)}
+    .cw{position:relative;height:260px}
 
     /* ── TABLE CARD ── */
     .tc{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);overflow:hidden}
@@ -467,19 +471,75 @@
 
     <!-- Charts row 1 -->
     <div class="ch-row">
-      <div class="cc"><div class="ct">Cumulative P&L</div><div class="cw"><canvas id="cPL"></canvas></div></div>
-      <div class="cc"><div class="ct">Fee Distribution by Firm</div><div class="cw"><canvas id="cOut"></canvas></div></div>
+      <div class="cc">
+        <div class="ct-row">
+          <div class="ct">Cumulative P&amp;L</div>
+          <select id="cper-pl" class="chart-per" onchange="setChartPeriod('pl',this.value)">
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+          </select>
+        </div>
+        <div class="cw"><canvas id="cPL"></canvas></div>
+      </div>
+      <div class="cc">
+        <div class="ct-row">
+          <div class="ct">Fee Distribution by Firm</div>
+          <select id="cper-out" class="chart-per" onchange="setChartPeriod('out',this.value)">
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+          </select>
+        </div>
+        <div class="cw"><canvas id="cOut"></canvas></div>
+      </div>
     </div>
     <!-- Charts row 2 -->
     <div class="ch-row3">
-      <div class="cc"><div class="ct">Spend vs. Payouts by Firm</div><div class="cw"><canvas id="cFirm"></canvas></div></div>
-      <div class="cc"><div class="ct">Payment Method</div><div class="cw"><canvas id="cMethod"></canvas></div></div>
-      <div class="cc"><div class="ct">Quarterly P&L</div><div class="cw"><canvas id="cQ"></canvas></div></div>
+      <div class="cc">
+        <div class="ct-row">
+          <div class="ct">Spend vs. Payouts by Firm</div>
+          <select id="cper-firm" class="chart-per" onchange="setChartPeriod('firm',this.value)">
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+          </select>
+        </div>
+        <div class="cw"><canvas id="cFirm"></canvas></div>
+      </div>
+      <div class="cc">
+        <div class="ct-row">
+          <div class="ct">Payment Method</div>
+          <select id="cper-meth" class="chart-per" onchange="setChartPeriod('meth',this.value)">
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+          </select>
+        </div>
+        <div class="cw"><canvas id="cMethod"></canvas></div>
+      </div>
+      <div class="cc">
+        <div class="ct-row">
+          <div class="ct">Quarterly P&amp;L</div>
+          <select id="cper-q" class="chart-per" onchange="setChartPeriod('q',this.value)">
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+          </select>
+        </div>
+        <div class="cw"><canvas id="cQ"></canvas></div>
+      </div>
     </div>
     <!-- Charts row 3 -->
     <div class="ch-row">
-      <div class="cc"><div class="ct">Monthly Cash Flow</div><div class="cw"><canvas id="cMo"></canvas></div></div>
-      <div class="cc"><div class="ct">Cumulative Fees vs. Payouts</div><div class="cw"><canvas id="cCum"></canvas></div></div>
+      <div class="cc">
+        <div class="ct-row">
+          <div class="ct">Monthly Cash Flow</div>
+          <select id="cper-mo" class="chart-per" onchange="setChartPeriod('mo',this.value)">
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+          </select>
+        </div>
+        <div class="cw"><canvas id="cMo"></canvas></div>
+      </div>
+      <div class="cc">
+        <div class="ct-row">
+          <div class="ct">Cumulative Fees vs. Payouts</div>
+          <select id="cper-cum" class="chart-per" onchange="setChartPeriod('cum',this.value)">
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+          </select>
+        </div>
+        <div class="cw"><canvas id="cCum"></canvas></div>
+      </div>
     </div>
 
     <!-- Calendar -->
@@ -1372,6 +1432,34 @@ function demo(){
 let _period='all'; // 'all'|'ytd'|'mtd'|'week'|'today'|'custom'
 let _periodFrom='', _periodTo='';
 
+// Per-chart independent period filters
+let chartPeriods={};
+function getDateRangeFor(p){
+  const t=new Date(),ts=t.toISOString().substr(0,10);
+  switch(p){
+    case 'today':return{from:ts,to:ts};
+    case 'week':{const s=new Date(t);s.setDate(t.getDate()-t.getDay());return{from:s.toISOString().substr(0,10),to:ts};}
+    case 'mtd':return{from:`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-01`,to:ts};
+    case 'ytd':return{from:`${t.getFullYear()}-01-01`,to:ts};
+    case '1y':{const s=new Date(t);s.setFullYear(s.getFullYear()-1);return{from:s.toISOString().substr(0,10),to:ts};}
+    case '6m':{const s=new Date(t);s.setMonth(s.getMonth()-6);return{from:s.toISOString().substr(0,10),to:ts};}
+    case '3m':{const s=new Date(t);s.setMonth(s.getMonth()-3);return{from:s.toISOString().substr(0,10),to:ts};}
+    default:return null;
+  }
+}
+function fyFor(arr,p){
+  const r=getDateRangeFor(p);
+  if(!r)return arr;
+  return arr.filter(x=>x.date&&x.date>=r.from&&x.date<=r.to);
+}
+function setChartPeriod(key,val){
+  chartPeriods[key]=val;
+  // Sync the select element value
+  const el=document.getElementById('cper-'+key);
+  if(el)el.value=val;
+  renderCharts(S.challenges,S.payouts);
+}
+
 function getDateRange(){
   const t=new Date(), ts=t.toISOString().substr(0,10);
   switch(_period){
@@ -1428,7 +1516,7 @@ function render(){
   renderKPI(m,pys);
   renderInsight(m,pys);
   renderQS(m,chs,pys);
-  renderCharts(chs,pys);
+  renderCharts(S.challenges,S.payouts);
   renderExpenses(chs);
   renderPayouts(pys);
   renderFirms(chs,pys);
@@ -1440,12 +1528,44 @@ function render(){
 
 // ── KPI ─────────────────────────────────────────────────────────
 function renderKPI(m,pys){
+  const chs=fy(S.challenges);
+  const firms=[...new Set(chs.map(c=>c.firm))].length;
+  const lastPay=[...pys].sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const maxPay=pys.length?Math.max(...pys.map(p=>Number(p.amt))):0;
+  const minPay=pys.length?Math.min(...pys.map(p=>Number(p.amt))):0;
+  const needPay=m.net<0&&m.avgPayout>0?Math.ceil(Math.abs(m.net)/m.avgPayout):0;
+  const retPerDollar=m.spent>0?(m.earned/m.spent).toFixed(2):0;
   document.getElementById('kpiStrip').innerHTML=`
-    <div class="kpi"><div class="kl">Total Invested</div><div class="kv r">${$$(m.spent)}</div><div class="kf">${m.total} challenges · avg ${$$(m.avgFee)}</div></div>
-    <div class="kpi"><div class="kl">Total Earned</div><div class="kv g">${$$(m.earned)}</div><div class="kf">${pys.length} payouts</div></div>
-    <div class="kpi"><div class="kl">Net P&amp;L</div><div class="kv ${m.net>=0?'g':'r'}">${m.net>=0?'+':''}${$$(m.net)}</div><span class="kpill ${m.net>=0?'pg':'pr'}">${m.net>=0?'↑ Profit':'↓ Underwater'}</span></div>
-    <div class="kpi"><div class="kl">ROI</div><div class="kv ${m.roi>=0?'g':'r'}">${m.roi>=0?'+':''}${m.roi.toFixed(1)}%</div><div class="kf">On total fee spend</div></div>
-    <div class="kpi"><div class="kl">Avg Payout</div><div class="kv g">${$$(m.avgPayout)}</div><div class="kf">Per payout received</div></div>`;
+    <div class="kpi">
+      <div class="kl">Total Invested</div>
+      <div class="kv r">${$$(m.spent)}</div>
+      <div class="kf">${m.total} challenge${m.total!==1?'s':''} · ${firms} firm${firms!==1?'s':''}</div>
+      <div class="kf" style="margin-top:4px;color:var(--text2)">Avg fee ${$$(m.avgFee)}</div>
+    </div>
+    <div class="kpi">
+      <div class="kl">Total Earned</div>
+      <div class="kv g">${$$(m.earned)}</div>
+      <div class="kf">${pys.length} payout${pys.length!==1?'s':''}</div>
+      <div class="kf" style="margin-top:4px;color:var(--text2)">${lastPay?`Last: ${lastPay.firm} · ${lastPay.date.substr(0,7)}`:'No payouts yet'}</div>
+    </div>
+    <div class="kpi">
+      <div class="kl">Net P&amp;L</div>
+      <div class="kv ${m.net>=0?'g':'r'}">${m.net>=0?'+':''}${$$(m.net)}</div>
+      <span class="kpill ${m.net>=0?'pg':'pr'}">${m.net>=0?'↑ Profit':'↓ Underwater'}</span>
+      <div class="kf" style="margin-top:8px;color:var(--text2)">${m.net<0&&needPay>0?`~${needPay} more payout${needPay!==1?'s':''} to break even`:m.net>0?`Covers fees + ${$$(m.net)} surplus`:'—'}</div>
+    </div>
+    <div class="kpi">
+      <div class="kl">ROI</div>
+      <div class="kv ${m.roi>=0?'g':'r'}">${m.roi>=0?'+':''}${m.roi.toFixed(1)}%</div>
+      <div class="kf">On total fee spend</div>
+      <div class="kf" style="margin-top:4px;color:var(--text2)">${m.spent>0?`$1 invested → $${retPerDollar} returned`:''}</div>
+    </div>
+    <div class="kpi">
+      <div class="kl">Avg Payout</div>
+      <div class="kv g">${$$(m.avgPayout)}</div>
+      <div class="kf">${pys.length} payout${pys.length!==1?'s':''}</div>
+      <div class="kf" style="margin-top:4px;color:var(--text2)">${pys.length>1?`Best ${$$(maxPay)} · Worst ${$$(minPay)}`:pys.length===1?`Only payout so far`:''}</div>
+    </div>`;
 }
 
 // ── INSIGHT ─────────────────────────────────────────────────────
@@ -1479,7 +1599,9 @@ function renderQS(m,chs,pys){
 
   // Biggest payout
   const bigPay=pys.length?Math.max(...pys.map(p=>Number(p.amt))):0;
-  const bigPayFirm=pys.length?pys.find(p=>Number(p.amt)===bigPay)?.firm:'—';
+  const bigPayObj=pys.length?pys.find(p=>Number(p.amt)===bigPay):null;
+  const bigPayFirm=bigPayObj?.firm||'—';
+  const bigPayDate=bigPayObj?.date||'';
 
   // Best month
   const monthly={};
@@ -1487,17 +1609,57 @@ function renderQS(m,chs,pys){
   chs.forEach(c=>{const k=c.date.substr(0,7);monthly[k]=(monthly[k]||0)-Number(c.fee);});
   const bestMo=Object.keys(monthly).sort((a,b)=>monthly[b]-monthly[a])[0];
   const bestMoVal=bestMo?monthly[bestMo]:0;
+  const bestMoPayCount=bestMo?pys.filter(p=>p.date.substr(0,7)===bestMo).length:0;
 
   // Profit consistency (% of months with positive net)
-  const moKeys=Object.keys(monthly);
+  const moKeys=Object.keys(monthly).sort();
   const profitableMos=moKeys.filter(k=>monthly[k]>0).length;
   const consistency=moKeys.length?Math.round(profitableMos/moKeys.length*100):0;
+  // Current positive streak (consecutive months ending at latest)
+  let streak=0;
+  for(let i=moKeys.length-1;i>=0;i--){if(monthly[moKeys[i]]>0)streak++;else break;}
+
+  // Best firm extra stats
+  const bfPayCount=bestFirm?pys.filter(p=>p.firm===bestFirm).length:0;
+  const bfEarned=bestFirm?fd[bestFirm].earned:0;
 
   document.getElementById('qsRow').innerHTML=`
-    <div class="qs"><div class="qs-icon">🏆</div><div class="qs-body"><div class="qs-label">Best Firm (ROI)</div><div class="qs-val ${bfRoi>=0?'g':'r'}">${bestFirm||'—'}</div><div class="qs-sub">${bfRoi>=0?'+':''}${bfRoi.toFixed(1)}% return on fees</div></div></div>
-    <div class="qs"><div class="qs-icon">💰</div><div class="qs-body"><div class="qs-label">Biggest Payout</div><div class="qs-val g">${$$(bigPay)}</div><div class="qs-sub">${bigPayFirm}</div></div></div>
-    <div class="qs"><div class="qs-icon">📅</div><div class="qs-body"><div class="qs-label">Best Month</div><div class="qs-val ${bestMoVal>=0?'g':'r'}">${bestMo?bestMoVal>=0?'+':''+''+$$(bestMoVal):'—'}</div><div class="qs-sub">${bestMo||'No data'}</div></div></div>
-    <div class="qs"><div class="qs-icon">📊</div><div class="qs-body"><div class="qs-label">Profit Consistency</div><div class="qs-val ${consistency>=60?'g':consistency>=40?'y':'r'}">${consistency}%</div><div class="qs-sub">${profitableMos}/${moKeys.length} months positive</div></div></div>`;
+    <div class="qs">
+      <div class="qs-icon">🏆</div>
+      <div class="qs-body">
+        <div class="qs-label">Best Firm (ROI)</div>
+        <div class="qs-val ${bfRoi>=0?'g':'r'}">${bestFirm||'—'}</div>
+        <div class="qs-sub">${bfRoi>=0?'+':''}${bfRoi.toFixed(1)}% return on fees</div>
+        ${bestFirm?`<div class="qs-sub" style="margin-top:3px">${$$(bfEarned)} earned · ${bfPayCount} payout${bfPayCount!==1?'s':''}</div>`:''}
+      </div>
+    </div>
+    <div class="qs">
+      <div class="qs-icon">💰</div>
+      <div class="qs-body">
+        <div class="qs-label">Biggest Payout</div>
+        <div class="qs-val g">${$$(bigPay)}</div>
+        <div class="qs-sub">${bigPayFirm}</div>
+        ${bigPayDate?`<div class="qs-sub" style="margin-top:3px">${bigPayDate}</div>`:''}
+      </div>
+    </div>
+    <div class="qs">
+      <div class="qs-icon">📅</div>
+      <div class="qs-body">
+        <div class="qs-label">Best Month</div>
+        <div class="qs-val ${bestMoVal>=0?'g':'r'}">${bestMo?(bestMoVal>=0?'+':'')+$$(bestMoVal):'—'}</div>
+        <div class="qs-sub">${bestMo||'No data'}</div>
+        ${bestMo?`<div class="qs-sub" style="margin-top:3px">${bestMoPayCount} payout${bestMoPayCount!==1?'s':''} that month</div>`:''}
+      </div>
+    </div>
+    <div class="qs">
+      <div class="qs-icon">📊</div>
+      <div class="qs-body">
+        <div class="qs-label">Profit Consistency</div>
+        <div class="qs-val ${consistency>=60?'g':consistency>=40?'y':'r'}">${consistency}%</div>
+        <div class="qs-sub">${profitableMos}/${moKeys.length} months positive</div>
+        ${streak>0?`<div class="qs-sub" style="margin-top:3px">${streak} month winning streak</div>`:`<div class="qs-sub" style="margin-top:3px">No current streak</div>`}
+      </div>
+    </div>`;
 }
 
 // ── CHARTS ──────────────────────────────────────────────────────
@@ -1507,72 +1669,83 @@ function kc(id){if(CC[id]){CC[id].destroy();delete CC[id];}}
 const GC=id=>document.getElementById(id).getContext('2d');
 function sc(){return{x:{grid:{color:GR,drawBorder:false},ticks:{color:MU,font:TF}},y:{grid:{color:GR,drawBorder:false},ticks:{color:MU,font:TF,callback:v=>'$'+Number(v).toLocaleString()}}};}
 
-function renderCharts(chs,pys){
+function renderCharts(rawChs,rawPys){
+  // Helper: get per-chart filtered data
+  const fc=k=>fyFor(rawChs,chartPeriods[k]||'all');
+  const fp=k=>fyFor(rawPys,chartPeriods[k]||'all');
+
   // P&L
   kc('pl');
-  const ev=[...chs.map(c=>({d:c.date,v:-Number(c.fee)})),...pys.map(p=>({d:p.date,v:Number(p.amt)}))].sort((a,b)=>a.d.localeCompare(b.d));
+  const plC=fc('pl'),plP=fp('pl');
+  const ev=[...plC.map(c=>({d:c.date,v:-Number(c.fee)})),...plP.map(p=>({d:p.date,v:Number(p.amt)}))].sort((a,b)=>a.d.localeCompare(b.d));
   if(ev.length){
     let run=0;const lb=[],da=[];
     ev.forEach(e=>{run+=e.v;lb.push(e.d.substr(5));da.push(run);});
-    const pos=da[da.length-1]>=0,col=pos?'#22c55e':'#ef4444';
-    CC['pl']=new Chart(GC('cPL'),{type:'line',data:{labels:lb,datasets:[{data:da,borderColor:col,backgroundColor:pos?'rgba(34,197,94,.07)':'rgba(239,68,68,.07)',fill:true,tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:da.map(v=>v>=0?'#22c55e':'#ef4444')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:sc()}});
+    const pos=da[da.length-1]>=0,col=pos?'#22d3a0':'#f87171';
+    CC['pl']=new Chart(GC('cPL'),{type:'line',data:{labels:lb,datasets:[{data:da,borderColor:col,backgroundColor:pos?'rgba(34,211,160,.07)':'rgba(248,113,113,.07)',fill:true,tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:da.map(v=>v>=0?'#22d3a0':'#f87171')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:sc()}});
   }
 
   // Fee Distribution by Firm
   kc('out');
-  const fd2=firmD(chs,pys);const fk2=Object.keys(fd2);
+  const outC=fc('out'),outP=fp('out');
+  const fd2=firmD(outC,outP);const fk2=Object.keys(fd2);
   if(fk2.length){
-    const FCOLS=['#3b82f6','#22c55e','#a855f7','#eab308','#ef4444','#f97316','#06b6d4'];
-    CC['out']=new Chart(GC('cOut'),{type:'doughnut',data:{labels:fk2,datasets:[{data:fk2.map(f=>fd2[f].spent),backgroundColor:fk2.map((_,i)=>FCOLS[i%FCOLS.length]),borderColor:'#131316',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{display:true,position:'bottom',labels:{color:MU,font:TF,padding:10,boxWidth:9}}}}});
+    const FCOLS=['#5b8af5','#22d3a0','#8b5cf6','#fbbf24','#f87171','#f97316','#06b6d4'];
+    CC['out']=new Chart(GC('cOut'),{type:'doughnut',data:{labels:fk2,datasets:[{data:fk2.map(f=>fd2[f].spent),backgroundColor:fk2.map((_,i)=>FCOLS[i%FCOLS.length]),borderColor:'var(--card)',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{display:true,position:'bottom',labels:{color:MU,font:TF,padding:10,boxWidth:9}}}}});
   }
 
   // Firm bar
   kc('firm');
-  const fd=firmD(chs,pys);const fk=Object.keys(fd);
+  const firmC=fc('firm'),firmP=fp('firm');
+  const fd=firmD(firmC,firmP);const fk=Object.keys(fd);
   if(fk.length){
-    CC['firm']=new Chart(GC('cFirm'),{type:'bar',data:{labels:fk,datasets:[{label:'Fees',data:fk.map(f=>fd[f].spent),backgroundColor:'rgba(239,68,68,.6)',borderRadius:4},{label:'Payouts',data:fk.map(f=>fd[f].earned),backgroundColor:'rgba(34,197,94,.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
+    CC['firm']=new Chart(GC('cFirm'),{type:'bar',data:{labels:fk,datasets:[{label:'Fees',data:fk.map(f=>fd[f].spent),backgroundColor:'rgba(248,113,113,.6)',borderRadius:4},{label:'Payouts',data:fk.map(f=>fd[f].earned),backgroundColor:'rgba(34,211,160,.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
   }
 
   // Payment method
   kc('meth');
-  const mths={};pys.forEach(p=>{mths[p.meth]=(mths[p.meth]||0)+Number(p.amt);});
+  const methP=fp('meth');
+  const mths={};methP.forEach(p=>{mths[p.meth]=(mths[p.meth]||0)+Number(p.amt);});
   const mk=Object.keys(mths);
   if(mk.length){
-    const COLS=['#3b82f6','#22c55e','#a855f7','#eab308','#ef4444','#f97316','#06b6d4'];
-    CC['meth']=new Chart(GC('cMethod'),{type:'doughnut',data:{labels:mk,datasets:[{data:mk.map(k=>mths[k]),backgroundColor:mk.map((_,i)=>COLS[i%COLS.length]),borderColor:'#131316',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:MU,font:TF,padding:8,boxWidth:8}}}}});
+    const COLS=['#5b8af5','#22d3a0','#8b5cf6','#fbbf24','#f87171','#f97316','#06b6d4'];
+    CC['meth']=new Chart(GC('cMethod'),{type:'doughnut',data:{labels:mk,datasets:[{data:mk.map(k=>mths[k]),backgroundColor:mk.map((_,i)=>COLS[i%COLS.length]),borderColor:'var(--card)',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:MU,font:TF,padding:8,boxWidth:8}}}}});
   }
 
   // Quarterly
   kc('q');
+  const qC=fc('q'),qP=fp('q');
   const qtr={};
-  [...chs.map(c=>({d:c.date,v:-Number(c.fee)})),...pys.map(p=>({d:p.date,v:Number(p.amt)}))].forEach(e=>{
+  [...qC.map(c=>({d:c.date,v:-Number(c.fee)})),...qP.map(p=>({d:p.date,v:Number(p.amt)}))].forEach(e=>{
     if(!e.d)return;const q=Math.ceil(parseInt(e.d.substr(5,2))/3);const k=`${e.d.substr(0,4)} Q${q}`;
     qtr[k]=(qtr[k]||0)+e.v;
   });
   const qk=Object.keys(qtr).sort();
   if(qk.length){
-    CC['q']=new Chart(GC('cQ'),{type:'bar',data:{labels:qk,datasets:[{data:qk.map(k=>qtr[k]),backgroundColor:qk.map(k=>qtr[k]>=0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:sc()}});
+    CC['q']=new Chart(GC('cQ'),{type:'bar',data:{labels:qk,datasets:[{data:qk.map(k=>qtr[k]),backgroundColor:qk.map(k=>qtr[k]>=0?'rgba(34,211,160,.7)':'rgba(248,113,113,.7)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:sc()}});
   }
 
   // Monthly cash flow
   kc('mo');
+  const moC=fc('mo'),moP=fp('mo');
   const mo={};
-  chs.forEach(c=>{const k=c.date.substr(0,7);if(!mo[k])mo[k]={s:0,e:0};mo[k].s+=Number(c.fee);});
-  pys.forEach(p=>{const k=p.date.substr(0,7);if(!mo[k])mo[k]={s:0,e:0};mo[k].e+=Number(p.amt);});
+  moC.forEach(c=>{const k=c.date.substr(0,7);if(!mo[k])mo[k]={s:0,e:0};mo[k].s+=Number(c.fee);});
+  moP.forEach(p=>{const k=p.date.substr(0,7);if(!mo[k])mo[k]={s:0,e:0};mo[k].e+=Number(p.amt);});
   const mok=Object.keys(mo).sort();
   if(mok.length){
-    CC['mo']=new Chart(GC('cMo'),{type:'bar',data:{labels:mok,datasets:[{label:'Fees Out',data:mok.map(k=>-mo[k].s),backgroundColor:'rgba(239,68,68,.5)',borderRadius:4},{label:'Payouts In',data:mok.map(k=>mo[k].e),backgroundColor:'rgba(34,197,94,.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
+    CC['mo']=new Chart(GC('cMo'),{type:'bar',data:{labels:mok,datasets:[{label:'Fees Out',data:mok.map(k=>-mo[k].s),backgroundColor:'rgba(248,113,113,.5)',borderRadius:4},{label:'Payouts In',data:mok.map(k=>mo[k].e),backgroundColor:'rgba(34,211,160,.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
   }
 
   // Cumulative fees vs payouts
   kc('cum');
-  const sorted=[...chs.map(c=>({d:c.date,fee:Number(c.fee),pay:0})),...pys.map(p=>({d:p.date,fee:0,pay:Number(p.amt)}))].sort((a,b)=>a.d.localeCompare(b.d));
+  const cumC=fc('cum'),cumP=fp('cum');
+  const sorted=[...cumC.map(c=>({d:c.date,fee:Number(c.fee),pay:0})),...cumP.map(p=>({d:p.date,fee:0,pay:Number(p.amt)}))].sort((a,b)=>a.d.localeCompare(b.d));
   if(sorted.length){
     let cf=0,cp=0;const lb2=[],df=[],dp2=[];
     sorted.forEach(e=>{cf+=e.fee;cp+=e.pay;lb2.push(e.d.substr(5));df.push(cf);dp2.push(cp);});
     CC['cum']=new Chart(GC('cCum'),{type:'line',data:{labels:lb2,datasets:[
-      {label:'Cumulative Fees',data:df,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.05)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
-      {label:'Cumulative Payouts',data:dp2,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.05)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
+      {label:'Cumulative Fees',data:df,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.05)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
+      {label:'Cumulative Payouts',data:dp2,borderColor:'#22d3a0',backgroundColor:'rgba(34,211,160,.05)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
   }
 }
