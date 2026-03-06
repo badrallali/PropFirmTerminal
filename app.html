@@ -2452,27 +2452,25 @@ async function syncRisePayouts(){
     const knownHashes=new Set(S.payouts.map(p=>p.txHash).filter(Boolean));
     const userWallets=S.settings?.firmWallets||{};
 
-    let added=0,dupes=0;
-    const unknown=[];
+    let added=0,dupes=0,unassigned=0;
 
     for(const tx of txs){
-      // Server already filtered to USDC/USDT contracts — accept all
       const hash=tx.hash;
       if(knownHashes.has(hash)){dupes++;continue;}
-      const amt=tx.value; // already a number, e.g. 50.0
+      const amt=tx.value;
       const date=tx.metadata?.blockTimestamp
         ?tx.metadata.blockTimestamp.substr(0,10)
         :new Date().toISOString().substr(0,10);
       const fromAddr=(tx.from||'').toLowerCase();
       const firm=FIRM_WALLETS[fromAddr]||userWallets[fromAddr]||null;
-      if(!firm){unknown.push({hash,amt,date,from:tx.from});continue;}
-      S.payouts.push({id:uid(),firm,amt,date,meth:'Rise',sz:0,notes:'',txHash:hash});
+      if(!firm) unassigned++;
+      S.payouts.push({id:uid(),firm:firm||'Unknown',amt,date,meth:'Rise',sz:0,notes:firm?'':`from:${tx.from}`,txHash:hash});
       knownHashes.add(hash);
       added++;
     }
 
     saveS();render();
-    showRiseToast(added,dupes,unknown,txs.length);
+    showRiseToast(added,dupes,unassigned,txs.length);
   }catch(e){
     alert('Rise sync failed:\n'+e.message);
   }finally{
@@ -2480,49 +2478,23 @@ async function syncRisePayouts(){
   }
 }
 
-function showRiseToast(added,dupes,unknown,scanned=0){
+function showRiseToast(added,dupes,unassigned,scanned=0){
   let headline=added>0
     ?`✓ ${added} payout${added>1?'s':''} imported`
     :(dupes>0?'Already up to date':`No new payouts found (${scanned} tx scanned)`);
   if(added>0&&dupes>0)headline+=` · ${dupes} already logged`;
-
-  let unknownHtml='';
-  if(unknown.length){
-    unknownHtml=`<div style="margin-top:11px;font-size:12px;font-weight:700;color:var(--yellow)">`
-      +`${unknown.length} unknown sender${unknown.length>1?'s':''} — assign to a firm:</div>`;
-    unknown.forEach(u=>{
-      const opts=['<option value="">— Skip —</option>',
-        ...S.clients.map(c=>`<option value="${c.name}">${c.name}</option>`)
-      ].join('');
-      unknownHtml+=`<div style="display:flex;align-items:center;gap:8px;margin-top:8px">`
-        +`<div style="font-family:var(--mf);font-size:10px;color:var(--text3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${u.from}">${u.from}</div>`
-        +`<div style="font-size:11px;color:var(--text2);white-space:nowrap">${$$(u.amt)} · ${u.date}</div>`
-        +`<select class="yr" style="font-size:11px" onchange="assignRiseSender('${u.hash}',this.value,'${u.from}',${u.amt},'${u.date}')">${opts}</select>`
-        +`</div>`;
-    });
-  }
-
+  const sub=unassigned>0
+    ?`<div style="margin-top:6px;font-size:12px;color:var(--yellow)">${unassigned} logged as Unknown — edit to assign a firm</div>`
+    :'';
   const toast=document.getElementById('riseToast');
   toast.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">`
-    +`<div><div style="font-size:13px;font-weight:700;color:var(--text)">${headline}</div>${unknownHtml}</div>`
+    +`<div><div style="font-size:13px;font-weight:700;color:var(--text)">${headline}</div>${sub}</div>`
     +`<button onclick="document.getElementById('riseToast').style.display='none'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;padding:0">✕</button>`
     +`</div>`;
   toast.style.display='block';
-  if(!unknown.length)setTimeout(()=>{toast.style.display='none';},4500);
+  setTimeout(()=>{toast.style.display='none';},5000);
 }
 
-function assignRiseSender(hash,firm,fromAddr,amt,date){
-  if(!firm)return;
-  if(!S.settings.firmWallets)S.settings.firmWallets={};
-  S.settings.firmWallets[fromAddr.toLowerCase()]=firm;
-  if(!S.payouts.find(p=>p.txHash===hash)){
-    S.payouts.push({id:uid(),firm,amt,date,meth:'Rise',sz:0,notes:'',txHash:hash});
-  }
-  saveS();render();
-  // Update toast headline after assignment
-  const el=document.getElementById('riseToast');
-  if(el){const hd=el.querySelector('div>div>div');if(hd)hd.textContent='✓ Payout assigned to '+firm;}
-}
 
 // ── PROFILE ─────────────────────────────────────────────────────
 function openProfile(){
