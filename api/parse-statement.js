@@ -23,28 +23,18 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4096,
+        max_tokens: 8192,
         messages: [{
           role: 'user',
-          content: `You are a financial data extractor. Extract every transaction from the text below and return a JSON array.
+          content: `Extract every financial transaction from the statement below. Return ONLY a compact JSON array (no whitespace, no markdown, no explanation). Start with [ end with ].
 
-Return ONLY the raw JSON array — no markdown, no code fences, no explanation. Start your response with [ and end with ].
+Each object: {"date":"YYYY-MM-DD","description":"short name","amount":number,"type":"income or expense","suggestedFirm":"firm or null","suggestedCat":"category or null"}
 
-Each transaction object must have exactly these fields:
-- "date": string in YYYY-MM-DD format (guess the year from context if not explicit)
-- "description": string, the merchant, sender, or counterparty name
-- "amount": number, always positive (use absolute value)
-- "type": "income" if money was received, "expense" if money was paid/sent
-- "suggestedFirm": string or null — for income, the prop trading firm name if identifiable
-- "suggestedCat": string or null — for expenses, one of: "Challenge Fee", "TradingView / Platform", "VPS / Hosting", "EA / Automation", "Education / Course", "Data Feed", "Hardware", "Accounting / Legal", "Other"
+suggestedCat options (expenses only): "Challenge Fee","TradingView / Platform","VPS / Hosting","EA / Automation","Education / Course","Data Feed","Hardware","Accounting / Legal","Other"
 
-Rules:
-- Include ALL monetary transactions you can find, even if the purpose is unclear
-- Do NOT skip transactions — it is better to include too many than too few
-- For ambiguous transactions, set type based on whether money came in or went out
-- If date format is ambiguous (e.g. MM/DD/YYYY vs DD/MM/YYYY), use the most likely interpretation
+Include ALL monetary transactions. type=income if money was received, type=expense if paid.
 
-Statement text:
+Statement:
 ${text}`
         }]
       })
