@@ -4,11 +4,14 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { text } = req.body || {};
+  let { text } = req.body || {};
   if (!text) return res.status(400).json({ error: 'text required' });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set in Vercel environment variables' });
+
+  // Cap text length to avoid exceeding token limits (~40k chars ≈ ~10k tokens)
+  if (text.length > 40000) text = text.slice(0, 40000);
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -23,17 +26,23 @@ export default async function handler(req, res) {
         max_tokens: 4096,
         messages: [{
           role: 'user',
-          content: `Parse this financial statement and extract all transactions. Return ONLY a valid JSON array, no other text, no markdown.
+          content: `You are a financial data extractor. Extract every transaction from the text below and return a JSON array.
 
-Each item must have:
-- date: YYYY-MM-DD format
-- description: merchant or sender name (keep it short)
-- amount: positive number (absolute value, no currency symbols)
-- type: "income" (money received — payouts from prop firms) or "expense" (fees paid, subscriptions, tools)
-- suggestedFirm: for income, the prop firm name if identifiable, else null
-- suggestedCat: for expenses, one of exactly: "Challenge Fee", "TradingView / Platform", "VPS / Hosting", "EA / Automation", "Education / Course", "Data Feed", "Hardware", "Accounting / Legal", "Other" — else null
+Return ONLY the raw JSON array — no markdown, no code fences, no explanation. Start your response with [ and end with ].
 
-Skip transactions that are clearly internal transfers, refunds of prior charges, or unrelated to trading/prop firms.
+Each transaction object must have exactly these fields:
+- "date": string in YYYY-MM-DD format (guess the year from context if not explicit)
+- "description": string, the merchant, sender, or counterparty name
+- "amount": number, always positive (use absolute value)
+- "type": "income" if money was received, "expense" if money was paid/sent
+- "suggestedFirm": string or null — for income, the prop trading firm name if identifiable
+- "suggestedCat": string or null — for expenses, one of: "Challenge Fee", "TradingView / Platform", "VPS / Hosting", "EA / Automation", "Education / Course", "Data Feed", "Hardware", "Accounting / Legal", "Other"
+
+Rules:
+- Include ALL monetary transactions you can find, even if the purpose is unclear
+- Do NOT skip transactions — it is better to include too many than too few
+- For ambiguous transactions, set type based on whether money came in or went out
+- If date format is ambiguous (e.g. MM/DD/YYYY vs DD/MM/YYYY), use the most likely interpretation
 
 Statement text:
 ${text}`
@@ -45,10 +54,21 @@ ${text}`
     if (data.error) return res.status(400).json({ error: data.error.message });
 
     const content = data.content?.[0]?.text || '';
-    const match = content.match(/\[[\s\S]*\]/);
-    if (!match) return res.status(200).json({ transactions: [] });
 
-    const transactions = JSON.parse(match[0]);
+    // Extract JSON array from response
+    const match = content.match(/\[[\s\S]*\]/);
+    if (!match) {
+      // Claude returned something but no JSON array — return raw for debugging
+      return res.status(200).json({ transactions: [], debug: content.slice(0, 500) });
+    }
+
+    let transactions;
+    try {
+      transactions = JSON.parse(match[0]);
+    } catch {
+      return res.status(200).json({ transactions: [], debug: match[0].slice(0, 500) });
+    }
+
     res.status(200).json({ transactions });
   } catch (e) {
     res.status(502).json({ error: e.message });
