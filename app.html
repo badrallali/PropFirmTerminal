@@ -12,6 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -864,14 +865,14 @@
 <div class="ov" id="ov-import">
   <div class="modal" style="width:860px;max-width:96vw">
     <div class="mo-title">Import Statement</div>
-    <div class="mo-desc">Upload a PDF bank or payment statement (Rise, Skrill, bank, USDT export). AI will extract all transactions automatically.</div>
+    <div class="mo-desc">Upload a statement file (PDF, CSV, or Excel). AI will extract all transactions automatically.</div>
 
     <!-- Step 1: Upload -->
     <div id="import-step1">
       <div class="fg" style="margin-top:16px">
         <div class="field" style="margin-bottom:12px">
-          <label style="display:block;font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">PDF Statement File</label>
-          <input type="file" id="import-file" accept=".pdf" style="background:var(--card2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:13px;padding:8px 12px;width:100%;cursor:pointer"/>
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Statement File — PDF, CSV, or Excel (.xlsx)</label>
+          <input type="file" id="import-file" accept=".pdf,.csv,.xls,.xlsx" style="background:var(--card2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:13px;padding:8px 12px;width:100%;cursor:pointer"/>
         </div>
         <p id="import-error" style="color:var(--red);font-size:12px;margin-top:8px;display:none"></p>
       </div>
@@ -3130,21 +3131,40 @@ function showImportError(msg){
 
 async function extractStatement(e){
   const file=document.getElementById('import-file').files[0];
-  if(!file){showImportError('Please select a PDF file.');return;}
+  if(!file){showImportError('Please select a file.');return;}
   document.getElementById('import-error').style.display='none';
   const btn=document.getElementById('import-extract-btn');
   btn.textContent='Extracting…'; btn.disabled=true;
   try{
-    // Extract text with pdf.js
-    const arrayBuffer=await file.arrayBuffer();
-    const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+    const ext=file.name.split('.').pop().toLowerCase();
     let text='';
-    for(let i=1;i<=pdf.numPages;i++){
-      const page=await pdf.getPage(i);
-      const content=await page.getTextContent();
-      text+=content.items.map(s=>s.str).join(' ')+'\n';
+
+    if(ext==='pdf'){
+      // Extract text with pdf.js
+      const arrayBuffer=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+      for(let i=1;i<=pdf.numPages;i++){
+        const page=await pdf.getPage(i);
+        const content=await page.getTextContent();
+        text+=content.items.map(s=>s.str).join(' ')+'\n';
+      }
+    } else if(ext==='csv'){
+      // Read CSV as plain text
+      text=await file.text();
+    } else if(ext==='xls'||ext==='xlsx'){
+      // Parse Excel with SheetJS, convert first sheet to CSV
+      const arrayBuffer=await file.arrayBuffer();
+      const wb=XLSX.read(arrayBuffer,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      text=XLSX.utils.sheet_to_csv(ws);
+    } else {
+      showImportError('Unsupported file type. Please upload a PDF, CSV, or Excel file.');
+      return;
     }
-    // Send to API
+
+    if(!text.trim()){showImportError('Could not extract any text from this file.');return;}
+
+    // Send to AI
     const resp=await fetch('/api/parse-statement',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -3152,7 +3172,7 @@ async function extractStatement(e){
     });
     const data=await resp.json();
     if(data.error){showImportError('AI error: '+data.error);return;}
-    if(!data.transactions||!data.transactions.length){showImportError('No transactions found in this statement.');return;}
+    if(!data.transactions||!data.transactions.length){showImportError('No transactions found in this file.');return;}
     renderImportPreview(data.transactions);
   }catch(err){
     showImportError('Failed: '+err.message);
