@@ -36,9 +36,9 @@ serve(async (req) => {
 
     // Call OpenRouter with fallback models
     const models = [
-      'meta-llama/llama-3.3-70b-instruct:free',
-      'mistralai/mistral-7b-instruct:free',
-      'qwen/qwen-2-7b-instruct:free',
+      'deepseek/deepseek-chat:free',
+      'deepseek/deepseek-r1:free',
+      'meta-llama/llama-3.1-8b-instruct:free',
     ]
     let orData: any = null
     for (const model of models) {
