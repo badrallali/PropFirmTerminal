@@ -44,7 +44,7 @@ serve(async (req) => {
         'X-Title': 'PropFirmTerminal',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free',
+        model: 'meta-llama/llama-3.3-70b-instruct:free',
         messages,
         max_tokens: generationConfig.maxOutputTokens || 600,
         temperature: generationConfig.temperature ?? 0.7,
