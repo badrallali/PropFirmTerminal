@@ -2584,7 +2584,6 @@ async function chatSend(){
     const authHeaders=await getChatAuthHeader();
     const res=await fetch(CHAT_URL,{method:'POST',headers:{'Content-Type':'application/json',...authHeaders},body:JSON.stringify(body)});
     const data=await res.json();
-    console.log('Gemini response:',JSON.stringify(data).slice(0,400));
     if(data.error){throw new Error(data.error.message||'API error');}
     const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||(data.promptFeedback?'Blocked: '+data.promptFeedback.blockReason:'No response — raw: '+JSON.stringify(data).slice(0,120));
     typingBubble.textContent=reply;
@@ -2614,7 +2613,7 @@ async function chatSend(){
     <div class="chat-head-icon">🤖</div>
     <div class="chat-head-info">
       <div class="chat-head-name">Tax Advisor AI</div>
-      <div class="chat-head-sub">Powered by Gemini · Prop trading specialist</div>
+      <div class="chat-head-sub">Powered by AI · Prop trading specialist</div>
     </div>
     <button class="chat-head-close" onclick="toggleChat()">✕</button>
   </div>
