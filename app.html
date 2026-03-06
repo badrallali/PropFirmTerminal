@@ -1110,10 +1110,13 @@ function defaultFirms(){
 function fixS(){
   if(!S.expenses)S.expenses=[];
   if(!S.invoices)S.invoices=[];
-  // Seed with default firms if the user has none saved yet
-  if(!S.clients||!S.clients.length)S.clients=defaultFirms();
   if(!S.profile)S.profile={name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''};
   if(!S.settings)S.settings={jur:'US'};
+  // Always ensure all default firms are present; preserve any user-added custom firms
+  const defaults=defaultFirms();
+  const defaultNames=new Set(defaults.map(d=>d.name));
+  const customs=(S.clients||[]).filter(c=>!defaultNames.has(c.name));
+  S.clients=[...defaults,...customs];
 }
 
 // Re-assign payouts previously logged as Unknown using stored sender address
