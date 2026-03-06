@@ -20,9 +20,22 @@ serve(async (req) => {
 
     // Forward request to Gemini
     const body = await req.json()
+
+    // v1 doesn't support systemInstruction — prepend it as context turns instead
+    const { systemInstruction, contents, ...rest } = body
+    let finalContents = contents || []
+    if (systemInstruction) {
+      const sysText = (systemInstruction.parts || []).map((p: any) => p.text).join('\n')
+      finalContents = [
+        { role: 'user', parts: [{ text: `[Instructions]\n${sysText}` }] },
+        { role: 'model', parts: [{ text: 'Understood.' }] },
+        ...finalContents
+      ]
+    }
+
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${Deno.env.get('GEMINI_KEY')}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${Deno.env.get('GEMINI_KEY')}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...rest, contents: finalContents }) }
     )
     const data = await res.json()
     return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } })
