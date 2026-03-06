@@ -828,6 +828,11 @@
       <input id="pr_riseWallet" placeholder="0x0000000000000000000000000000000000000000" style="font-family:var(--mf);font-size:12px;letter-spacing:.3px"/>
       <div style="font-size:11px;color:var(--text3);margin-top:5px">Your Rise payout receiving address on Arbitrum.</div>
     </div>
+    <div class="dl" style="color:var(--red);border-color:rgba(248,113,113,.2)">Danger Zone</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-xs" style="border-color:rgba(248,113,113,.3);color:var(--red)" onclick="confirmLoadDemo()">↺ Load Sample Data</button>
+      <button class="btn btn-ghost btn-xs" style="border-color:rgba(248,113,113,.3);color:var(--red)" onclick="clearAllData()">🗑 Clear All Data</button>
+    </div>
     <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('profile')">Cancel</button><button class="btn btn-blue" onclick="saveProfile()">Save Profile</button></div>
   </div>
 </div>
@@ -1080,6 +1085,12 @@ function confirmLoadDemo(){
   demo();
   saveS();
   render();
+}
+
+function clearAllData(){
+  if(!confirm('This will permanently delete ALL payouts, challenges, expenses and invoices. Cannot be undone.\n\nContinue?'))return;
+  S.payouts=[];S.challenges=[];S.expenses=[];S.invoices=[];
+  saveS();closeMo('profile');render();
 }
 
 function demo(){
