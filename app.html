@@ -175,6 +175,15 @@
     .btn-edit:hover{background:rgba(99,102,241,.2)}
     .btn-xs{padding:5px 10px;font-size:12px}
 
+    /* ── PROP FIRMS SHOWCASE ── */
+    #pfGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px}
+    .pf-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:20px;display:flex;flex-direction:column;transition:border-color .2s,box-shadow .2s}
+    .pf-card:hover{border-color:rgba(91,138,245,.35);box-shadow:0 4px 24px rgba(91,138,245,.08)}
+    .pf-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .pf-visit-btn{display:flex;align-items:center;justify-content:center;margin-top:16px;padding:9px 14px;background:rgba(91,138,245,.08);border:1px solid rgba(91,138,245,.2);border-radius:var(--r);color:var(--blue);font-size:13px;font-weight:600;text-decoration:none;transition:background .15s,border-color .15s;margin-top:auto;padding-top:9px}
+    .pf-card .pf-visit-btn{margin-top:16px}
+    .pf-visit-btn:hover{background:rgba(91,138,245,.16);border-color:rgba(91,138,245,.4)}
+
     /* ── IMPORT PREVIEW TABLE ── */
     #import-preview-tbl{width:100%;border-collapse:collapse;font-size:12px}
     #import-preview-tbl thead th{text-align:left;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border2);position:sticky;top:0}
@@ -662,8 +671,8 @@
         <button class="btn btn-blue btn-xs" onclick="document.getElementById('addFirmForm').style.display=document.getElementById('addFirmForm').style.display==='none'?'block':'none'">+ Add Firm</button>
       </div>
     </div>
-    <!-- Saved clients grid -->
-    <div id="pfGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:20px"></div>
+    <!-- Partner firms showcase grid -->
+    <div id="pfGrid"></div>
     <!-- Add form (hidden by default) -->
     <div id="addFirmForm" style="display:none">
       <div class="tc" style="padding:20px">
@@ -1079,31 +1088,32 @@ let S={challenges:[],payouts:[],expenses:[],invoices:[],clients:[],
 const KEY='pft5';
 
 function defaultFirms(){
+  // ref: replace with your affiliate/referral URL per firm
   return [
-    {id:uid(),name:'FTMO',                web:'ftmo.com',                addr:'Purkyňova 2121/3',                          city:'Prague',         state:'',   country:'Czech Republic',        zip:'110 00', email:'support@ftmo.com',                    tax:'CZ08452173'},
-    {id:uid(),name:'Apex',                web:'apextraderfunding.com',   addr:'2028 E. Ben White Blvd, Suite 240',         city:'Austin',         state:'TX', country:'United States',         zip:'78741',  email:'support@apextraderfunding.com',        tax:''},
-    {id:uid(),name:'TopStep',             web:'topstep.com',             addr:'141 W Jackson Blvd, Suite 4240',            city:'Chicago',        state:'IL', country:'United States',         zip:'60604',  email:'help@topstep.com',                    tax:''},
-    {id:uid(),name:'FundedNext',          web:'fundednext.com',          addr:'Office No. 7, AI Robotics HUB, C1 Bldg, AFZ', city:'Ajman',       state:'',   country:'United Arab Emirates',  zip:'',       email:'support@fundednext.com',               tax:''},
-    {id:uid(),name:'PipFarm',             web:'pipfarm.com',             addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@pipfarm.com',                  tax:''},
-    {id:uid(),name:'E8 Funding',          web:'e8markets.com',           addr:'100 Crescent Ct, Unit 700',                 city:'Dallas',         state:'TX', country:'United States',         zip:'75201',  email:'support@e8markets.com',                tax:''},
-    {id:uid(),name:'The 5%ers',           web:'the5ers.com',             addr:'3 Golda Meir Street',                       city:"Ra'anana",       state:'',   country:'Israel',                zip:'',       email:'support@the5ers.com',                  tax:'IL516285462'},
-    {id:uid(),name:'Blue Guardian',       web:'blueguardian.com',        addr:'The Sotheby Building, Rodney Village, Rodney Bay', city:'Gros-Islet', state:'', country:'Saint Lucia',        zip:'',       email:'support@blueguardian.com',              tax:''},
-    {id:uid(),name:'Funding Pips',        web:'fundingpips.com',         addr:'',                                          city:'Dubai',          state:'',   country:'United Arab Emirates',  zip:'',       email:'support@fundingpips.com',               tax:''},
-    {id:uid(),name:'Alpha Capital',       web:'alphacapitalgroup.uk',    addr:'Kemp House, 160 City Road',                 city:'London',         state:'',   country:'United Kingdom',        zip:'EC1V 2NX',email:'support@alphacapitalgroup.uk',         tax:''},
-    {id:uid(),name:'The Funded Trader',   web:'thefundedtrader.com',     addr:'5900 Balcones Dr, Suite 100',               city:'Austin',         state:'TX', country:'United States',         zip:'78731',  email:'support@thefundedtrader.com',           tax:''},
-    {id:uid(),name:'Lux Trading Firm',    web:'luxtradingfirm.com',      addr:'1 Bartholomew Close',                       city:'London',         state:'',   country:'United Kingdom',        zip:'EC1A 7BL',email:'support@luxtradingfirm.com',           tax:''},
-    {id:uid(),name:'True Forex Funds',    web:'trueforexfunds.com',      addr:'',                                          city:'Budapest',       state:'',   country:'Hungary',               zip:'',       email:'support@trueforexfunds.com',            tax:''},
-    {id:uid(),name:'Fidelcrest',          web:'fidelcrest.com',          addr:'Griva Digeni 115, Trident Centre',          city:'Limassol',       state:'',   country:'Cyprus',                zip:'3101',   email:'support@fidelcrest.com',                tax:''},
-    {id:uid(),name:'City Traders Imperium',web:'citytraders.io',         addr:'',                                          city:'London',         state:'',   country:'United Kingdom',        zip:'',       email:'support@citytraders.io',                tax:''},
-    {id:uid(),name:'Earn2Trade',          web:'earn2trade.com',          addr:'',                                          city:'',               state:'',   country:'United States',         zip:'',       email:'support@earn2trade.com',                tax:''},
-    {id:uid(),name:'OneUp Trader',        web:'oneuptrader.com',         addr:'',                                          city:'',               state:'',   country:'United States',         zip:'',       email:'support@oneuptrader.com',               tax:''},
-    {id:uid(),name:'The Trading Pit',     web:'thetradingpit.com',       addr:'Landstrasse 123',                           city:'Vaduz',          state:'',   country:'Liechtenstein',         zip:'9490',   email:'support@thetradingpit.com',             tax:''},
-    {id:uid(),name:'Goat Funded Trader',  web:'goatfundedtrader.com',    addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@goatfundedtrader.com',          tax:''},
-    {id:uid(),name:'Maven Trading',       web:'maven-trading.com',       addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@maven-trading.com',             tax:''},
-    {id:uid(),name:'Bulenox',             web:'bulenox.com',             addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@bulenox.com',                   tax:''},
-    {id:uid(),name:'Traders With Edge',   web:'traderswithedge.com',     addr:'',                                          city:'',               state:'',   country:'Australia',             zip:'',       email:'support@traderswithedge.com',           tax:''},
-    {id:uid(),name:'My Forex Funds',      web:'myforexfunds.com',        addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@myforexfunds.com',              tax:''},
-    {id:uid(),name:'Funded Academy',      web:'fundedacademy.com',       addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@fundedacademy.com',             tax:''},
+    {id:uid(),name:'FTMO',                web:'ftmo.com',                flag:'🇨🇿',desc:"Europe's leading prop firm. Two-phase evaluation with up to $2M in funding.",               ref:'https://ftmo.com',                addr:'Purkyňova 2121/3',                          city:'Prague',      state:'',   country:'Czech Republic',       zip:'110 00', email:'support@ftmo.com',                    tax:'CZ08452173'},
+    {id:uid(),name:'Apex',                web:'apextraderfunding.com',   flag:'🇺🇸',desc:'Pass one evaluation and trade funded futures accounts up to $300K.',                         ref:'https://apextraderfunding.com',   addr:'2028 E. Ben White Blvd, Suite 240',         city:'Austin',      state:'TX', country:'United States',        zip:'78741',  email:'support@apextraderfunding.com',        tax:''},
+    {id:uid(),name:'TopStep',             web:'topstep.com',             flag:'🇺🇸',desc:'The original funded futures program. Trade CME markets with firm capital.',                  ref:'https://topstep.com',             addr:'141 W Jackson Blvd, Suite 4240',            city:'Chicago',     state:'IL', country:'United States',        zip:'60604',  email:'help@topstep.com',                    tax:''},
+    {id:uid(),name:'FundedNext',          web:'fundednext.com',          flag:'🇦🇪',desc:'Fast-growing global prop firm offering up to $4M in combined funding across accounts.',       ref:'https://fundednext.com',          addr:'Office No. 7, AI Robotics HUB, C1 Bldg, AFZ', city:'Ajman',    state:'',   country:'United Arab Emirates', zip:'',       email:'support@fundednext.com',               tax:''},
+    {id:uid(),name:'PipFarm',             web:'pipfarm.com',             flag:'',  desc:'Modern prop firm built for consistent traders. Flexible drawdown and payout structure.',     ref:'https://pipfarm.com',             addr:'',                                          city:'',            state:'',   country:'',                     zip:'',       email:'support@pipfarm.com',                  tax:''},
+    {id:uid(),name:'E8 Funding',          web:'e8markets.com',           flag:'🇺🇸',desc:'Straightforward forex evaluation. Scale up to $3.2M in total funding.',                     ref:'https://e8markets.com',           addr:'100 Crescent Ct, Unit 700',                 city:'Dallas',      state:'TX', country:'United States',        zip:'75201',  email:'support@e8markets.com',                tax:''},
+    {id:uid(),name:'The 5%ers',           web:'the5ers.com',             flag:'🇮🇱',desc:'Unique growth plan with instant funding options. Scale up to $4M in capital.',              ref:'https://the5ers.com',             addr:'3 Golda Meir Street',                       city:"Ra'anana",    state:'',   country:'Israel',               zip:'',       email:'support@the5ers.com',                  tax:'IL516285462'},
+    {id:uid(),name:'Blue Guardian',       web:'blueguardian.com',        flag:'🇱🇨',desc:'Competitive prop firm with up to 85% profit split and flexible trading conditions.',         ref:'https://blueguardian.com',        addr:'The Sotheby Building, Rodney Village, Rodney Bay', city:'Gros-Islet', state:'', country:'Saint Lucia',   zip:'',       email:'support@blueguardian.com',              tax:''},
+    {id:uid(),name:'Funding Pips',        web:'fundingpips.com',         flag:'🇦🇪',desc:'Dubai-based prop firm with up to 90% profit split and bi-weekly payouts.',                  ref:'https://fundingpips.com',         addr:'',                                          city:'Dubai',       state:'',   country:'United Arab Emirates', zip:'',       email:'support@fundingpips.com',               tax:''},
+    {id:uid(),name:'Alpha Capital',       web:'alphacapitalgroup.uk',    flag:'🇬🇧',desc:'UK-based prop firm with flexible conditions for forex and indices traders.',                 ref:'https://alphacapitalgroup.uk',    addr:'Kemp House, 160 City Road',                 city:'London',      state:'',   country:'United Kingdom',       zip:'EC1V 2NX',email:'support@alphacapitalgroup.uk',         tax:''},
+    {id:uid(),name:'The Funded Trader',   web:'thefundedtrader.com',     flag:'🇺🇸',desc:'Multi-asset prop firm with multiple account types and up to $1.5M in funding.',             ref:'https://thefundedtrader.com',     addr:'5900 Balcones Dr, Suite 100',               city:'Austin',      state:'TX', country:'United States',        zip:'78731',  email:'support@thefundedtrader.com',           tax:''},
+    {id:uid(),name:'Lux Trading Firm',    web:'luxtradingfirm.com',      flag:'🇬🇧',desc:'London-based prop firm for discretionary forex traders with a growth scaling plan.',        ref:'https://luxtradingfirm.com',      addr:'1 Bartholomew Close',                       city:'London',      state:'',   country:'United Kingdom',       zip:'EC1A 7BL',email:'support@luxtradingfirm.com',           tax:''},
+    {id:uid(),name:'True Forex Funds',    web:'trueforexfunds.com',      flag:'🇭🇺',desc:'European prop firm with a streamlined one-phase evaluation and fast payouts.',               ref:'https://trueforexfunds.com',      addr:'',                                          city:'Budapest',    state:'',   country:'Hungary',              zip:'',       email:'support@trueforexfunds.com',            tax:''},
+    {id:uid(),name:'Fidelcrest',          web:'fidelcrest.com',          flag:'🇨🇾',desc:'Prop firm for forex, stocks, and indices with aggressive and normal account modes.',         ref:'https://fidelcrest.com',          addr:'Griva Digeni 115, Trident Centre',          city:'Limassol',    state:'',   country:'Cyprus',               zip:'3101',   email:'support@fidelcrest.com',                tax:''},
+    {id:uid(),name:'City Traders Imperium',web:'citytraders.io',         flag:'🇬🇧',desc:'London-based prop firm focused on trader education and long-term development.',             ref:'https://citytraders.io',          addr:'',                                          city:'London',      state:'',   country:'United Kingdom',       zip:'',       email:'support@citytraders.io',                tax:''},
+    {id:uid(),name:'Earn2Trade',          web:'earn2trade.com',          flag:'🇺🇸',desc:'US-regulated funded futures trading program with educational resources included.',           ref:'https://earn2trade.com',          addr:'',                                          city:'',            state:'',   country:'United States',        zip:'',       email:'support@earn2trade.com',                tax:''},
+    {id:uid(),name:'OneUp Trader',        web:'oneuptrader.com',         flag:'🇺🇸',desc:'Simple, transparent funded futures evaluation with no consistency rules.',                  ref:'https://oneuptrader.com',         addr:'',                                          city:'',            state:'',   country:'United States',        zip:'',       email:'support@oneuptrader.com',               tax:''},
+    {id:uid(),name:'The Trading Pit',     web:'thetradingpit.com',       flag:'🇱🇮',desc:'European multi-asset prop firm with competitive rules and fast weekly payouts.',             ref:'https://thetradingpit.com',       addr:'Landstrasse 123',                           city:'Vaduz',       state:'',   country:'Liechtenstein',        zip:'9490',   email:'support@thetradingpit.com',             tax:''},
+    {id:uid(),name:'Goat Funded Trader',  web:'goatfundedtrader.com',    flag:'',  desc:'Accessible prop firm with relaxed trading rules and a straightforward evaluation.',          ref:'https://goatfundedtrader.com',    addr:'',                                          city:'',            state:'',   country:'',                     zip:'',       email:'support@goatfundedtrader.com',          tax:''},
+    {id:uid(),name:'Maven Trading',       web:'maven-trading.com',       flag:'',  desc:'Funded accounts for futures traders with competitive conditions and clear rules.',            ref:'https://maven-trading.com',       addr:'',                                          city:'',            state:'',   country:'',                     zip:'',       email:'support@maven-trading.com',             tax:''},
+    {id:uid(),name:'Bulenox',             web:'bulenox.com',             flag:'',  desc:'Futures prop firm with competitive evaluation terms and a supportive community.',            ref:'https://bulenox.com',             addr:'',                                          city:'',            state:'',   country:'',                     zip:'',       email:'support@bulenox.com',                   tax:''},
+    {id:uid(),name:'Traders With Edge',   web:'traderswithedge.com',     flag:'🇦🇺',desc:'Australian-based prop firm for forex and indices with a straightforward evaluation.',       ref:'https://traderswithedge.com',     addr:'',                                          city:'',            state:'',   country:'Australia',            zip:'',       email:'support@traderswithedge.com',           tax:''},
+    {id:uid(),name:'My Forex Funds',      web:'myforexfunds.com',        flag:'',  desc:'Previously one of the world\'s largest retail prop firms with rapid account scaling.',     ref:'https://myforexfunds.com',        addr:'',                                          city:'',            state:'',   country:'',                     zip:'',       email:'support@myforexfunds.com',              tax:''},
+    {id:uid(),name:'Funded Academy',      web:'fundedacademy.com',       flag:'',  desc:'Prop firm combining funded trading accounts with educational resources for traders.',       ref:'https://fundedacademy.com',       addr:'',                                          city:'',            state:'',   country:'',                     zip:'',       email:'support@fundedacademy.com',             tax:''},
   ];
 }
 
@@ -2096,35 +2106,39 @@ function renderTax(chs,pys){
 
 // ── PROP FIRMS (CLIENTS) ─────────────────────────────────────────
 function renderClientList(){
-  // Update page grid
   const grid=document.getElementById('pfGrid');
   if(grid){
-    if(!S.clients.length){
-      grid.innerHTML=`<div class="tc" style="grid-column:1/-1;padding:32px;text-align:center">
-        <div style="font-size:28px;margin-bottom:8px">🏢</div>
-        <div style="color:var(--text2);font-weight:600;margin-bottom:4px">No firms saved yet</div>
-        <div style="color:var(--text3);font-size:12px">Click "+ Add Firm" to pre-save a firm's invoice details.</div>
-      </div>`;
-    } else {
-      grid.innerHTML=S.clients.map(c=>`
-        <div class="tc" style="padding:20px">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:10px">
-              ${c.web?`<img src="https://www.google.com/s2/favicons?sz=64&domain=${c.web}" onerror="this.style.display='none'" style="width:36px;height:36px;object-fit:contain;border-radius:6px;border:1px solid var(--border);padding:2px;background:#fff;flex-shrink:0">`:'<div style="width:36px;height:36px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🏢</div>'}
-              <div>
-                <div style="font-size:15px;font-weight:700;color:var(--text)">${c.name}</div>
-                ${c.web?`<div style="font-size:11px;color:var(--blue);margin-top:2px">${c.web}</div>`:''}
-              </div>
+    const partnerNames=new Set(defaultFirms().map(d=>d.name));
+    grid.innerHTML=S.clients.map(c=>{
+      const isPartner=partnerNames.has(c.name);
+      const visitUrl=c.ref||(c.web?'https://'+c.web:'');
+      const location=[c.flag||'',c.city,c.country].filter(Boolean).join(' ');
+      return `<div class="pf-card">
+        <div class="pf-card-top">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0">
+            ${c.web
+              ?`<img src="https://www.google.com/s2/favicons?sz=64&domain=${c.web}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:48px;height:48px;object-fit:contain;border-radius:10px;border:1px solid var(--border);padding:4px;background:#fff;flex-shrink:0"><div style="display:none;width:48px;height:48px;border-radius:10px;background:var(--card2);border:1px solid var(--border);align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏢</div>`
+              :`<div style="width:48px;height:48px;border-radius:10px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏢</div>`
+            }
+            <div style="min-width:0">
+              <div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+              ${location?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${location}</div>`:''}
             </div>
-            <button class="btn-del" onclick="delClient('${c.id}')">Remove</button>
           </div>
-          <div style="font-size:12px;color:var(--text3);line-height:1.8">
-            ${[c.addr,c.city&&c.state?c.city+', '+c.state:c.city||c.state,c.zip,c.country].filter(Boolean).map(l=>`<div>${l}</div>`).join('')}
-            ${c.email?`<div style="margin-top:4px">${c.email}</div>`:''}
-            ${c.tax?`<div>Reg: ${c.tax}</div>`:''}
-          </div>
-        </div>`).join('');
-    }
+          ${isPartner
+            ?`<span style="font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--blue);background:rgba(91,138,245,.12);border:1px solid rgba(91,138,245,.25);border-radius:20px;padding:3px 9px;white-space:nowrap;flex-shrink:0">Partner</span>`
+            :`<button class="btn-del" onclick="delClient('${c.id}')" style="flex-shrink:0">Remove</button>`
+          }
+        </div>
+        ${c.desc?`<p style="font-size:12px;color:var(--text3);margin:12px 0 0;line-height:1.6">${c.desc}</p>`:''}
+        ${(c.addr||c.email||c.tax)?`<div style="margin-top:12px;display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--text3)">
+          ${c.addr?`<span>📍 ${[c.addr,c.city].filter(Boolean).join(', ')}</span>`:''}
+          ${c.email?`<span>✉ ${c.email}</span>`:''}
+          ${c.tax?`<span>🏛 ${c.tax}</span>`:''}
+        </div>`:''}
+        ${visitUrl?`<a href="${visitUrl}" target="_blank" rel="noopener" class="pf-visit-btn">Visit Firm →</a>`:''}
+      </div>`;
+    }).join('');
   }
   // refresh datalist for payout/challenge modals
   const dl=document.getElementById('cl_datalist');
@@ -2152,8 +2166,12 @@ function saveClient(){
 }
 
 function delClient(id){
+  const c=S.clients.find(x=>x.id===id);
+  if(!c)return;
+  const partnerNames=new Set(defaultFirms().map(d=>d.name));
+  if(partnerNames.has(c.name)){alert('Partner firms cannot be removed.');return;}
   if(!confirm('Remove this firm?'))return;
-  S.clients=S.clients.filter(c=>c.id!==id);
+  S.clients=S.clients.filter(x=>x.id!==id);
   saveS();
   renderClientList();
 }
