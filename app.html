@@ -2456,9 +2456,7 @@ async function syncRisePayouts(){
     const unknown=[];
 
     for(const tx of txs){
-      // Alchemy returns value as a number and timestamp as ISO string
-      const sym=(tx.asset||'').toUpperCase();
-      if(!sym.includes('USD'))continue;
+      // Server already filtered to USDC/USDT contracts — accept all
       const hash=tx.hash;
       if(knownHashes.has(hash)){dupes++;continue;}
       const amt=tx.value; // already a number, e.g. 50.0
