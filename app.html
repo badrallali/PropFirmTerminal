@@ -760,18 +760,33 @@
 <div class="ov" id="ov-ch">
   <div class="modal">
     <div class="mo-title" id="mo-ch-title">Add Challenge</div><div class="mo-desc">Log a new prop firm challenge attempt.</div>
-    <div class="fg">
-      <div class="field"><label>Prop Firm</label><select id="ch_firm" onchange="if(this.value==='__add__'){editingChId=null;closeMo('ch');navTo('propfirms',null)}"></select></div>
-      <div class="field"><label>Account Size ($)</label><input type="number" id="ch_sz" placeholder="100000"/></div>
+    <div class="field" id="ch_entry_type_wrap" style="display:none"><label>Entry Type</label>
+      <select id="ch_entry_type" onchange="onChEntryTypeChange()"><option value="challenge">Challenge Fee</option><option value="expense">Other Expense</option></select>
     </div>
-    <div class="fg">
-      <div class="field"><label>Fee ($)</label><input type="number" id="ch_fee" placeholder="149"/></div>
-      <div class="field"><label>Type</label><select id="ch_type"><option>1-Stage</option><option>2-Stage</option><option>Instant</option><option>3-Stage</option></select></div>
+    <div id="ch_challenge_fields">
+      <div class="fg">
+        <div class="field"><label>Prop Firm</label><select id="ch_firm" onchange="if(this.value==='__add__'){editingChId=null;closeMo('ch');navTo('propfirms',null)}"></select></div>
+        <div class="field"><label>Account Size ($)</label><input type="number" id="ch_sz" placeholder="100000"/></div>
+      </div>
+      <div class="fg">
+        <div class="field"><label>Fee ($)</label><input type="number" id="ch_fee" placeholder="149"/></div>
+        <div class="field"><label>Type</label><select id="ch_type"><option>1-Stage</option><option>2-Stage</option><option>Instant</option><option>3-Stage</option></select></div>
+      </div>
+    </div>
+    <div id="ch_expense_fields" style="display:none">
+      <div class="fg">
+        <div class="field"><label>Category</label><select id="ch_exp_cat"><option>TradingView / Platform</option><option>VPS / Hosting</option><option>EA / Automation</option><option>Education / Course</option><option>Data Feed</option><option>Hardware</option><option>Accounting / Legal</option><option>Other</option></select></div>
+        <div class="field"><label>Amount ($)</label><input type="number" id="ch_exp_amt" placeholder="15"/></div>
+      </div>
+      <div class="fg">
+        <div class="field"><label>Vendor</label><input id="ch_exp_vendor" placeholder="e.g. TradingView Pro"/></div>
+        <div class="field"><label>Recurring</label><select id="ch_exp_rec"><option value="no">One-time</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select></div>
+      </div>
     </div>
     <div class="field"><label>Date</label><input type="date" id="ch_date"/></div>
     <div class="field"><label>Notes</label><input id="ch_notes" placeholder="Optional"/></div>
     <div class="field"><label>Invoice / Receipt <span style="font-weight:400;color:var(--text3)">(PDF or image, optional)</span></label><input type="file" id="ch_invoice" accept=".pdf,.png,.jpg,.jpeg,.webp" style="color:var(--text2);font-size:12px"/></div>
-    <div class="mo-foot"><button class="btn btn-ghost" onclick="editingChId=null;document.getElementById('mo-ch-title').textContent='Add Challenge';closeMo('ch')">Cancel</button><button class="btn btn-blue" onclick="saveCh()">Save</button></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="onChCancel()">Cancel</button><button class="btn btn-blue" onclick="saveCh()">Save</button></div>
   </div>
 </div>
 
@@ -796,20 +811,35 @@
 <!-- EXPENSE -->
 <div class="ov" id="ov-exp">
   <div class="modal">
-    <div class="mo-title">Add Business Expense</div><div class="mo-desc">Log deductible expenses (challenge fees are auto-imported).</div>
-    <div class="fg">
-      <div class="field"><label>Category</label>
-        <select id="ex_cat"><option>TradingView / Platform</option><option>VPS / Hosting</option><option>EA / Automation</option><option>Education / Course</option><option>Data Feed</option><option>Hardware</option><option>Accounting / Legal</option><option>Other</option></select>
+    <div class="mo-title" id="mo-exp-title">Add Business Expense</div><div class="mo-desc">Log deductible expenses (challenge fees are in the section above).</div>
+    <div class="field" id="ex_entry_type_wrap" style="display:none"><label>Entry Type</label>
+      <select id="ex_entry_type" onchange="onExEntryTypeChange()"><option value="expense">Other Expense</option><option value="challenge">Challenge Fee</option></select>
+    </div>
+    <div id="ex_expense_fields">
+      <div class="fg">
+        <div class="field"><label>Category</label>
+          <select id="ex_cat"><option>TradingView / Platform</option><option>VPS / Hosting</option><option>EA / Automation</option><option>Education / Course</option><option>Data Feed</option><option>Hardware</option><option>Accounting / Legal</option><option>Other</option></select>
+        </div>
+        <div class="field"><label>Amount ($)</label><input type="number" id="ex_amt" placeholder="15"/></div>
       </div>
-      <div class="field"><label>Amount ($)</label><input type="number" id="ex_amt" placeholder="15"/></div>
+      <div class="fg">
+        <div class="field"><label>Vendor</label><input id="ex_vendor" placeholder="e.g. TradingView Pro"/></div>
+        <div class="field"><label>Recurring</label><select id="ex_rec"><option value="no">One-time</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select></div>
+      </div>
     </div>
-    <div class="fg">
-      <div class="field"><label>Vendor</label><input id="ex_vendor" placeholder="e.g. TradingView Pro"/></div>
-      <div class="field"><label>Date</label><input type="date" id="ex_date"/></div>
+    <div id="ex_challenge_fields" style="display:none">
+      <div class="fg">
+        <div class="field"><label>Prop Firm</label><select id="ex_ch_firm" onchange="if(this.value==='__add__'){editingExpId=null;closeMo('exp');navTo('propfirms',null)}"></select></div>
+        <div class="field"><label>Account Size ($)</label><input type="number" id="ex_ch_sz" placeholder="100000"/></div>
+      </div>
+      <div class="fg">
+        <div class="field"><label>Fee ($)</label><input type="number" id="ex_ch_fee" placeholder="149"/></div>
+        <div class="field"><label>Type</label><select id="ex_ch_type"><option>1-Stage</option><option>2-Stage</option><option>Instant</option><option>3-Stage</option></select></div>
+      </div>
     </div>
-    <div class="field"><label>Recurring</label><select id="ex_rec"><option value="no">One-time</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select></div>
+    <div class="field"><label>Date</label><input type="date" id="ex_date"/></div>
     <div class="field"><label>Invoice / Receipt <span style="font-weight:400;color:var(--text3)">(PDF or image, optional)</span></label><input type="file" id="ex_invoice" accept=".pdf,.png,.jpg,.jpeg,.webp" style="color:var(--text2);font-size:12px"/></div>
-    <div class="mo-foot"><button class="btn btn-ghost" onclick="editingExpId=null;closeMo('exp')">Cancel</button><button class="btn btn-blue" onclick="saveExp()">Save</button></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="onExpCancel()">Cancel</button><button class="btn btn-blue" onclick="saveExp()">Save</button></div>
   </div>
 </div>
 
@@ -2716,18 +2746,54 @@ function populateFirmDropdowns(){
 function openMo(t){
   if(t==='py')populateFirmDropdowns();
   if(t==='ch'){populateFirmDropdowns();if(!editingChId)document.getElementById('ch_date').value=today();}
-  if(t==='py')document.getElementById('py_date').value=today();
-  if(t==='exp')document.getElementById('ex_date').value=today();
+  if(t==='py'&&!editingPyId)document.getElementById('py_date').value=today();
+  if(t==='exp'&&!editingExpId)document.getElementById('ex_date').value=today();
   if(t==='profile')openProfile();
   document.getElementById('ov-'+t).classList.add('open');
 }
 function closeMo(t){document.getElementById('ov-'+t).classList.remove('open');}
 document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 
+function _resetChModal(){
+  document.getElementById('mo-ch-title').textContent='Add Challenge';
+  document.getElementById('ch_entry_type_wrap').style.display='none';
+  document.getElementById('ch_entry_type').value='challenge';
+  document.getElementById('ch_challenge_fields').style.display='';
+  document.getElementById('ch_expense_fields').style.display='none';
+}
+function onChCancel(){editingChId=null;_resetChModal();closeMo('ch');}
+function onChEntryTypeChange(){
+  const isExp=document.getElementById('ch_entry_type').value==='expense';
+  document.getElementById('ch_challenge_fields').style.display=isExp?'none':'';
+  document.getElementById('ch_expense_fields').style.display=isExp?'':'none';
+}
+
 async function saveCh(){
-  const firm=document.getElementById('ch_firm').value,fee=document.getElementById('ch_fee').value,date=document.getElementById('ch_date').value;
-  if(!firm||firm==='__add__'||!fee||!date){alert('Firm, Fee, and Date required.');return;}
+  const date=document.getElementById('ch_date').value;
   const file=document.getElementById('ch_invoice').files[0];
+  const entryType=editingChId?document.getElementById('ch_entry_type').value:'challenge';
+
+  // Switching challenge → expense
+  if(entryType==='expense'){
+    const amt=+document.getElementById('ch_exp_amt').value;
+    if(!amt||!date){alert('Amount and Date required.');return;}
+    const orig=S.challenges.find(x=>x.id===editingChId);
+    let invoiceUrl=orig?orig.invoiceUrl||'':'';
+    if(file&&currentUser){
+      const ext=file.name.split('.').pop();
+      const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${editingChId}.${ext}`,file,{upsert:true});
+      if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${editingChId}.${ext}`);invoiceUrl=pd.publicUrl;}
+    }
+    S.challenges=S.challenges.filter(x=>x.id!==editingChId);
+    S.expenses.push({id:editingChId,cat:document.getElementById('ch_exp_cat').value,vendor:document.getElementById('ch_exp_vendor').value.trim(),amt,date,rec:document.getElementById('ch_exp_rec').value,invoiceUrl});
+    editingChId=null;
+    _resetChModal();
+    saveS();closeMo('ch');['ch_sz','ch_fee','ch_notes','ch_exp_amt','ch_exp_vendor'].forEach(i=>document.getElementById(i).value='');document.getElementById('ch_invoice').value='';render();
+    return;
+  }
+
+  const firm=document.getElementById('ch_firm').value,fee=document.getElementById('ch_fee').value;
+  if(!firm||firm==='__add__'||!fee||!date){alert('Firm, Fee, and Date required.');return;}
   if(editingChId){
     const c=S.challenges.find(x=>x.id===editingChId);
     if(c){
@@ -2749,7 +2815,7 @@ async function saveCh(){
     }
     S.challenges.push({id,firm,sz:+document.getElementById('ch_sz').value||0,fee:+fee,type:document.getElementById('ch_type').value,date,notes:document.getElementById('ch_notes').value.trim(),invoiceUrl});
   }
-  document.getElementById('mo-ch-title').textContent='Add Challenge';
+  _resetChModal();
   saveS();closeMo('ch');['ch_sz','ch_fee','ch_notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('ch_invoice').value='';render();
 }
 
@@ -2769,6 +2835,10 @@ function editCh(id){
   const c=S.challenges.find(x=>x.id===id); if(!c)return;
   editingChId=id;
   openMo('ch');
+  document.getElementById('ch_entry_type_wrap').style.display='';
+  document.getElementById('ch_entry_type').value='challenge';
+  document.getElementById('ch_challenge_fields').style.display='';
+  document.getElementById('ch_expense_fields').style.display='none';
   document.getElementById('ch_firm').value=c.firm;
   document.getElementById('ch_sz').value=c.sz||'';
   document.getElementById('ch_fee').value=c.fee;
@@ -2794,6 +2864,11 @@ function savePy(){
 function editExp(id){
   const e=S.expenses.find(x=>x.id===id); if(!e)return;
   editingExpId=id;
+  document.getElementById('mo-exp-title').textContent='Edit Business Expense';
+  document.getElementById('ex_entry_type_wrap').style.display='';
+  document.getElementById('ex_entry_type').value='expense';
+  document.getElementById('ex_expense_fields').style.display='';
+  document.getElementById('ex_challenge_fields').style.display='none';
   document.getElementById('ex_cat').value=e.cat;
   document.getElementById('ex_amt').value=e.amt;
   document.getElementById('ex_vendor').value=e.vendor||'';
@@ -2802,10 +2877,51 @@ function editExp(id){
   openMo('exp');
 }
 
+function _resetExpModal(){
+  document.getElementById('mo-exp-title').textContent='Add Business Expense';
+  document.getElementById('ex_entry_type_wrap').style.display='none';
+  document.getElementById('ex_entry_type').value='expense';
+  document.getElementById('ex_expense_fields').style.display='';
+  document.getElementById('ex_challenge_fields').style.display='none';
+}
+function onExpCancel(){editingExpId=null;_resetExpModal();closeMo('exp');}
+function onExEntryTypeChange(){
+  const isCh=document.getElementById('ex_entry_type').value==='challenge';
+  document.getElementById('ex_expense_fields').style.display=isCh?'none':'';
+  document.getElementById('ex_challenge_fields').style.display=isCh?'':'none';
+  if(isCh){
+    const opts=(S.clients.length?S.clients.map(c=>`<option value="${c.name}">${c.name}</option>`).join(''):'<option value="" disabled>No firms saved yet</option>')+'<option value="__add__" style="color:var(--blue)">➕ Add a Prop Firm</option>';
+    document.getElementById('ex_ch_firm').innerHTML=opts;
+  }
+}
+
 async function saveExp(){
-  const amt=document.getElementById('ex_amt').value,date=document.getElementById('ex_date').value;
-  if(!amt||!date){alert('Amount and Date required.');return;}
+  const date=document.getElementById('ex_date').value;
   const file=document.getElementById('ex_invoice').files[0];
+  const entryType=editingExpId?document.getElementById('ex_entry_type').value:'expense';
+
+  // Switching expense → challenge
+  if(entryType==='challenge'){
+    const firm=document.getElementById('ex_ch_firm').value;
+    const fee=+document.getElementById('ex_ch_fee').value;
+    if(!firm||firm==='__add__'||!fee||!date){alert('Firm, Fee, and Date required.');return;}
+    const orig=S.expenses.find(x=>x.id===editingExpId);
+    let invoiceUrl=orig?orig.invoiceUrl||'':'';
+    if(file&&currentUser){
+      const ext=file.name.split('.').pop();
+      const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${editingExpId}.${ext}`,file,{upsert:true});
+      if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${editingExpId}.${ext}`);invoiceUrl=pd.publicUrl;}
+    }
+    S.expenses=S.expenses.filter(x=>x.id!==editingExpId);
+    S.challenges.push({id:editingExpId,firm,sz:+document.getElementById('ex_ch_sz').value||0,fee,type:document.getElementById('ex_ch_type').value,date,notes:'',invoiceUrl});
+    editingExpId=null;
+    _resetExpModal();
+    saveS();closeMo('exp');['ex_amt','ex_vendor','ex_date','ex_ch_fee','ex_ch_sz'].forEach(i=>document.getElementById(i).value='');document.getElementById('ex_invoice').value='';render();
+    return;
+  }
+
+  const amt=document.getElementById('ex_amt').value;
+  if(!amt||!date){alert('Amount and Date required.');return;}
   if(editingExpId){
     const e=S.expenses.find(x=>x.id===editingExpId);
     if(e){
@@ -2818,6 +2934,7 @@ async function saveExp(){
       }
     }
     editingExpId=null;
+    _resetExpModal();
   } else {
     const id=uid();
     let invoiceUrl='';
