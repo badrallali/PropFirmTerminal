@@ -2432,14 +2432,15 @@ async function syncRisePayouts(){
   btn.textContent='⏳ Syncing…';btn.disabled=true;
 
   try{
-    // Blockscout Arbitrum — free, no API key required
-    const url=`https://arbitrum.blockscout.com/api`
+    // Arbiscan — etherscan-compatible, free without API key
+    const url=`https://api.arbiscan.io/api`
       +`?module=account&action=tokentx&address=${wallet}&sort=desc&offset=200&page=1`;
     const res=await fetch(url);
-    if(!res.ok)throw new Error(`Blockscout responded with HTTP ${res.status}`);
+    if(!res.ok)throw new Error(`Arbiscan responded with HTTP ${res.status}`);
     const json=await res.json();
-    if(json.status==='0'&&json.message!=='No transactions found')throw new Error(json.result||'API error');
-    const txs=json.result||[];
+    // status '0' with message 'NOTOK' is a real error; anything else (no data, empty) is fine
+    if(json.message==='NOTOK')throw new Error(json.result||'Arbiscan error — check your wallet address');
+    const txs=Array.isArray(json.result)?json.result:[];
 
     // All known tx hashes to deduplicate
     const knownHashes=new Set(S.payouts.map(p=>p.txHash).filter(Boolean));
@@ -2472,7 +2473,7 @@ async function syncRisePayouts(){
     saveS();render();
     showRiseToast(added,dupes,unknown);
   }catch(e){
-    alert('Sync failed: '+e.message);
+    alert('Rise sync failed:\n'+e.message);
   }finally{
     btn.textContent='↻ Sync Rise';btn.disabled=false;
   }
