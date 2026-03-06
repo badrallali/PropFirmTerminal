@@ -18,6 +18,7 @@ export default async function handler(req, res) {
           method: 'alchemy_getAssetTransfers',
           params: [{
             toAddress: wallet,
+            contractAddresses: ['0x1b34bcc581d535d33c895fabce3c85f1bf3bdb33'], // RISEPAY token
             category: ['erc20'],
             withMetadata: true,
             excludeZeroValue: true,
