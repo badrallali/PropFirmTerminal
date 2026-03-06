@@ -82,20 +82,20 @@
 
     /* ── KPI STRIP ── */
     .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border2);border:1px solid var(--border2);border-radius:var(--rl);overflow:hidden;margin-bottom:16px}
-    .kpi{background:var(--card);padding:28px 28px}
-    .kl{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
-    .kv{font-size:32px;font-weight:700;letter-spacing:-.8px;line-height:1}
-    .kf{margin-top:9px;font-size:12px;color:var(--text3)}
-    .kpill{display:inline-flex;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;margin-top:8px}
+    .kpi{background:var(--card);padding:32px 28px}
+    .kl{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px}
+    .kv{font-size:40px;font-weight:700;letter-spacing:-.8px;line-height:1;font-family:var(--mf)}
+    .kf{margin-top:10px;font-size:13px;color:var(--text2)}
+    .kpill{display:inline-flex;font-size:12px;font-weight:700;padding:4px 10px;border-radius:4px;margin-top:10px}
 
     /* ── QUICK STATS ── */
     .qs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
-    .qs{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:24px 22px;display:flex;align-items:center;gap:18px}
-    .qs-icon{font-size:30px;flex-shrink:0}
+    .qs{background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:30px 24px;display:flex;align-items:center;gap:20px}
+    .qs-icon{font-size:36px;flex-shrink:0}
     .qs-body{display:flex;flex-direction:column}
-    .qs-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-    .qs-val{font-size:22px;font-weight:700;letter-spacing:-.5px}
-    .qs-sub{font-size:12px;color:var(--text3);margin-top:4px}
+    .qs-label{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+    .qs-val{font-size:30px;font-weight:700;letter-spacing:-.5px;font-family:var(--mf)}
+    .qs-sub{font-size:13px;color:var(--text2);margin-top:5px}
 
     /* ── INSIGHT ── */
     .ins{display:flex;align-items:center;gap:10px;padding:11px 15px;border-radius:var(--r);font-size:13px;font-weight:500;margin-bottom:12px;border:1px solid}
@@ -1739,6 +1739,10 @@ function renderTax(chs,pys){
       </tr>`).join('')
     :`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No expenses logged yet.</td></tr>`;
 
+  const _now=new Date();
+  const _curYr=String(_now.getFullYear());
+  const _curQ=Math.ceil((_now.getMonth()+1)/3);
+
   const yrBreakdown=yrs.length?yrRows.map(({yr,qs,yrGross,yrExp,yrNet})=>`
     <div class="tc" style="margin-bottom:12px">
       <div class="tch">
@@ -1746,13 +1750,16 @@ function renderTax(chs,pys){
         <span class="tcm" style="color:${yrNet>=0?'var(--green)':'var(--red)'};font-weight:700">${yrNet>=0?'+':''}${$$(yrNet)} net</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border2)">
-        ${qs.map(({q,inc,exp,net:qn})=>`
-          <div style="background:var(--card);padding:14px 16px">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:8px">Q${q}</div>
-            <div style="font-size:16px;font-weight:700;color:${qn>=0?'var(--green)':'var(--red)'}">${qn>=0?'+':''}${$$(qn)}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:4px">In <span style="color:var(--green)">${$$(inc)}</span></div>
-            <div style="font-size:11px;color:var(--text3)">Out <span style="color:var(--red)">−${$$(exp)}</span></div>
-          </div>`).join('')}
+        ${qs.map(({q,inc,exp,net:qn})=>{
+          const isCur=yr===_curYr&&q===_curQ;
+          return `<div style="background:${isCur?'rgba(91,138,245,.07)':'var(--card)'};padding:20px 18px;${isCur?'border-top:2px solid var(--blue);':'border-top:2px solid transparent;'}position:relative">
+            ${isCur?`<span style="position:absolute;top:8px;right:10px;font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.5px;text-transform:uppercase;font-family:var(--mf)">Current</span>`:''}
+            <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:${isCur?'var(--blue)':'var(--text2)'};margin-bottom:10px;font-family:var(--mf)">Q${q}</div>
+            <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:${qn>=0?'var(--green)':'var(--red)'};font-family:var(--mf)">${qn>=0?'+':''}${$$(qn)}</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:8px">In <span style="color:var(--green);font-weight:600">${$$(inc)}</span></div>
+            <div style="font-size:13px;color:var(--text2);margin-top:2px">Out <span style="color:var(--red);font-weight:600">−${$$(exp)}</span></div>
+          </div>`;
+        }).join('')}
       </div>
     </div>`).join('')
     :`<div class="tc" style="margin-bottom:12px">${empty('📊','No data for selected period.')}</div>`;
