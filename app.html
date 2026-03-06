@@ -381,6 +381,7 @@
     .cert-mini-card:hover .cmso{opacity:1}
     .cmso{position:absolute;inset:0;background:rgba(0,0,0,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;opacity:0;transition:opacity .18s;border-radius:14px}
     .cmso-label{font-size:11px;font-weight:700;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+    #riseToast{position:fixed;bottom:22px;right:22px;background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:16px 18px;min-width:270px;max-width:500px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9999;display:none}
   </style>
 </head>
 <body>
@@ -612,6 +613,7 @@
           <option value="custom">Custom...</option>
         </select>
         <button class="btn btn-ghost btn-xs" onclick="exportCSV('py')">↓ CSV</button>
+        <button class="btn btn-ghost btn-xs" id="riseBtn" onclick="syncRisePayouts()">↻ Sync Rise</button>
         <button class="btn btn-blue btn-xs" onclick="openMo('py')">+ Log Payout</button>
       </div>
     </div>
@@ -820,6 +822,12 @@
       </div>
     </div>
     <div class="field"><label>Invoice Footer / Bank Details (appears on invoices)</label><textarea id="pr_footer" placeholder="Bank: Chase Bank&#10;Account: XXXX-XXXX&#10;Routing: XXXXXXXXX"></textarea></div>
+    <div class="dl">Integrations</div>
+    <div class="field">
+      <label>Rise Wallet Address (Tron / TRC-20)</label>
+      <input id="pr_riseWallet" placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="font-family:var(--mf);font-size:12px;letter-spacing:.3px"/>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px">Your Rise payout receiving address. Used to auto-import payouts directly from the blockchain.</div>
+    </div>
     <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('profile')">Cancel</button><button class="btn btn-blue" onclick="saveProfile()">Save Profile</button></div>
   </div>
 </div>
@@ -2407,6 +2415,108 @@ function renderCalDetail(k,ev){
 }
 
 
+// ── RISE BLOCKCHAIN SYNC ────────────────────────────────────────
+// Map: Rise sender wallet address (lowercase) → prop firm name
+// Fill in with the actual Tron addresses for each firm's Rise account
+const FIRM_WALLETS = {
+  // 'tabc1234567890abcdef1234567890abcdef12': 'FTMO',
+  // 'txyz9876543210fedcba9876543210fedcba98': 'Apex Trader Funding',
+  // Add entries as: 'tron_address_all_lowercase': 'Firm Name'
+};
+
+const USDT_TRON = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
+
+async function syncRisePayouts(){
+  const wallet=(S.settings?.riseWallet||'').trim();
+  if(!wallet){alert('Add your Rise wallet address in Profile & Settings first.');openMo('profile');return;}
+
+  const btn=document.getElementById('riseBtn');
+  btn.textContent='⏳ Syncing…';btn.disabled=true;
+
+  try{
+    const url=`https://api.trongrid.io/v1/accounts/${wallet}/transactions/trc20`
+      +`?contract_address=${USDT_TRON}&only_to=true&limit=200&order_by=block_timestamp,desc`;
+    const res=await fetch(url);
+    if(!res.ok)throw new Error(`TronGrid responded with HTTP ${res.status}`);
+    const json=await res.json();
+    const txs=json.data||[];
+
+    // All known tx hashes to deduplicate
+    const knownHashes=new Set(S.payouts.map(p=>p.txHash).filter(Boolean));
+    // User-saved wallet→firm overrides
+    const userWallets=S.settings?.firmWallets||{};
+
+    let added=0,dupes=0;
+    const unknown=[];
+
+    for(const tx of txs){
+      if((tx.to||'').toLowerCase()!==wallet.toLowerCase())continue;
+      if(tx.token_info?.symbol!=='USDT')continue;
+      const hash=tx.transaction_id;
+      if(knownHashes.has(hash)){dupes++;continue;}
+      const amt=parseInt(tx.value)/1_000_000;
+      const date=new Date(tx.block_timestamp).toISOString().substr(0,10);
+      const fromAddr=(tx.from||'').toLowerCase();
+      const firm=FIRM_WALLETS[fromAddr]||userWallets[fromAddr]||null;
+      if(!firm){unknown.push({hash,amt,date,from:tx.from});continue;}
+      S.payouts.push({id:uid(),firm,amt,date,meth:'Rise',sz:0,notes:'',txHash:hash});
+      knownHashes.add(hash);
+      added++;
+    }
+
+    saveS();render();
+    showRiseToast(added,dupes,unknown);
+  }catch(e){
+    alert('Sync failed: '+e.message);
+  }finally{
+    btn.textContent='↻ Sync Rise';btn.disabled=false;
+  }
+}
+
+function showRiseToast(added,dupes,unknown){
+  let headline=added>0
+    ?`✓ ${added} payout${added>1?'s':''} imported`
+    :(dupes>0?'Already up to date':'No new payouts found');
+  if(added>0&&dupes>0)headline+=` · ${dupes} already logged`;
+
+  let unknownHtml='';
+  if(unknown.length){
+    unknownHtml=`<div style="margin-top:11px;font-size:12px;font-weight:700;color:var(--yellow)">`
+      +`${unknown.length} unknown sender${unknown.length>1?'s':''} — assign to a firm:</div>`;
+    unknown.forEach(u=>{
+      const opts=['<option value="">— Skip —</option>',
+        ...S.clients.map(c=>`<option value="${c.name}">${c.name}</option>`)
+      ].join('');
+      unknownHtml+=`<div style="display:flex;align-items:center;gap:8px;margin-top:8px">`
+        +`<div style="font-family:var(--mf);font-size:10px;color:var(--text3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${u.from}">${u.from}</div>`
+        +`<div style="font-size:11px;color:var(--text2);white-space:nowrap">${$$(u.amt)} · ${u.date}</div>`
+        +`<select class="yr" style="font-size:11px" onchange="assignRiseSender('${u.hash}',this.value,'${u.from}',${u.amt},'${u.date}')">${opts}</select>`
+        +`</div>`;
+    });
+  }
+
+  const toast=document.getElementById('riseToast');
+  toast.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">`
+    +`<div><div style="font-size:13px;font-weight:700;color:var(--text)">${headline}</div>${unknownHtml}</div>`
+    +`<button onclick="document.getElementById('riseToast').style.display='none'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;padding:0">✕</button>`
+    +`</div>`;
+  toast.style.display='block';
+  if(!unknown.length)setTimeout(()=>{toast.style.display='none';},4500);
+}
+
+function assignRiseSender(hash,firm,fromAddr,amt,date){
+  if(!firm)return;
+  if(!S.settings.firmWallets)S.settings.firmWallets={};
+  S.settings.firmWallets[fromAddr.toLowerCase()]=firm;
+  if(!S.payouts.find(p=>p.txHash===hash)){
+    S.payouts.push({id:uid(),firm,amt,date,meth:'Rise',sz:0,notes:'',txHash:hash});
+  }
+  saveS();render();
+  // Update toast headline after assignment
+  const el=document.getElementById('riseToast');
+  if(el){const hd=el.querySelector('div>div>div');if(hd)hd.textContent='✓ Payout assigned to '+firm;}
+}
+
 // ── PROFILE ─────────────────────────────────────────────────────
 function openProfile(){
   const p=S.profile;
@@ -2414,12 +2524,16 @@ function openProfile(){
     const el=document.getElementById('pr_'+k);if(el)el.value=p[k]||'';
   });
   if(document.getElementById('pr_jur'))document.getElementById('pr_jur').value=S.settings?.jur||'US';
+  if(document.getElementById('pr_riseWallet'))document.getElementById('pr_riseWallet').value=S.settings?.riseWallet||'';
 }
 
 function saveProfile(){
   ['name','biz','addr','city','state','country','zip','email','phone','tax','footer'].forEach(k=>{
     const el=document.getElementById('pr_'+k);if(el)S.profile[k]=el.value.trim();
   });
+  if(!S.settings)S.settings={};
+  const jurEl=document.getElementById('pr_jur'); if(jurEl)S.settings.jur=jurEl.value;
+  const walletEl=document.getElementById('pr_riseWallet'); if(walletEl)S.settings.riseWallet=walletEl.value.trim();
   saveS();closeMo('profile');render();
 }
 
@@ -2878,6 +2992,7 @@ async function chatSend(){
 .seg button{background:none;border:none;color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;padding:5px 12px;cursor:pointer;transition:background .15s,color .15s}
 .seg button.active{background:var(--blue);color:#fff;font-weight:600}
 </style>
+<div id="riseToast"></div>
 </body>
 </html>
 
