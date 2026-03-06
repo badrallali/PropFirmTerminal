@@ -34,23 +34,32 @@ serve(async (req) => {
       })
     }
 
-    // Call OpenRouter (OpenAI-compatible)
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('OPENROUTER_KEY')}`,
-        'HTTP-Referer': 'https://propfirmterminal.com',
-        'X-Title': 'PropFirmTerminal',
-      },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-70b-instruct:free',
-        messages,
-        max_tokens: generationConfig.maxOutputTokens || 600,
-        temperature: generationConfig.temperature ?? 0.7,
-      }),
-    })
-    const orData = await res.json()
+    // Call OpenRouter with fallback models
+    const models = [
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'mistralai/mistral-7b-instruct:free',
+      'qwen/qwen-2-7b-instruct:free',
+    ]
+    let orData: any = null
+    for (const model of models) {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('OPENROUTER_KEY')}`,
+          'HTTP-Referer': 'https://propfirmterminal.com',
+          'X-Title': 'PropFirmTerminal',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: generationConfig.maxOutputTokens || 600,
+          temperature: generationConfig.temperature ?? 0.7,
+        }),
+      })
+      orData = await res.json()
+      if (!orData.error) break
+    }
 
     // Convert OpenAI response → Gemini format so app.html needs no changes
     if (orData.error) {
