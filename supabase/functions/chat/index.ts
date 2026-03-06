@@ -10,7 +10,6 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
-    // Verify the user is authenticated
     const auth = req.headers.get('Authorization')
     if (!auth) return new Response(JSON.stringify({ error: { message: 'Unauthorized' } }), { status: 401, headers: cors })
 
@@ -18,27 +17,48 @@ serve(async (req) => {
     const { data: { user }, error } = await sb.auth.getUser(auth.replace('Bearer ', ''))
     if (error || !user) return new Response(JSON.stringify({ error: { message: 'Unauthorized' } }), { status: 401, headers: cors })
 
-    // Forward request to Gemini
+    // Parse incoming Gemini-format body from app.html
     const body = await req.json()
+    const { systemInstruction, contents = [], generationConfig = {} } = body
 
-    // v1 doesn't support systemInstruction — prepend it as context turns instead
-    const { systemInstruction, contents, ...rest } = body
-    let finalContents = contents || []
+    // Convert Gemini format → OpenAI format
+    const messages: { role: string; content: string }[] = []
     if (systemInstruction) {
       const sysText = (systemInstruction.parts || []).map((p: any) => p.text).join('\n')
-      finalContents = [
-        { role: 'user', parts: [{ text: `[Instructions]\n${sysText}` }] },
-        { role: 'model', parts: [{ text: 'Understood.' }] },
-        ...finalContents
-      ]
+      messages.push({ role: 'system', content: sysText })
+    }
+    for (const turn of contents) {
+      messages.push({
+        role: turn.role === 'model' ? 'assistant' : 'user',
+        content: (turn.parts || []).map((p: any) => p.text).join(''),
+      })
     }
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${Deno.env.get('GEMINI_KEY')}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...rest, contents: finalContents }) }
-    )
-    const data = await res.json()
-    return new Response(JSON.stringify(data), { headers: { ...cors, 'Content-Type': 'application/json' } })
+    // Call OpenRouter (OpenAI-compatible)
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('OPENROUTER_KEY')}`,
+        'HTTP-Referer': 'https://propfirmterminal.com',
+        'X-Title': 'PropFirmTerminal',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash-exp:free',
+        messages,
+        max_tokens: generationConfig.maxOutputTokens || 600,
+        temperature: generationConfig.temperature ?? 0.7,
+      }),
+    })
+    const orData = await res.json()
+
+    // Convert OpenAI response → Gemini format so app.html needs no changes
+    if (orData.error) {
+      return new Response(JSON.stringify({ error: orData.error }), { headers: { ...cors, 'Content-Type': 'application/json' } })
+    }
+    const text = orData.choices?.[0]?.message?.content || ''
+    const geminiShape = { candidates: [{ content: { parts: [{ text }] } }] }
+    return new Response(JSON.stringify(geminiShape), { headers: { ...cors, 'Content-Type': 'application/json' } })
 
   } catch (err) {
     return new Response(JSON.stringify({ error: { message: err.message } }), { status: 500, headers: cors })
