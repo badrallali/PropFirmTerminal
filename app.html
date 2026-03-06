@@ -1078,10 +1078,40 @@ let S={challenges:[],payouts:[],expenses:[],invoices:[],clients:[],
   settings:{jur:'US'}};
 const KEY='pft5';
 
+function defaultFirms(){
+  return [
+    {id:uid(),name:'FTMO',                web:'ftmo.com',                addr:'Purkyňova 2121/3',                          city:'Prague',         state:'',   country:'Czech Republic',        zip:'110 00', email:'support@ftmo.com',                    tax:'CZ08452173'},
+    {id:uid(),name:'Apex',                web:'apextraderfunding.com',   addr:'2028 E. Ben White Blvd, Suite 240',         city:'Austin',         state:'TX', country:'United States',         zip:'78741',  email:'support@apextraderfunding.com',        tax:''},
+    {id:uid(),name:'TopStep',             web:'topstep.com',             addr:'141 W Jackson Blvd, Suite 4240',            city:'Chicago',        state:'IL', country:'United States',         zip:'60604',  email:'help@topstep.com',                    tax:''},
+    {id:uid(),name:'FundedNext',          web:'fundednext.com',          addr:'Office No. 7, AI Robotics HUB, C1 Bldg, AFZ', city:'Ajman',       state:'',   country:'United Arab Emirates',  zip:'',       email:'support@fundednext.com',               tax:''},
+    {id:uid(),name:'PipFarm',             web:'pipfarm.com',             addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@pipfarm.com',                  tax:''},
+    {id:uid(),name:'E8 Funding',          web:'e8markets.com',           addr:'100 Crescent Ct, Unit 700',                 city:'Dallas',         state:'TX', country:'United States',         zip:'75201',  email:'support@e8markets.com',                tax:''},
+    {id:uid(),name:'The 5%ers',           web:'the5ers.com',             addr:'3 Golda Meir Street',                       city:"Ra'anana",       state:'',   country:'Israel',                zip:'',       email:'support@the5ers.com',                  tax:'IL516285462'},
+    {id:uid(),name:'Blue Guardian',       web:'blueguardian.com',        addr:'The Sotheby Building, Rodney Village, Rodney Bay', city:'Gros-Islet', state:'', country:'Saint Lucia',        zip:'',       email:'support@blueguardian.com',              tax:''},
+    {id:uid(),name:'Funding Pips',        web:'fundingpips.com',         addr:'',                                          city:'Dubai',          state:'',   country:'United Arab Emirates',  zip:'',       email:'support@fundingpips.com',               tax:''},
+    {id:uid(),name:'Alpha Capital',       web:'alphacapitalgroup.uk',    addr:'Kemp House, 160 City Road',                 city:'London',         state:'',   country:'United Kingdom',        zip:'EC1V 2NX',email:'support@alphacapitalgroup.uk',         tax:''},
+    {id:uid(),name:'The Funded Trader',   web:'thefundedtrader.com',     addr:'5900 Balcones Dr, Suite 100',               city:'Austin',         state:'TX', country:'United States',         zip:'78731',  email:'support@thefundedtrader.com',           tax:''},
+    {id:uid(),name:'Lux Trading Firm',    web:'luxtradingfirm.com',      addr:'1 Bartholomew Close',                       city:'London',         state:'',   country:'United Kingdom',        zip:'EC1A 7BL',email:'support@luxtradingfirm.com',           tax:''},
+    {id:uid(),name:'True Forex Funds',    web:'trueforexfunds.com',      addr:'',                                          city:'Budapest',       state:'',   country:'Hungary',               zip:'',       email:'support@trueforexfunds.com',            tax:''},
+    {id:uid(),name:'Fidelcrest',          web:'fidelcrest.com',          addr:'Griva Digeni 115, Trident Centre',          city:'Limassol',       state:'',   country:'Cyprus',                zip:'3101',   email:'support@fidelcrest.com',                tax:''},
+    {id:uid(),name:'City Traders Imperium',web:'citytraders.io',         addr:'',                                          city:'London',         state:'',   country:'United Kingdom',        zip:'',       email:'support@citytraders.io',                tax:''},
+    {id:uid(),name:'Earn2Trade',          web:'earn2trade.com',          addr:'',                                          city:'',               state:'',   country:'United States',         zip:'',       email:'support@earn2trade.com',                tax:''},
+    {id:uid(),name:'OneUp Trader',        web:'oneuptrader.com',         addr:'',                                          city:'',               state:'',   country:'United States',         zip:'',       email:'support@oneuptrader.com',               tax:''},
+    {id:uid(),name:'The Trading Pit',     web:'thetradingpit.com',       addr:'Landstrasse 123',                           city:'Vaduz',          state:'',   country:'Liechtenstein',         zip:'9490',   email:'support@thetradingpit.com',             tax:''},
+    {id:uid(),name:'Goat Funded Trader',  web:'goatfundedtrader.com',    addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@goatfundedtrader.com',          tax:''},
+    {id:uid(),name:'Maven Trading',       web:'maven-trading.com',       addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@maven-trading.com',             tax:''},
+    {id:uid(),name:'Bulenox',             web:'bulenox.com',             addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@bulenox.com',                   tax:''},
+    {id:uid(),name:'Traders With Edge',   web:'traderswithedge.com',     addr:'',                                          city:'',               state:'',   country:'Australia',             zip:'',       email:'support@traderswithedge.com',           tax:''},
+    {id:uid(),name:'My Forex Funds',      web:'myforexfunds.com',        addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@myforexfunds.com',              tax:''},
+    {id:uid(),name:'Funded Academy',      web:'fundedacademy.com',       addr:'',                                          city:'',               state:'',   country:'',                      zip:'',       email:'support@fundedacademy.com',             tax:''},
+  ];
+}
+
 function fixS(){
   if(!S.expenses)S.expenses=[];
   if(!S.invoices)S.invoices=[];
-  if(!S.clients)S.clients=[];
+  // Seed with default firms if the user has none saved yet
+  if(!S.clients||!S.clients.length)S.clients=defaultFirms();
   if(!S.profile)S.profile={name:'',biz:'',addr:'',city:'',state:'',country:'',zip:'',email:'',phone:'',tax:'',footer:''};
   if(!S.settings)S.settings={jur:'US'};
 }
@@ -1521,18 +1551,7 @@ function demo(){
     {id:uid(),cat:'Data Feed',             vendor:'Rithmic Data Feed',  amt:55,   date:'2026-03-01',rec:'monthly'},
     {id:uid(),cat:'Accounting / Legal',    vendor:'CPA Q1 2026',        amt:350,  date:'2026-03-05',rec:'no'},
   ];
-  S.clients=[
-    {id:uid(),name:'FTMO',          web:'ftmo.com',         addr:'Purkyňova 2121/3',       city:'Prague',    state:'',  country:'Czech Republic',  zip:'110 00', email:'support@ftmo.com',           tax:'CZ08452173'},
-    {id:uid(),name:'Apex',          web:'apextraderfunding.com', addr:'2028 E. Ben White Blvd, Suite 240', city:'Austin', state:'TX', country:'United States', zip:'78741', email:'support@apextraderfunding.com', tax:''},
-    {id:uid(),name:'TopStep',       web:'topstep.com',      addr:'141 W Jackson Blvd, Suite 4240', city:'Chicago', state:'IL', country:'United States', zip:'60604', email:'help@topstep.com',          tax:''},
-    {id:uid(),name:'FundedNext',    web:'fundednext.com',   addr:'Office No. 7, AI Robotics HUB, C1 Bldg, AFZ', city:'Ajman', state:'', country:'United Arab Emirates', zip:'', email:'support@fundednext.com', tax:''},
-    {id:uid(),name:'PipFarm',       web:'pipfarm.com',      addr:'',                       city:'',          state:'',  country:'',                zip:'',       email:'support@pipfarm.com',         tax:''},
-    {id:uid(),name:'E8 Funding',    web:'e8markets.com',    addr:'100 Crescent Ct, Unit 700', city:'Dallas',  state:'TX', country:'United States', zip:'75201', email:'support@e8markets.com',       tax:''},
-    {id:uid(),name:'The 5%ers',     web:'the5ers.com',      addr:'3 Golda Meir Street',        city:"Ra'anana",state:'',  country:'Israel',          zip:'',       email:'support@the5ers.com',         tax:''},
-    {id:uid(),name:'Blue Guardian', web:'blueguardian.com', addr:'The Sotheby Building, Rodney Village, Rodney Bay', city:'Gros-Islet', state:'', country:'Saint Lucia', zip:'', email:'support@blueguardian.com', tax:''},
-    {id:uid(),name:'Funding Pips',  web:'fundingpips.com',  addr:'',                           city:'Dubai',   state:'',  country:'United Arab Emirates', zip:'',  email:'support@fundingpips.com',     tax:''},
-    {id:uid(),name:'Alpha Capital', web:'alphacapitalgroup.uk', addr:'',                       city:'London',  state:'',  country:'United Kingdom',  zip:'',       email:'support@alphacapitalgroup.uk',tax:''},
-  ];
+  S.clients=defaultFirms();
 }
 
 // ── PERIOD FILTER ────────────────────────────────────────────────
@@ -3198,8 +3217,50 @@ async function extractStatement(e){
 
 const EXPENSE_CATS=['Challenge Fee','TradingView / Platform','VPS / Hosting','EA / Automation','Education / Course','Data Feed','Hardware','Accounting / Legal','Other'];
 
+// Known aliases / legal entity names → canonical firm name
+const FIRM_ALIASES={
+  'five percent online':'The 5%ers',
+  'fivepercent online':'The 5%ers',
+  'five percent ltd':'The 5%ers',
+  'growthnext':'FundedNext',
+  'growth next':'FundedNext',
+  'myforexfunds':'My Forex Funds',
+  'my forex funds':'My Forex Funds',
+  'apextraderfunding':'Apex',
+  'apex trader funding':'Apex',
+  'topsteptrader':'TopStep',
+  'top step trader':'TopStep',
+  'thefundedtrader':'The Funded Trader',
+  'the funded trader':'The Funded Trader',
+  'luxtradingfirm':'Lux Trading Firm',
+  'lux trading':'Lux Trading Firm',
+  'trueforexfunds':'True Forex Funds',
+  'true forex funds':'True Forex Funds',
+  'citytraders':'City Traders Imperium',
+  'city traders imperium':'City Traders Imperium',
+  'earn2trade':'Earn2Trade',
+  'oneuptrader':'OneUp Trader',
+  'one up trader':'OneUp Trader',
+  'tradingpit':'The Trading Pit',
+  'trading pit':'The Trading Pit',
+  'goatfundedtrader':'Goat Funded Trader',
+  'goat funded':'Goat Funded Trader',
+  'fundedacademy':'Funded Academy',
+  'bulenox':'Bulenox',
+  'maventrading':'Maven Trading',
+  'maven trading':'Maven Trading',
+  'alphakapital':'Alpha Capital',
+  'e8markets':'E8 Funding',
+  'e8 markets':'E8 Funding',
+};
+
 function guessImportFirm(description){
   const desc=(description||'').toLowerCase();
+  // Check alias table first (catches legal entity names & alternate spellings)
+  for(const [alias,firmName] of Object.entries(FIRM_ALIASES)){
+    if(desc.includes(alias)) return firmName;
+  }
+  // Then check against user's saved firms by name, domain, and domain root
   for(const c of S.clients){
     const name=c.name.toLowerCase();
     const web=(c.web||'').toLowerCase().replace(/^www\./,'');
