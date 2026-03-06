@@ -824,9 +824,9 @@
     <div class="field"><label>Invoice Footer / Bank Details (appears on invoices)</label><textarea id="pr_footer" placeholder="Bank: Chase Bank&#10;Account: XXXX-XXXX&#10;Routing: XXXXXXXXX"></textarea></div>
     <div class="dl">Integrations</div>
     <div class="field">
-      <label>Rise Wallet Address (Tron / TRC-20)</label>
-      <input id="pr_riseWallet" placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="font-family:var(--mf);font-size:12px;letter-spacing:.3px"/>
-      <div style="font-size:11px;color:var(--text3);margin-top:5px">Your Rise payout receiving address. Used to auto-import payouts directly from the blockchain.</div>
+      <label>Rise Wallet Address (Arbitrum)</label>
+      <input id="pr_riseWallet" placeholder="0x0000000000000000000000000000000000000000" style="font-family:var(--mf);font-size:12px;letter-spacing:.3px"/>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px">Your Rise payout receiving address on Arbitrum. Used to auto-import payouts directly from the blockchain.</div>
     </div>
     <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('profile')">Cancel</button><button class="btn btn-blue" onclick="saveProfile()">Save Profile</button></div>
   </div>
@@ -2417,14 +2417,12 @@ function renderCalDetail(k,ev){
 
 // ── RISE BLOCKCHAIN SYNC ────────────────────────────────────────
 // Map: Rise sender wallet address (lowercase) → prop firm name
-// Fill in with the actual Tron addresses for each firm's Rise account
+// Fill in with the actual Arbitrum addresses for each firm's Rise account
 const FIRM_WALLETS = {
-  // 'tabc1234567890abcdef1234567890abcdef12': 'FTMO',
-  // 'txyz9876543210fedcba9876543210fedcba98': 'Apex Trader Funding',
-  // Add entries as: 'tron_address_all_lowercase': 'Firm Name'
+  // '0xabc123...': 'FTMO',
+  // '0xdef456...': 'Apex Trader Funding',
+  // Add entries as: '0xaddress_all_lowercase': 'Firm Name'
 };
-
-const USDT_TRON = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
 
 async function syncRisePayouts(){
   const wallet=(S.settings?.riseWallet||'').trim();
@@ -2434,12 +2432,14 @@ async function syncRisePayouts(){
   btn.textContent='⏳ Syncing…';btn.disabled=true;
 
   try{
-    const url=`https://api.trongrid.io/v1/accounts/${wallet}/transactions/trc20`
-      +`?contract_address=${USDT_TRON}&only_to=true&limit=200&order_by=block_timestamp,desc`;
+    // Blockscout Arbitrum — free, no API key required
+    const url=`https://arbitrum.blockscout.com/api`
+      +`?module=account&action=tokentx&address=${wallet}&sort=desc&offset=200&page=1`;
     const res=await fetch(url);
-    if(!res.ok)throw new Error(`TronGrid responded with HTTP ${res.status}`);
+    if(!res.ok)throw new Error(`Blockscout responded with HTTP ${res.status}`);
     const json=await res.json();
-    const txs=json.data||[];
+    if(json.status==='0'&&json.message!=='No transactions found')throw new Error(json.result||'API error');
+    const txs=json.result||[];
 
     // All known tx hashes to deduplicate
     const knownHashes=new Set(S.payouts.map(p=>p.txHash).filter(Boolean));
@@ -2450,12 +2450,17 @@ async function syncRisePayouts(){
     const unknown=[];
 
     for(const tx of txs){
+      // Only incoming transfers (to == user wallet)
       if((tx.to||'').toLowerCase()!==wallet.toLowerCase())continue;
-      if(tx.token_info?.symbol!=='USDT')continue;
-      const hash=tx.transaction_id;
+      // Only stablecoins (USDC or USDT on Arbitrum)
+      const sym=(tx.tokenSymbol||'').toUpperCase();
+      if(sym!=='USDC'&&sym!=='USDT')continue;
+      // Blockscout uses tx.hash (not transaction_id)
+      const hash=tx.hash;
       if(knownHashes.has(hash)){dupes++;continue;}
-      const amt=parseInt(tx.value)/1_000_000;
-      const date=new Date(tx.block_timestamp).toISOString().substr(0,10);
+      const decimals=parseInt(tx.tokenDecimal)||6;
+      const amt=parseInt(tx.value)/Math.pow(10,decimals);
+      const date=new Date(parseInt(tx.timeStamp)*1000).toISOString().substr(0,10);
       const fromAddr=(tx.from||'').toLowerCase();
       const firm=FIRM_WALLETS[fromAddr]||userWallets[fromAddr]||null;
       if(!firm){unknown.push({hash,amt,date,from:tx.from});continue;}
