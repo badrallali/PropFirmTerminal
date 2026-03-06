@@ -3140,13 +3140,24 @@ async function extractStatement(e){
     let text='';
 
     if(ext==='pdf'){
-      // Extract text with pdf.js
+      // Extract text preserving row structure by grouping items by Y coordinate
       const arrayBuffer=await file.arrayBuffer();
       const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
       for(let i=1;i<=pdf.numPages;i++){
         const page=await pdf.getPage(i);
         const content=await page.getTextContent();
-        text+=content.items.map(s=>s.str).join(' ')+'\n';
+        const lineMap={};
+        content.items.forEach(item=>{
+          const y=Math.round(item.transform[5]/3)*3;
+          if(!lineMap[y])lineMap[y]=[];
+          lineMap[y].push({x:item.transform[4],str:item.str});
+        });
+        const ys=Object.keys(lineMap).map(Number).sort((a,b)=>b-a);
+        ys.forEach(y=>{
+          const line=lineMap[y].sort((a,b)=>a.x-b.x).map(i=>i.str).join('\t');
+          if(line.trim())text+=line+'\n';
+        });
+        text+='\n';
       }
     } else if(ext==='csv'){
       // Read CSV as plain text
@@ -3172,7 +3183,11 @@ async function extractStatement(e){
     });
     const data=await resp.json();
     if(data.error){showImportError('AI error: '+data.error);return;}
-    if(!data.transactions||!data.transactions.length){showImportError('No transactions found in this file.');return;}
+    if(!data.transactions||!data.transactions.length){
+      const hint=data.debug?` AI returned: "${data.debug.slice(0,120)}"`:' Try a different file or format.';
+      showImportError('No transactions found in this file.'+hint);
+      return;
+    }
     renderImportPreview(data.transactions);
   }catch(err){
     showImportError('Failed: '+err.message);
