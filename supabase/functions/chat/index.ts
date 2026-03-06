@@ -21,7 +21,7 @@ serve(async (req) => {
     // Forward request to Gemini
     const body = await req.json()
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${Deno.env.get('GEMINI_KEY')}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${Deno.env.get('GEMINI_KEY')}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
     )
     const data = await res.json()
