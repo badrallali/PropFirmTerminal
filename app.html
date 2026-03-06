@@ -2443,10 +2443,12 @@ async function syncRisePayouts(){
   btn.textContent='⏳ Syncing…';btn.disabled=true;
 
   try{
-    const res=await fetch(`/api/rise-sync?wallet=${encodeURIComponent(wallet)}`);
-    if(!res.ok)throw new Error(`Server responded with HTTP ${res.status}`);
+    // Blockscout Arbitrum — free, no API key, no proxy needed
+    const url=`https://arbitrum.blockscout.com/api?module=account&action=tokentx`
+      +`&address=${encodeURIComponent(wallet)}&sort=desc&offset=200&page=1`;
+    const res=await fetch(url);
+    if(!res.ok)throw new Error(`Blockscout responded with HTTP ${res.status}`);
     const json=await res.json();
-    if(json.error)throw new Error(json.error);
     if(json.message==='NOTOK')throw new Error(json.result||'Could not fetch transactions — check your wallet address');
     const txs=Array.isArray(json.result)?json.result:[];
 
@@ -2461,10 +2463,9 @@ async function syncRisePayouts(){
     for(const tx of txs){
       // Only incoming transfers (to == user wallet)
       if((tx.to||'').toLowerCase()!==wallet.toLowerCase())continue;
-      // Only stablecoins (USDC or USDT on Arbitrum)
+      // Accept any USD stablecoin (USDC, USDC.e, USDT, USDbC, etc.)
       const sym=(tx.tokenSymbol||'').toUpperCase();
-      if(sym!=='USDC'&&sym!=='USDT')continue;
-      // Blockscout uses tx.hash (not transaction_id)
+      if(!sym.includes('USD'))continue;
       const hash=tx.hash;
       if(knownHashes.has(hash)){dupes++;continue;}
       const decimals=parseInt(tx.tokenDecimal)||6;
@@ -2479,7 +2480,7 @@ async function syncRisePayouts(){
     }
 
     saveS();render();
-    showRiseToast(added,dupes,unknown);
+    showRiseToast(added,dupes,unknown,txs.length);
   }catch(e){
     alert('Rise sync failed:\n'+e.message);
   }finally{
@@ -2487,10 +2488,10 @@ async function syncRisePayouts(){
   }
 }
 
-function showRiseToast(added,dupes,unknown){
+function showRiseToast(added,dupes,unknown,scanned=0){
   let headline=added>0
     ?`✓ ${added} payout${added>1?'s':''} imported`
-    :(dupes>0?'Already up to date':'No new payouts found');
+    :(dupes>0?'Already up to date':`No new payouts found (${scanned} tx scanned)`);
   if(added>0&&dupes>0)headline+=` · ${dupes} already logged`;
 
   let unknownHtml='';
