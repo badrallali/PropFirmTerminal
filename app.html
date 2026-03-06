@@ -759,9 +759,9 @@
 <!-- CHALLENGE -->
 <div class="ov" id="ov-ch">
   <div class="modal">
-    <div class="mo-title">Add Challenge</div><div class="mo-desc">Log a new prop firm challenge attempt.</div>
+    <div class="mo-title" id="mo-ch-title">Add Challenge</div><div class="mo-desc">Log a new prop firm challenge attempt.</div>
     <div class="fg">
-      <div class="field"><label>Prop Firm</label><input id="ch_firm" placeholder="e.g. FTMO"/></div>
+      <div class="field"><label>Prop Firm</label><select id="ch_firm" onchange="if(this.value==='__add__'){editingChId=null;closeMo('ch');navTo('propfirms',null)}"></select></div>
       <div class="field"><label>Account Size ($)</label><input type="number" id="ch_sz" placeholder="100000"/></div>
     </div>
     <div class="fg">
@@ -771,7 +771,7 @@
     <div class="field"><label>Date</label><input type="date" id="ch_date"/></div>
     <div class="field"><label>Notes</label><input id="ch_notes" placeholder="Optional"/></div>
     <div class="field"><label>Invoice / Receipt <span style="font-weight:400;color:var(--text3)">(PDF or image, optional)</span></label><input type="file" id="ch_invoice" accept=".pdf,.png,.jpg,.jpeg,.webp" style="color:var(--text2);font-size:12px"/></div>
-    <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('ch')">Cancel</button><button class="btn btn-blue" onclick="saveCh()">Save</button></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="editingChId=null;document.getElementById('mo-ch-title').textContent='Add Challenge';closeMo('ch')">Cancel</button><button class="btn btn-blue" onclick="saveCh()">Save</button></div>
   </div>
 </div>
 
@@ -1912,6 +1912,7 @@ function renderExpenses(chs){
       <td style="color:var(--text3)">${c.date}</td>
       <td style="color:var(--text3);font-size:11px">${c.notes||'—'}</td>
       <td style="display:flex;gap:6px;align-items:center">
+        <button class="btn-edit" onclick="editCh('${c.id}')">✏️ Edit</button>
         <button class="btn-inv" onclick="chInvoiceClick('${c.id}')">${c.invoiceUrl?'📄 Invoice':'📎 Attach'}</button>
         <button class="btn-del" onclick="delCh('${c.id}')">Remove</button>
       </td>
@@ -2478,7 +2479,7 @@ function delInv(id){S.invoices=S.invoices.filter(i=>i.id!==id);saveS();renderInv
 
 // ── CALENDAR ─────────────────────────────────────────────────────
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calSelected=null;
-let editingPyId=null, editingExpId=null;
+let editingPyId=null, editingExpId=null, editingChId=null;
 
 function calNav(dir){ calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;} renderCal(); }
 function calGoToday(){ const t=new Date(); calYear=t.getFullYear(); calMonth=t.getMonth(); renderCal(); }
@@ -2708,11 +2709,13 @@ function populateFirmDropdowns(){
   )+'<option value="__add__" style="color:var(--blue)">➕ Add a Prop Firm</option>';
   const el=document.getElementById('py_firm');
   if(el){const prev=el.value;el.innerHTML=opts;if(prev&&prev!=='__add__')el.value=prev;}
+  const el2=document.getElementById('ch_firm');
+  if(el2){const prev2=el2.value;el2.innerHTML=opts;if(prev2&&prev2!=='__add__')el2.value=prev2;}
 }
 
 function openMo(t){
   if(t==='py')populateFirmDropdowns();
-  if(t==='ch')document.getElementById('ch_date').value=today();
+  if(t==='ch'){populateFirmDropdowns();if(!editingChId)document.getElementById('ch_date').value=today();}
   if(t==='py')document.getElementById('py_date').value=today();
   if(t==='exp')document.getElementById('ex_date').value=today();
   if(t==='profile')openProfile();
@@ -2722,18 +2725,32 @@ function closeMo(t){document.getElementById('ov-'+t).classList.remove('open');}
 document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 
 async function saveCh(){
-  const firm=document.getElementById('ch_firm').value.trim(),fee=document.getElementById('ch_fee').value,date=document.getElementById('ch_date').value;
-  if(!firm||!fee||!date){alert('Firm, Fee, and Date required.');return;}
-  const id=uid();
-  let invoiceUrl='';
+  const firm=document.getElementById('ch_firm').value,fee=document.getElementById('ch_fee').value,date=document.getElementById('ch_date').value;
+  if(!firm||firm==='__add__'||!fee||!date){alert('Firm, Fee, and Date required.');return;}
   const file=document.getElementById('ch_invoice').files[0];
-  if(file&&currentUser){
-    const ext=file.name.split('.').pop();
-    const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
-    if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
+  if(editingChId){
+    const c=S.challenges.find(x=>x.id===editingChId);
+    if(c){
+      c.firm=firm;c.sz=+document.getElementById('ch_sz').value||0;c.fee=+fee;c.type=document.getElementById('ch_type').value;c.date=date;c.notes=document.getElementById('ch_notes').value.trim();
+      if(file&&currentUser){
+        const ext=file.name.split('.').pop();
+        const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${c.id}.${ext}`,file,{upsert:true});
+        if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${c.id}.${ext}`);c.invoiceUrl=pd.publicUrl;}
+      }
+    }
+    editingChId=null;
+  } else {
+    const id=uid();
+    let invoiceUrl='';
+    if(file&&currentUser){
+      const ext=file.name.split('.').pop();
+      const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
+      if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
+    }
+    S.challenges.push({id,firm,sz:+document.getElementById('ch_sz').value||0,fee:+fee,type:document.getElementById('ch_type').value,date,notes:document.getElementById('ch_notes').value.trim(),invoiceUrl});
   }
-  S.challenges.push({id,firm,sz:+document.getElementById('ch_sz').value||0,fee:+fee,type:document.getElementById('ch_type').value,date,notes:document.getElementById('ch_notes').value.trim(),invoiceUrl});
-  saveS();closeMo('ch');['ch_firm','ch_sz','ch_fee','ch_notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('ch_invoice').value='';render();
+  document.getElementById('mo-ch-title').textContent='Add Challenge';
+  saveS();closeMo('ch');['ch_sz','ch_fee','ch_notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('ch_invoice').value='';render();
 }
 
 function editPy(id){
@@ -2746,6 +2763,19 @@ function editPy(id){
   document.getElementById('py_sz').value=p.sz||'';
   document.getElementById('py_notes').value=p.notes||'';
   openMo('py');
+}
+
+function editCh(id){
+  const c=S.challenges.find(x=>x.id===id); if(!c)return;
+  editingChId=id;
+  openMo('ch');
+  document.getElementById('ch_firm').value=c.firm;
+  document.getElementById('ch_sz').value=c.sz||'';
+  document.getElementById('ch_fee').value=c.fee;
+  document.getElementById('ch_type').value=c.type;
+  document.getElementById('ch_date').value=c.date;
+  document.getElementById('ch_notes').value=c.notes||'';
+  document.getElementById('mo-ch-title').textContent='Edit Challenge';
 }
 
 function savePy(){
@@ -3297,8 +3327,9 @@ function guessImportFirm(description){
 
 const FIELD_STYLE='background:var(--card2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font);font-size:12px;padding:3px 6px';
 
-function firmInput(val){
-  return `<input class="import-firmcat" type="text" value="${val}" placeholder="Firm name" style="${FIELD_STYLE};width:150px"/>`;
+function firmSelect(val){
+  const opts='<option value="">— Unassigned —</option>'+S.clients.map(c=>`<option value="${c.name}"${c.name===val?' selected':''}>${c.name}</option>`).join('');
+  return `<select class="import-firmcat" style="${FIELD_STYLE}">${opts}</select>`;
 }
 function catSelect(val){
   const opts=EXPENSE_CATS.map(c=>`<option value="${c}"${c===val?' selected':''}>${c}</option>`).join('');
@@ -3315,7 +3346,7 @@ function renderImportPreview(txns){
     // If AI said expense but description matches a known firm → treat as challenge fee
     let txnType=t.type==='income'?'income':(matchedFirm?'challenge':'expense');
     const catVal=t.suggestedCat||'Other';
-    const firmCatCell=txnType==='expense'?catSelect(catVal):firmInput(matchedFirm);
+    const firmCatCell=txnType==='expense'?catSelect(catVal):firmSelect(matchedFirm);
     return `<tr data-idx="${i}">
       <td><input class="import-date" type="date" value="${t.date||''}" style="${FIELD_STYLE};width:130px"/></td>
       <td style="font-size:12px;color:var(--text2);max-width:180px;word-break:break-word">${t.description||''}</td>
@@ -3334,7 +3365,7 @@ function renderImportPreview(txns){
 function toggleImportRow(sel,idx){
   const cell=document.getElementById(`import-firmcat-cell-${idx}`);
   if(sel.value==='income'||sel.value==='challenge'){
-    cell.innerHTML=firmInput('');
+    cell.innerHTML=firmSelect('');
   }else{
     cell.innerHTML=catSelect('Other');
   }
