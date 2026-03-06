@@ -240,8 +240,96 @@
 
     @media(max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.ch-row3{grid-template-columns:1fr 1fr}.qs-row{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:700px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.ch-row,.ch-row3,.be-grid{grid-template-columns:1fr}.fg,.fg3{grid-template-columns:1fr}.q-row{grid-template-columns:repeat(2,1fr)}.profile-sections{grid-template-columns:1fr}}
-    @media print{
-      header,nav,.sec-actions,.btn-inv,.btn-del,.btn,.icon-btn,.ov,.na{display:none!important}
+    /* ── AI CHATBOT ── */
+  #chatBtn{
+    position:fixed;bottom:28px;right:28px;z-index:200;
+    width:52px;height:52px;border-radius:50%;
+    background:linear-gradient(135deg,#3b82f6,#6366f1);
+    border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 24px rgba(99,102,241,.45);
+    transition:transform .2s,box-shadow .2s;
+    font-size:20px;
+  }
+  #chatBtn:hover{transform:scale(1.08);box-shadow:0 8px 32px rgba(99,102,241,.6)}
+  #chatBtn .chat-unread{
+    position:absolute;top:2px;right:2px;width:10px;height:10px;
+    background:#ef4444;border-radius:50%;border:2px solid var(--bg);
+    display:none;
+  }
+  #chatPanel{
+    position:fixed;bottom:92px;right:28px;z-index:200;
+    width:380px;height:560px;
+    background:#111113;border:1px solid #27272a;border-radius:18px;
+    display:flex;flex-direction:column;overflow:hidden;
+    box-shadow:0 24px 80px rgba(0,0,0,.7);
+    transform:scale(.95) translateY(12px);opacity:0;pointer-events:none;
+    transition:transform .22s cubic-bezier(.16,1,.3,1),opacity .22s;
+  }
+  #chatPanel.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all}
+  .chat-head{
+    padding:14px 16px;border-bottom:1px solid #1f1f22;
+    display:flex;align-items:center;gap:10px;flex-shrink:0;
+    background:#0f0f11;
+  }
+  .chat-head-icon{
+    width:34px;height:34px;border-radius:10px;flex-shrink:0;
+    background:linear-gradient(135deg,#3b82f6,#6366f1);
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+  }
+  .chat-head-info{flex:1;min-width:0}
+  .chat-head-name{font-size:13px;font-weight:700;color:#fafafa}
+  .chat-head-sub{font-size:11px;color:#52525b;margin-top:1px}
+  .chat-head-close{width:28px;height:28px;background:none;border:none;cursor:pointer;color:#52525b;font-size:18px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .15s}
+  .chat-head-close:hover{background:#1f1f22;color:#a1a1aa}
+  #chatMsgs{
+    flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;
+  }
+  #chatMsgs::-webkit-scrollbar{width:3px}
+  #chatMsgs::-webkit-scrollbar-thumb{background:#27272a;border-radius:2px}
+  .chat-msg{max-width:85%;display:flex;flex-direction:column;gap:3px}
+  .chat-msg.user{align-self:flex-end}
+  .chat-msg.ai{align-self:flex-start}
+  .chat-bubble{
+    padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.6;
+    white-space:pre-wrap;word-break:break-word;
+  }
+  .chat-msg.user .chat-bubble{background:#3b82f6;color:#fff;border-bottom-right-radius:3px}
+  .chat-msg.ai .chat-bubble{background:#1c1c1f;color:#e4e4e7;border-bottom-left-radius:3px;border:1px solid #27272a}
+  .chat-msg.ai.typing .chat-bubble{color:#52525b}
+  .chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px}
+  .chat-sug{
+    background:#1c1c1f;border:1px solid #27272a;border-radius:20px;
+    padding:5px 11px;font-size:11px;color:#a1a1aa;cursor:pointer;
+    transition:background .15s,color .15s;white-space:nowrap;
+  }
+  .chat-sug:hover{background:#27272a;color:#fafafa}
+  .chat-input-row{
+    padding:10px 12px;border-top:1px solid #1f1f22;
+    display:flex;gap:8px;align-items:flex-end;flex-shrink:0;
+    background:#0f0f11;
+  }
+  #chatInput{
+    flex:1;background:#1c1c1f;border:1px solid #27272a;border-radius:10px;
+    color:#fafafa;font-family:var(--font);font-size:13px;
+    padding:8px 11px;outline:none;resize:none;
+    max-height:100px;min-height:36px;overflow-y:auto;
+    transition:border-color .15s;line-height:1.5;
+  }
+  #chatInput:focus{border-color:#3b82f6}
+  #chatInput::placeholder{color:#52525b}
+  #chatSendBtn{
+    width:34px;height:34px;border-radius:8px;border:none;
+    background:#3b82f6;color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+    flex-shrink:0;transition:background .15s,opacity .15s;
+  }
+  #chatSendBtn:hover{background:#2563eb}
+  #chatSendBtn:disabled{opacity:.4;cursor:default}
+  @media(max-width:480px){#chatPanel{width:calc(100vw - 24px);right:12px}}
+
+  @media print{
+      header,nav,.sec-actions,.btn-inv,.btn-del,.btn,.icon-btn,.ov,.na,#chatBtn,#chatPanel{display:none!important}
       body{background:#fff}.inv-sheet{border-radius:0;padding:24px;box-shadow:none}
       main,.modal,.ov.open{display:none!important}
       #printArea{display:block!important}
@@ -2355,7 +2443,189 @@ function toggleTheme(){
 (function(){applyTheme(localStorage.getItem('theme')==='light');})();
 
 // onAuthStateChange handles init — fires with INITIAL_SESSION on page load
+
+// ── AI TAX ADVISOR CHATBOT ─────────────────────────────────────────
+const GEMINI_KEY='AIzaSyC1ryRXGAW2PX31xGTm71IoNZRx1fPpDEM';
+const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_KEY;
+let _chatOpen=false;
+let _chatHistory=[]; // [{role:'user'|'model', parts:[{text}]}]
+let _chatBusy=false;
+
+function buildChatContext(){
+  const pys=S.payouts||[];
+  const chs=S.challenges||[];
+  const exps=S.expenses||[];
+  const pr=S.profile||{};
+  const jur=(S.settings||{}).jur||'US';
+
+  const totalPaid=pys.reduce((a,p)=>a+Number(p.amt||0),0);
+  const totalFees=chs.reduce((a,c)=>a+Number(c.fee||0),0);
+  const totalOtherExp=exps.reduce((a,e)=>a+Number(e.amt||0),0);
+  const totalCosts=totalFees+totalOtherExp;
+  const netPnl=totalPaid-totalCosts;
+  const roi=totalCosts>0?((netPnl/totalCosts)*100).toFixed(1):0;
+
+  // Firm breakdown
+  const firms={};
+  pys.forEach(p=>{if(!firms[p.firm])firms[p.firm]={paid:0,fees:0};firms[p.firm].paid+=Number(p.amt||0);});
+  chs.forEach(c=>{if(!firms[c.firm])firms[c.firm]={paid:0,fees:0};firms[c.firm].fees+=Number(c.fee||0);});
+  const firmLines=Object.entries(firms).map(([f,v])=>`  - ${f}: payouts $${v.paid.toFixed(0)}, fees $${v.fees.toFixed(0)}, net $${(v.paid-v.fees).toFixed(0)}`).join('\n');
+
+  // Tax estimate (simple)
+  let taxLine='';
+  if(jur==='US'){
+    const selfEmpTax=netPnl>0?netPnl*0.153:0;
+    const incomeTax=netPnl>0?netPnl*0.22:0;
+    taxLine=`Est. Self-Employment Tax: $${selfEmpTax.toFixed(0)}\nEst. Income Tax (22% bracket): $${incomeTax.toFixed(0)}\nEst. Total Tax: $${(selfEmpTax+incomeTax).toFixed(0)}`;
+  } else if(jur==='UK'){
+    const incomeTax=netPnl>0?netPnl*0.20:0;
+    const ni=netPnl>0?netPnl*0.09:0;
+    taxLine=`Est. Income Tax (20%): $${incomeTax.toFixed(0)}\nEst. NI Class 4 (9%): $${ni.toFixed(0)}\nEst. Total Tax: $${(incomeTax+ni).toFixed(0)}`;
+  }
+
+  const recentPays=pys.slice(-5).map(p=>`  - ${p.date} | ${p.firm} | $${p.amt} | ${p.method||''}`).join('\n')||'  None';
+  const recentFees=chs.slice(-5).map(c=>`  - ${c.date} | ${c.firm} | $${c.fee} | ${c.plan||''}`).join('\n')||'  None';
+
+  return `You are an expert tax advisor specializing in prop trading and self-employed traders. You have full access to this trader's data. Be concise, practical, and friendly. Format numbers clearly. Do not give generic disclaimers unless directly relevant.
+
+=== TRADER PROFILE ===
+Name: ${pr.name||'Trader'}
+Country/Jurisdiction: ${jur}
+Tax Rate on File: ${pr.tax||'Not set'}
+
+=== FINANCIAL SUMMARY (All Time) ===
+Total Payouts Received: $${totalPaid.toFixed(2)}
+Total Challenge Fees: $${totalFees.toFixed(2)}
+Other Expenses: $${totalOtherExp.toFixed(2)}
+Total Costs: $${totalCosts.toFixed(2)}
+Net P&L: $${netPnl.toFixed(2)}
+Overall ROI: ${roi}%
+
+=== TAX ESTIMATES ===
+${taxLine||'Jurisdiction not configured.'}
+
+=== FIRM BREAKDOWN ===
+${firmLines||'No data yet.'}
+
+=== RECENT PAYOUTS (last 5) ===
+${recentPays}
+
+=== RECENT CHALLENGE FEES (last 5) ===
+${recentFees}
+
+=== TOTAL RECORDS ===
+Payouts: ${pys.length} | Challenge Fees: ${chs.length} | Other Expenses: ${exps.length}
+
+Answer the trader's questions using this data. If asked about specific numbers, use the data above. Challenge fees and trading expenses are generally deductible as business expenses for self-employed traders.`;
+}
+
+function toggleChat(){
+  _chatOpen=!_chatOpen;
+  document.getElementById('chatPanel').classList.toggle('open',_chatOpen);
+  document.getElementById('chatUnread').style.display='none';
+  if(_chatOpen) setTimeout(()=>document.getElementById('chatInput').focus(),250);
+}
+
+function chatKeydown(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}
+}
+
+function chatSuggest(el){
+  const txt=el.textContent;
+  document.getElementById('chatInput').value=txt;
+  document.getElementById('chatSugs').style.display='none';
+  chatSend();
+}
+
+function chatAppend(role,text,isTyping=false){
+  const msgs=document.getElementById('chatMsgs');
+  const div=document.createElement('div');
+  div.className='chat-msg '+role+(isTyping?' typing':'');
+  const bubble=document.createElement('div');
+  bubble.className='chat-bubble';
+  bubble.textContent=text;
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+  return bubble;
+}
+
+async function chatSend(){
+  if(_chatBusy)return;
+  const inp=document.getElementById('chatInput');
+  const text=(inp.value||'').trim();
+  if(!text)return;
+
+  inp.value='';inp.style.height='auto';
+  document.getElementById('chatSugs').style.display='none';
+  document.getElementById('chatSendBtn').disabled=true;
+  _chatBusy=true;
+
+  chatAppend('user',text);
+  const typingBubble=chatAppend('ai','Thinking…',true);
+
+  _chatHistory.push({role:'user',parts:[{text}]});
+
+  const systemCtx=buildChatContext();
+
+  const body={
+    systemInstruction:{parts:[{text:systemCtx}]},
+    contents:_chatHistory,
+    generationConfig:{temperature:0.7,maxOutputTokens:600}
+  };
+
+  try{
+    const res=await fetch(GEMINI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await res.json();
+    if(data.error){throw new Error(data.error.message||'API error');}
+    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||'Sorry, I couldn\'t generate a response.';
+    typingBubble.textContent=reply;
+    typingBubble.closest('.chat-msg').classList.remove('typing');
+    _chatHistory.push({role:'model',parts:[{text:reply}]});
+    if(_chatHistory.length>20)_chatHistory=_chatHistory.slice(-20);
+  }catch(err){
+    typingBubble.textContent='Error: '+err.message;
+    typingBubble.closest('.chat-msg').classList.remove('typing');
+    _chatHistory.pop();
+  }
+
+  document.getElementById('chatSendBtn').disabled=false;
+  _chatBusy=false;
+  document.getElementById('chatMsgs').scrollTop=document.getElementById('chatMsgs').scrollHeight;
+}
 </script>
+
+<!-- ══ AI TAX ADVISOR CHATBOT ══ -->
+<button id="chatBtn" onclick="toggleChat()" title="Ask your tax advisor">
+  🤖
+  <div class="chat-unread" id="chatUnread"></div>
+</button>
+
+<div id="chatPanel">
+  <div class="chat-head">
+    <div class="chat-head-icon">🤖</div>
+    <div class="chat-head-info">
+      <div class="chat-head-name">Tax Advisor AI</div>
+      <div class="chat-head-sub">Powered by Gemini · Prop trading specialist</div>
+    </div>
+    <button class="chat-head-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div id="chatMsgs">
+    <div class="chat-msg ai">
+      <div class="chat-bubble">Hey! I'm your prop trading tax advisor. I have full access to your trading data — payouts, fees, expenses, and tax estimates.\n\nAsk me anything about your numbers or taxes. 📊</div>
+    </div>
+  </div>
+  <div class="chat-suggestions" id="chatSugs">
+    <div class="chat-sug" onclick="chatSuggest(this)">What's my net ROI?</div>
+    <div class="chat-sug" onclick="chatSuggest(this)">How much tax do I owe?</div>
+    <div class="chat-sug" onclick="chatSuggest(this)">Which firm is most profitable?</div>
+    <div class="chat-sug" onclick="chatSuggest(this)">Are my challenge fees deductible?</div>
+  </div>
+  <div class="chat-input-row">
+    <textarea id="chatInput" placeholder="Ask about your taxes or trading data…" rows="1" onkeydown="chatKeydown(event)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+    <button id="chatSendBtn" onclick="chatSend()" title="Send">➤</button>
+  </div>
+</div>
 
 <!-- seg style (inline, small) -->
 <style>
