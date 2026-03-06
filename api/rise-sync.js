@@ -1,16 +1,14 @@
+// Kept as a proxy fallback — client now calls Blockscout directly.
+// This endpoint is no longer required but kept for future use.
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   const wallet = (req.query.wallet || '').trim();
   if (!wallet) return res.status(400).json({ error: 'wallet address required' });
 
-  const apiKey = process.env.ETHERSCAN_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
-
   const url =
-    `https://api.etherscan.io/v2/api` +
-    `?chainid=42161&module=account&action=tokentx` +
-    `&address=${wallet}&sort=desc&offset=200&page=1&apikey=${apiKey}`;
+    `https://arbitrum.blockscout.com/api?module=account&action=tokentx` +
+    `&address=${encodeURIComponent(wallet)}&sort=desc&offset=200&page=1`;
 
   try {
     const upstream = await fetch(url);
