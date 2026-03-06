@@ -17,7 +17,7 @@
       --bg:#05070f;--bg2:#0c0f1d;--surf:#0e1020;--card:#0f1122;--card2:#111527;
       --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
       --blue:#5b8af5;--green:#22d3a0;--red:#f87171;--yellow:#fbbf24;--purple:#8b5cf6;--cyan:#06b6d4;
-      --text:#eef0ff;--text2:rgba(238,240,255,.55);--text3:rgba(238,240,255,.28);
+      --text:#eef0ff;--text2:rgba(238,240,255,.72);--text3:rgba(238,240,255,.45);
       --font:'DM Sans','Inter',-apple-system,sans-serif;--mf:'JetBrains Mono',monospace;--r:8px;--rl:12px;
     }
     :root.light{
@@ -492,7 +492,7 @@
         <div class="ct-row">
           <div class="ct">Cumulative P&amp;L</div>
           <select id="cper-pl" class="chart-per" onchange="setChartPeriod('pl',this.value)">
-            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m" selected>Last 3 Mo</option><option value="mtd">This Month</option>
           </select>
         </div>
         <div class="cw"><canvas id="cPL"></canvas></div>
@@ -501,7 +501,7 @@
         <div class="ct-row">
           <div class="ct">Fee Distribution by Firm</div>
           <select id="cper-out" class="chart-per" onchange="setChartPeriod('out',this.value)">
-            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m" selected>Last 3 Mo</option><option value="mtd">This Month</option>
           </select>
         </div>
         <div class="cw"><canvas id="cOut"></canvas></div>
@@ -513,7 +513,7 @@
         <div class="ct-row">
           <div class="ct">Spend vs. Payouts by Firm</div>
           <select id="cper-firm" class="chart-per" onchange="setChartPeriod('firm',this.value)">
-            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m" selected>Last 3 Mo</option><option value="mtd">This Month</option>
           </select>
         </div>
         <div class="cw"><canvas id="cFirm"></canvas></div>
@@ -522,7 +522,7 @@
         <div class="ct-row">
           <div class="ct">Payment Method</div>
           <select id="cper-meth" class="chart-per" onchange="setChartPeriod('meth',this.value)">
-            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m" selected>Last 3 Mo</option><option value="mtd">This Month</option>
           </select>
         </div>
         <div class="cw"><canvas id="cMethod"></canvas></div>
@@ -531,7 +531,7 @@
         <div class="ct-row">
           <div class="ct">Quarterly P&amp;L</div>
           <select id="cper-q" class="chart-per" onchange="setChartPeriod('q',this.value)">
-            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m" selected>Last 3 Mo</option><option value="mtd">This Month</option>
           </select>
         </div>
         <div class="cw"><canvas id="cQ"></canvas></div>
@@ -543,7 +543,7 @@
         <div class="ct-row">
           <div class="ct">Monthly Cash Flow</div>
           <select id="cper-mo" class="chart-per" onchange="setChartPeriod('mo',this.value)">
-            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m" selected>Last 3 Mo</option><option value="mtd">This Month</option>
           </select>
         </div>
         <div class="cw"><canvas id="cMo"></canvas></div>
@@ -552,7 +552,7 @@
         <div class="ct-row">
           <div class="ct">Cumulative Fees vs. Payouts</div>
           <select id="cper-cum" class="chart-per" onchange="setChartPeriod('cum',this.value)">
-            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m">Last 3 Mo</option><option value="mtd">This Month</option>
+            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m" selected>Last 3 Mo</option><option value="mtd">This Month</option>
           </select>
         </div>
         <div class="cw"><canvas id="cCum"></canvas></div>
@@ -1680,8 +1680,8 @@ function sc(){return{x:{grid:{color:GR,drawBorder:false},ticks:{color:MU,font:TF
 
 function renderCharts(rawChs,rawPys){
   // Helper: get per-chart filtered data
-  const fc=k=>fyFor(rawChs,chartPeriods[k]||'all');
-  const fp=k=>fyFor(rawPys,chartPeriods[k]||'all');
+  const fc=k=>fyFor(rawChs,chartPeriods[k]||'3m');
+  const fp=k=>fyFor(rawPys,chartPeriods[k]||'3m');
 
   // P&L
   kc('pl');
