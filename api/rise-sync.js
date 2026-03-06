@@ -1,3 +1,10 @@
+// USDC contract addresses on Arbitrum One
+const USDC_CONTRACTS = [
+  '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Native USDC (Circle)
+  '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', // USDC.e (bridged)
+  '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', // USDT on Arbitrum
+];
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -18,10 +25,11 @@ export default async function handler(req, res) {
           method: 'alchemy_getAssetTransfers',
           params: [{
             toAddress: wallet,
+            contractAddresses: USDC_CONTRACTS, // only stablecoins
             category: ['erc20'],
             withMetadata: true,
             excludeZeroValue: true,
-            maxCount: '0xC8' // 200 results
+            maxCount: '0xC8' // 200
           }],
           id: 1
         })
