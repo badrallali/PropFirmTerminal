@@ -1788,9 +1788,12 @@ function renderClientList(){
       grid.innerHTML=S.clients.map(c=>`
         <div class="tc" style="padding:20px">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
-            <div>
-              <div style="font-size:15px;font-weight:700;color:var(--text)">${c.name}</div>
-              ${c.web?`<div style="font-size:11px;color:var(--blue);margin-top:2px">${c.web}</div>`:''}
+            <div style="display:flex;align-items:center;gap:10px">
+              ${c.web?`<img src="https://logo.clearbit.com/${c.web}" onerror="this.style.display='none'" style="width:36px;height:36px;object-fit:contain;border-radius:6px;border:1px solid var(--border);padding:2px;background:#fff;flex-shrink:0">`:'<div style="width:36px;height:36px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🏢</div>'}
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text)">${c.name}</div>
+                ${c.web?`<div style="font-size:11px;color:var(--blue);margin-top:2px">${c.web}</div>`:''}
+              </div>
             </div>
             <button class="btn-del" onclick="delClient('${c.id}')">Remove</button>
           </div>
