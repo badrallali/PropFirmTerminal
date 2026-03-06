@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PropFirm Terminal — Command Center</title>
+  <title>PropFirmTerminal — Command Center</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' rx='8' fill='%230d0f1e'/%3E%3Cpath d='M6 22.5 L10.5 16.5 L14.5 19 L20 11 L25.5 11' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='25.5' cy='11' r='2.2' fill='%232154f4'/%3E%3C/svg%3E"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -51,26 +51,26 @@
 
     /* ── HEADER ── */
     header{
-      position:sticky;top:0;z-index:50;height:64px;
-      background:rgba(5,7,15,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-      border-bottom:1px solid var(--border2);
-      display:flex;align-items:center;padding:0 32px;gap:24px;
+      position:sticky;top:0;z-index:50;height:72px;
+      background:rgba(5,7,15,.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+      border-bottom:1px solid rgba(255,255,255,.15);
+      display:flex;align-items:center;padding:0 36px;gap:28px;
     }
-    .brand{display:flex;align-items:center;gap:9px;flex-shrink:0;text-decoration:none}
-    .bm{width:26px;height:26px;background:var(--blue);border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff}
-    .bn{font-size:14px;font-weight:700;letter-spacing:-.3px;color:var(--text)}
+    .brand{display:flex;align-items:center;gap:10px;flex-shrink:0;text-decoration:none}
+    .bm{width:30px;height:30px;background:var(--blue);border-radius:7px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff}
+    .bn{font-size:15px;font-weight:700;letter-spacing:-.3px;color:#fff}
     .bn em{font-style:normal;color:var(--blue)}
-    nav{display:flex;gap:1px;flex:1;overflow-x:auto;justify-content:center}
+    nav{display:flex;gap:2px;flex:1;overflow-x:auto;justify-content:center}
     nav::-webkit-scrollbar{display:none}
-    .na{background:none;border:none;color:var(--text3);font-family:var(--font);font-size:13px;font-weight:500;padding:5px 10px;border-radius:var(--r);cursor:pointer;white-space:nowrap;transition:color .15s,background .15s;text-decoration:none;display:inline-block}
-    .na:hover{color:var(--text2);background:var(--card2)}
-    .na.on{color:var(--text);background:var(--card2);font-weight:600}
-    .he{display:flex;align-items:center;gap:8px;flex-shrink:0}
-    .yr{background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-family:var(--font);font-size:12px;padding:4px 8px;cursor:pointer;outline:none}
+    .na{background:none;border:none;color:rgba(255,255,255,.6);font-family:var(--font);font-size:13.5px;font-weight:500;padding:6px 12px;border-radius:var(--r);cursor:pointer;white-space:nowrap;transition:color .15s,background .15s;text-decoration:none;display:inline-block}
+    .na:hover{color:#fff;background:rgba(255,255,255,.08)}
+    .na.on{color:#fff;background:rgba(255,255,255,.11);font-weight:600}
+    .he{display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .yr{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:var(--r);color:#fff;font-family:var(--font);font-size:13px;padding:5px 10px;cursor:pointer;outline:none}
     .yr:focus{border-color:var(--blue)}
-    .icon-btn{width:32px;height:32px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);display:grid;place-items:center;cursor:pointer;font-size:15px;transition:background .15s;color:var(--text2)}
-    .icon-btn:hover{background:var(--border)}
-    .hd-meta{font-size:11px;color:var(--text3)}
+    .icon-btn{width:36px;height:36px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:var(--r);display:grid;place-items:center;cursor:pointer;font-size:17px;transition:background .15s;color:#fff}
+    .icon-btn:hover{background:rgba(255,255,255,.15)}
+    .hd-meta{font-size:11px;color:rgba(255,255,255,.45)}
 
     /* ── LAYOUT ── */
     main{max-width:100%;padding:0 36px 60px}
@@ -466,16 +466,15 @@
     <a class="na"     href="#" onclick="navTo('certificates',event)" style="color:#f59e0b">🏆 Certificates</a>
   </nav>
   <div class="he">
-    <button class="btn btn-ghost btn-xs" onclick="openMo('import')" title="Import PDF bank or payment statement" style="font-size:11px;padding:4px 10px;gap:4px;display:flex;align-items:center">⬆ Import</button>
     <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</div>
     <div class="icon-btn" onclick="navTo('profile',event)" title="Profile & Settings">👤</div>
-    <div id="userBadge" style="display:none;align-items:center;gap:6px">
-      <span id="userEmail" style="font-size:11px;color:var(--text3);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-      <button class="btn btn-ghost btn-xs" onclick="signOut()" style="font-size:11px;padding:3px 8px">Sign Out</button>
+    <div id="userBadge" style="display:none;align-items:center;gap:8px">
+      <span id="userEmail" style="font-size:12px;color:rgba(255,255,255,.55);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <button class="btn btn-ghost btn-xs" onclick="signOut()" style="font-size:12px;padding:5px 12px;color:#fff;border-color:rgba(255,255,255,.2)">Sign Out</button>
     </div>
   </div>
 </header>
-<div id="customPeriodBar" style="display:none;position:sticky;top:64px;z-index:40;background:var(--card);border-bottom:1px solid var(--border2);padding:8px 32px;align-items:center;gap:10px">
+<div id="customPeriodBar" style="display:none;position:sticky;top:72px;z-index:40;background:var(--card);border-bottom:1px solid var(--border2);padding:8px 32px;align-items:center;gap:10px">
   <span style="font-size:12px;color:var(--text3);flex-shrink:0">Custom range:</span>
   <input type="date" id="periodFrom" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;padding:5px 9px;outline:none"/>
   <span style="font-size:12px;color:var(--text3)">→</span>
