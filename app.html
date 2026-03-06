@@ -368,10 +368,11 @@
   @media(max-width:480px){#chatPanel{width:calc(100vw - 24px);right:12px}}
 
   @media print{
-      header,nav,.sec-actions,.btn-inv,.btn-del,.btn-edit,.btn,.icon-btn,.ov,.na,#chatBtn,#chatPanel{display:none!important}
-      body{background:#fff}.inv-sheet{border-radius:0;padding:24px;box-shadow:none}
-      main,.modal,.ov.open{display:none!important}
-      #printArea{display:block!important}
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+      header,nav,.sec-actions,.btn-inv,.btn-del,.btn-edit,.btn,.icon-btn,.ov,.na,#chatBtn,#chatPanel,#appWrap,#authWrap,#loadWrap{display:none!important}
+      body{background:#fff;margin:0;padding:0}
+      .inv-sheet{border-radius:0;padding:24px;box-shadow:none}
+      #printArea{display:block!important;position:fixed;top:0;left:0;width:100%;z-index:9999;background:#fff}
     }
     #printArea{display:none}
     /* ── CERT GRID ── */
@@ -2192,100 +2193,166 @@ function printTax(){
   const periodLabel=_period==='all'?'All Time':_period==='ytd'?'Year to Date':_period==='mtd'?'Month to Date':_period==='week'?'This Week':_period==='today'?'Today':(_periodFrom&&_periodTo)?`${_periodFrom} → ${_periodTo}`:'Custom';
   const pr=S.profile||{};
   const fmt=n=>Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const fmtDate=d=>{const[y,m,dy]=d.split('-');return`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${+dy}, ${y}`;};
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmtDate=d=>{const[y,m,dy]=d.split('-');return`${MONTHS[+m-1]} ${+dy}, ${y}`;};
+  const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
 
-  // Merge all transactions and sort by date descending
+  // Unified ledger sorted by date ascending (oldest → newest)
   const txns=[
-    ...pys.map(p=>({date:p.date,desc:p.firm,cat:'Payout',type:'income',amt:Number(p.amt)})),
-    ...chs.map(c=>({date:c.date,desc:c.firm+' — Challenge Fee',cat:'Challenge Fee',type:'expense',amt:Number(c.fee)})),
-    ...exps.map(e=>({date:e.date,desc:e.vendor?`${e.vendor} — ${e.cat}`:e.cat,cat:e.cat,type:'expense',amt:Number(e.amt)}))
-  ].sort((a,b)=>b.date.localeCompare(a.date));
+    ...pys.map(p=>({date:p.date,desc:p.firm,cat:'Payout',type:'income',amt:Number(p.amt),meth:p.meth||''})),
+    ...chs.map(c=>({date:c.date,desc:c.firm,cat:'Challenge Fee',type:'expense',amt:Number(c.fee),meth:c.type||''})),
+    ...exps.map(e=>({date:e.date,desc:e.vendor||e.cat,cat:e.cat,type:'expense',amt:Number(e.amt),meth:e.rec==='monthly'?'Monthly':e.rec==='annual'?'Annual':'One-time'}))
+  ].sort((a,b)=>a.date.localeCompare(b.date));
 
-  const txnRows=txns.length
-    ?txns.map((t,i)=>`<tr style="background:${i%2===0?'#ffffff':'#f9fafb'}">
-        <td style="padding:10px 14px;font-size:12px;color:#6b7280;white-space:nowrap">${fmtDate(t.date)}</td>
-        <td style="padding:10px 14px;font-size:12px;color:#111827;font-weight:500">${t.desc}</td>
-        <td style="padding:10px 14px;font-size:11px">
-          <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.3px;
-            background:${t.type==='income'?'#dcfce7':'#fee2e2'};
-            color:${t.type==='income'?'#15803d':'#b91c1c'}">${t.cat}</span>
-        </td>
-        <td style="padding:10px 14px;font-size:13px;font-weight:700;text-align:right;color:${t.type==='income'?'#15803d':'#dc2626'}">
-          ${t.type==='income'?'+':'-'}$${fmt(t.amt)}
-        </td>
-      </tr>`).join('')
-    :`<tr><td colspan="4" style="padding:24px;text-align:center;color:#9ca3af;font-size:13px">No transactions in this period.</td></tr>`;
+  // Income rows (payouts)
+  const incomeRows=[...pys].sort((a,b)=>a.date.localeCompare(b.date)).map((p,i)=>`
+    <tr style="background:${i%2===0?'#fff':'#f9fffe'}">
+      <td style="padding:9px 16px;font-size:12px;color:#374151;white-space:nowrap;border-bottom:1px solid #f0fdf4">${fmtDate(p.date)}</td>
+      <td style="padding:9px 16px;font-size:12px;color:#111827;font-weight:600;border-bottom:1px solid #f0fdf4">${p.firm}</td>
+      <td style="padding:9px 16px;font-size:11px;color:#6b7280;border-bottom:1px solid #f0fdf4">${p.meth||'—'}</td>
+      <td style="padding:9px 16px;font-size:13px;font-weight:700;text-align:right;color:#15803d;border-bottom:1px solid #f0fdf4">+$${fmt(p.amt)}</td>
+    </tr>`).join('');
 
-  const summaryCards=[
-    {label:'Gross Income',value:`+$${fmt(gross)}`,color:'#15803d',bg:'#f0fdf4',border:'#bbf7d0'},
-    {label:'Total Deductions',value:`−$${fmt(fees+other)}`,color:'#dc2626',bg:'#fff1f2',border:'#fecdd3'},
-    {label:'Challenge Fees',value:`−$${fmt(fees)}`,color:'#b91c1c',bg:'#fff1f2',border:'#fecdd3'},
-    {label:'Other Expenses',value:`−$${fmt(other)}`,color:'#b91c1c',bg:'#fff1f2',border:'#fecdd3'},
-    {label:'Net P&L',value:`${net>=0?'+':'−'}$${fmt(Math.abs(net))}`,color:net>=0?'#15803d':'#dc2626',bg:net>=0?'#f0fdf4':'#fff1f2',border:net>=0?'#bbf7d0':'#fecdd3'},
-  ].map(c=>`<div style="border:1px solid ${c.border};border-radius:10px;padding:16px 18px;background:${c.bg}">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#6b7280;margin-bottom:6px">${c.label}</div>
-      <div style="font-size:22px;font-weight:800;color:${c.color};letter-spacing:-.5px">${c.value}</div>
-    </div>`).join('');
+  // Expense rows (challenge fees + other)
+  const allExps=[
+    ...chs.map(c=>({date:c.date,desc:c.firm,cat:'Challenge Fee',detail:c.type||'',amt:Number(c.fee)})),
+    ...exps.map(e=>({date:e.date,desc:e.vendor||e.cat,cat:e.cat,detail:'',amt:Number(e.amt)}))
+  ].sort((a,b)=>a.date.localeCompare(b.date));
+  const expenseRows=allExps.map((e,i)=>`
+    <tr style="background:${i%2===0?'#fff':'#fffafa'}">
+      <td style="padding:9px 16px;font-size:12px;color:#374151;white-space:nowrap;border-bottom:1px solid #fff1f2">${fmtDate(e.date)}</td>
+      <td style="padding:9px 16px;font-size:12px;color:#111827;font-weight:600;border-bottom:1px solid #fff1f2">${e.desc}</td>
+      <td style="padding:9px 16px;font-size:11px;color:#6b7280;border-bottom:1px solid #fff1f2">${e.cat}${e.detail?' · '+e.detail:''}</td>
+      <td style="padding:9px 16px;font-size:13px;font-weight:700;text-align:right;color:#dc2626;border-bottom:1px solid #fff1f2">−$${fmt(e.amt)}</td>
+    </tr>`).join('');
 
-  const html=`<div style="font-family:'Segoe UI',system-ui,Arial,sans-serif;max-width:860px;margin:0 auto;padding:48px 40px;color:#111827">
+  const noRows=`<tr><td colspan="4" style="padding:20px 16px;text-align:center;color:#9ca3af;font-size:12px">No entries in this period.</td></tr>`;
 
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px">
+  const kpi=(label,val,sub,col)=>`
+    <div style="flex:1;padding:20px 24px;border-right:1px solid #e2e8f0">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8;margin-bottom:8px">${label}</div>
+      <div style="font-size:24px;font-weight:800;color:${col};letter-spacing:-.5px;line-height:1">${val}</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:5px">${sub}</div>
+    </div>`;
+
+  const html=`<div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#fff;color:#0f172a;margin:0;padding:0">
+
+    <!-- ── HEADER ── -->
+    <div style="background:#0f172a;padding:36px 48px;display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6b7280;margin-bottom:6px">PropFirm Terminal</div>
-        <div style="font-size:30px;font-weight:800;color:#111827;letter-spacing:-1px;line-height:1">Tax Report</div>
-        <div style="margin-top:10px;display:flex;gap:16px">
-          <span style="font-size:12px;background:#f3f4f6;border-radius:20px;padding:4px 12px;color:#374151;font-weight:500">📅 ${periodLabel}</span>
-          <span style="font-size:12px;color:#9ca3af">Generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</span>
+        <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#475569;margin-bottom:10px">PropFirm Terminal</div>
+        <div style="font-size:28px;font-weight:800;color:#f8fafc;letter-spacing:-.5px;line-height:1.1">Income &amp; Tax Report</div>
+        <div style="font-size:12px;color:#64748b;margin-top:10px">Period: <span style="color:#94a3b8;font-weight:600">${periodLabel}</span> &nbsp;·&nbsp; Generated ${today}</div>
+      </div>
+      <div style="text-align:right;padding-top:4px">
+        ${pr.name?`<div style="font-size:15px;font-weight:700;color:#f1f5f9">${pr.name}</div>`:''}
+        ${pr.biz?`<div style="font-size:12px;color:#94a3b8;margin-top:3px">${pr.biz}</div>`:''}
+        ${(pr.city||pr.country)?`<div style="font-size:11px;color:#64748b;margin-top:2px">${[pr.city,pr.country].filter(Boolean).join(', ')}</div>`:''}
+        ${pr.email?`<div style="font-size:11px;color:#64748b;margin-top:2px">${pr.email}</div>`:''}
+      </div>
+    </div>
+
+    <!-- ── KPI STRIP ── -->
+    <div style="display:flex;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+      ${kpi('Gross Income',`+$${fmt(gross)}`,`${pys.length} payout${pys.length!==1?'s':''}`, '#15803d')}
+      ${kpi('Challenge Fees',`−$${fmt(fees)}`,`${chs.length} challenge${chs.length!==1?'s':''}`, '#dc2626')}
+      ${kpi('Other Expenses',`−$${fmt(other)}`,`${exps.length} item${exps.length!==1?'s':''}`, '#dc2626')}
+      ${kpi('Total Deductions',`−$${fmt(fees+other)}`,'combined costs','#b91c1c')}
+      <div style="flex:1;padding:20px 24px;background:${net>=0?'#f0fdf4':'#fff1f2'}">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8;margin-bottom:8px">Net P&amp;L</div>
+        <div style="font-size:24px;font-weight:800;color:${net>=0?'#15803d':'#dc2626'};letter-spacing:-.5px;line-height:1">${net>=0?'+':'−'}$${fmt(Math.abs(net))}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px">${net>=0?'Profitable':'Net loss'}</div>
+      </div>
+    </div>
+
+    <!-- ── BODY ── -->
+    <div style="padding:36px 48px">
+
+      <!-- Income -->
+      <div style="margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="width:4px;height:20px;background:#15803d;border-radius:2px"></div>
+          <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#374151">Income — Payouts</div>
+          <div style="font-size:11px;color:#9ca3af;margin-left:4px">${pys.length} entries</div>
+          <div style="margin-left:auto;font-size:14px;font-weight:800;color:#15803d">+$${fmt(gross)}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #dcfce7;border-radius:8px;overflow:hidden">
+          <thead>
+            <tr style="background:#15803d">
+              <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#dcfce7;letter-spacing:.6px;text-transform:uppercase">Date</th>
+              <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#dcfce7;letter-spacing:.6px;text-transform:uppercase">Firm</th>
+              <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#dcfce7;letter-spacing:.6px;text-transform:uppercase">Method</th>
+              <th style="padding:10px 16px;text-align:right;font-size:10px;font-weight:700;color:#dcfce7;letter-spacing:.6px;text-transform:uppercase">Amount</th>
+            </tr>
+          </thead>
+          <tbody>${incomeRows||noRows}</tbody>
+          <tfoot>
+            <tr style="background:#f0fdf4;border-top:2px solid #bbf7d0">
+              <td colspan="3" style="padding:11px 16px;font-size:12px;font-weight:700;color:#15803d">Subtotal — Gross Income</td>
+              <td style="padding:11px 16px;font-size:14px;font-weight:800;text-align:right;color:#15803d">+$${fmt(gross)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Expenses -->
+      <div style="margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="width:4px;height:20px;background:#dc2626;border-radius:2px"></div>
+          <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#374151">Deductible Expenses</div>
+          <div style="font-size:11px;color:#9ca3af;margin-left:4px">${allExps.length} entries</div>
+          <div style="margin-left:auto;font-size:14px;font-weight:800;color:#dc2626">−$${fmt(fees+other)}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #fecdd3;border-radius:8px;overflow:hidden">
+          <thead>
+            <tr style="background:#dc2626">
+              <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#fee2e2;letter-spacing:.6px;text-transform:uppercase">Date</th>
+              <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#fee2e2;letter-spacing:.6px;text-transform:uppercase">Description</th>
+              <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#fee2e2;letter-spacing:.6px;text-transform:uppercase">Category</th>
+              <th style="padding:10px 16px;text-align:right;font-size:10px;font-weight:700;color:#fee2e2;letter-spacing:.6px;text-transform:uppercase">Amount</th>
+            </tr>
+          </thead>
+          <tbody>${expenseRows||noRows}</tbody>
+          <tfoot>
+            <tr style="background:#fff1f2;border-top:2px solid #fecdd3">
+              <td colspan="3" style="padding:11px 16px;font-size:12px;font-weight:700;color:#dc2626">Subtotal — Total Deductions</td>
+              <td style="padding:11px 16px;font-size:14px;font-weight:800;text-align:right;color:#dc2626">−$${fmt(fees+other)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Net summary -->
+      <div style="border:2px solid ${net>=0?'#15803d':'#dc2626'};border-radius:10px;overflow:hidden">
+        <div style="background:${net>=0?'#15803d':'#dc2626'};padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:#fff;letter-spacing:.3px">NET TAXABLE INCOME</span>
+          <span style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px">${net>=0?'+':'−'}$${fmt(Math.abs(net))}</span>
+        </div>
+        <div style="background:${net>=0?'#f0fdf4':'#fff1f2'};padding:14px 20px;display:flex;gap:40px;font-size:12px">
+          <span style="color:#6b7280">Gross Income: <strong style="color:#15803d">+$${fmt(gross)}</strong></span>
+          <span style="color:#6b7280">Challenge Fees: <strong style="color:#dc2626">−$${fmt(fees)}</strong></span>
+          <span style="color:#6b7280">Other Expenses: <strong style="color:#dc2626">−$${fmt(other)}</strong></span>
+          <span style="color:#6b7280">Transactions: <strong style="color:#374151">${txns.length}</strong></span>
         </div>
       </div>
-      ${pr.name?`<div style="text-align:right">
-        <div style="font-size:15px;font-weight:700;color:#111827">${pr.name}</div>
-        ${pr.biz?`<div style="font-size:12px;color:#6b7280;margin-top:2px">${pr.biz}</div>`:''}
-        ${pr.email?`<div style="font-size:12px;color:#9ca3af;margin-top:1px">${pr.email}</div>`:''}
-      </div>`:''}
+
     </div>
 
-    <!-- Divider -->
-    <div style="height:2px;background:linear-gradient(90deg,#111827 0%,#e5e7eb 100%);margin-bottom:28px"></div>
-
-    <!-- Summary cards -->
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:32px">
-      ${summaryCards}
+    <!-- ── FOOTER ── -->
+    <div style="padding:16px 48px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+      <div style="font-size:10px;color:#94a3b8;line-height:1.6">This report is generated for informational purposes only.<br>Consult a qualified tax professional before filing.</div>
+      <div style="font-size:10px;color:#cbd5e1;text-align:right">PropFirm Terminal<br>${today}</div>
     </div>
 
-    <!-- Transaction table -->
-    <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">
-      All Transactions — ${txns.length} entries
-    </div>
-    <table style="width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;font-size:12px">
-      <thead>
-        <tr style="background:#111827">
-          <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:600;color:#d1d5db;letter-spacing:.4px;text-transform:uppercase">Date</th>
-          <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:600;color:#d1d5db;letter-spacing:.4px;text-transform:uppercase">Description</th>
-          <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:600;color:#d1d5db;letter-spacing:.4px;text-transform:uppercase">Category</th>
-          <th style="padding:11px 14px;text-align:right;font-size:11px;font-weight:600;color:#d1d5db;letter-spacing:.4px;text-transform:uppercase">Amount</th>
-        </tr>
-      </thead>
-      <tbody>${txnRows}</tbody>
-      <tfoot>
-        <tr style="background:#f3f4f6;border-top:2px solid #d1d5db">
-          <td colspan="3" style="padding:12px 14px;font-size:12px;font-weight:700;color:#374151">Net P&L</td>
-          <td style="padding:12px 14px;font-size:15px;font-weight:800;text-align:right;color:${net>=0?'#15803d':'#dc2626'}">${net>=0?'+':'−'}$${fmt(Math.abs(net))}</td>
-        </tr>
-      </tfoot>
-    </table>
-
-    <!-- Footer note -->
-    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:11px;color:#9ca3af">This report is for informational purposes. Consult a tax professional for filing advice.</div>
-      <div style="font-size:11px;color:#d1d5db">PropFirm Terminal</div>
-    </div>
   </div>`;
 
-  document.getElementById('printArea').innerHTML=html;
-  window.print();
-  setTimeout(()=>{document.getElementById('printArea').innerHTML='';},1000);
+  const area=document.getElementById('printArea');
+  area.innerHTML=html;
+  // Let browser paint before opening print dialog
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    window.print();
+    window.onafterprint=()=>{area.innerHTML='';window.onafterprint=null;};
+  }));
 }
 
 function renderInvList(){
