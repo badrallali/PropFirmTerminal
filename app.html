@@ -2428,11 +2428,12 @@ function renderCalDetail(k,ev){
 
 // ── RISE BLOCKCHAIN SYNC ────────────────────────────────────────
 // Map: Rise sender wallet address (lowercase) → prop firm name
-// Fill in with the actual Arbitrum addresses for each firm's Rise account
 const FIRM_WALLETS = {
-  // '0xabc123...': 'FTMO',
-  // '0xdef456...': 'Apex Trader Funding',
-  // Add entries as: '0xaddress_all_lowercase': 'Firm Name'
+  '0x349b0ed1520eae1472f57eac77e390a1ecb0c677': 'The 5%ers',
+  '0x68035843020b6c0cd94dd29c273fff13c8e9a914': 'Blue Guardian',
+  '0xd19e945eeea57475b791c20112ebb4b628f5b95c': 'E8',
+  '0x1e198ad0608476efa952de1cd8e574db68df5f16': 'Funding Pips',
+  '0xd172b9c227361fcf6151e802e1f09c084964bdcd': 'Alpha Capital',
 };
 
 async function syncRisePayouts(){
