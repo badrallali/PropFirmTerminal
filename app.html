@@ -169,6 +169,8 @@
     .btn-inv:hover{background:rgba(168,85,247,.22)}
     .btn-del  {background:rgba(239,68,68,.1);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:600;cursor:pointer}
     .btn-del:hover{background:rgba(239,68,68,.2)}
+    .btn-edit {background:rgba(99,102,241,.1);color:#818cf8;border:none;border-radius:5px;padding:3px 8px;font-size:11px;font-weight:600;cursor:pointer}
+    .btn-edit:hover{background:rgba(99,102,241,.2)}
     .btn-xs{padding:5px 10px;font-size:12px}
 
     /* ── FORM ── */
@@ -366,7 +368,7 @@
   @media(max-width:480px){#chatPanel{width:calc(100vw - 24px);right:12px}}
 
   @media print{
-      header,nav,.sec-actions,.btn-inv,.btn-del,.btn,.icon-btn,.ov,.na,#chatBtn,#chatPanel{display:none!important}
+      header,nav,.sec-actions,.btn-inv,.btn-del,.btn-edit,.btn,.icon-btn,.ov,.na,#chatBtn,#chatPanel{display:none!important}
       body{background:#fff}.inv-sheet{border-radius:0;padding:24px;box-shadow:none}
       main,.modal,.ov.open{display:none!important}
       #printArea{display:block!important}
@@ -767,7 +769,7 @@
     </div>
     <div class="field"><label>Account Size ($) — reference</label><input type="number" id="py_sz" placeholder="100000"/></div>
     <div class="field"><label>Notes</label><input id="py_notes" placeholder="Optional"/></div>
-    <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('py')">Cancel</button><button class="btn btn-blue" onclick="savePy()">Save</button></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="editingPyId=null;closeMo('py')">Cancel</button><button class="btn btn-blue" onclick="savePy()">Save</button></div>
   </div>
 </div>
 
@@ -787,7 +789,7 @@
     </div>
     <div class="field"><label>Recurring</label><select id="ex_rec"><option value="no">One-time</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select></div>
     <div class="field"><label>Invoice / Receipt <span style="font-weight:400;color:var(--text3)">(PDF or image, optional)</span></label><input type="file" id="ex_invoice" accept=".pdf,.png,.jpg,.jpeg,.webp" style="color:var(--text2);font-size:12px"/></div>
-    <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('exp')">Cancel</button><button class="btn btn-blue" onclick="saveExp()">Save</button></div>
+    <div class="mo-foot"><button class="btn btn-ghost" onclick="editingExpId=null;closeMo('exp')">Cancel</button><button class="btn btn-blue" onclick="saveExp()">Save</button></div>
   </div>
 </div>
 
@@ -1836,6 +1838,7 @@ function renderExpenses(chs){
         <td style="font-weight:600;color:var(--red)">−${$$(e.amt)}</td>
         <td style="color:var(--text3)">${e.date}</td>
         <td style="display:flex;gap:6px;align-items:center">
+          <button class="btn-edit" onclick="editExp('${e.id}')">✏️ Edit</button>
           ${e.invoiceUrl?`<a href="${e.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">📄 View</a>`:''}
           <button class="btn-del" onclick="delExp('${e.id}')">Remove</button>
         </td>
@@ -1866,6 +1869,7 @@ function renderPayouts(pys){
     <td style="color:var(--text3)">${p.sz?numF(p.sz):'—'}</td>
     <td style="color:var(--text3);font-size:11px">${p.notes||'—'}</td>
     <td style="display:flex;gap:6px;align-items:center">
+      <button class="btn-edit" onclick="editPy('${p.id}')">✏️ Edit</button>
       <button class="btn-inv" onclick="genInv('${p.id}')">📄 Invoice</button>
       <button class="btn-del" onclick="delPy('${p.id}')">Remove</button>
     </td>
@@ -1953,6 +1957,7 @@ function renderTax(chs,pys){
         <td style="font-weight:600;color:var(--red)">−${$$(e.amt)}</td>
         <td style="color:var(--text3)">${e.date}</td>
         <td style="display:flex;gap:6px;align-items:center">
+          <button class="btn-edit" onclick="editExp('${e.id}')">✏️ Edit</button>
           ${e.invoiceUrl?`<a href="${e.invoiceUrl}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">📄 View</a>`:''}
           <button class="btn-del" onclick="delExp('${e.id}')">Remove</button>
         </td>
@@ -2315,6 +2320,7 @@ function delInv(id){S.invoices=S.invoices.filter(i=>i.id!==id);saveS();renderInv
 
 // ── CALENDAR ─────────────────────────────────────────────────────
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calSelected=null;
+let editingPyId=null, editingExpId=null;
 
 function calNav(dir){ calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;} renderCal(); }
 function calGoToday(){ const t=new Date(); calYear=t.getFullYear(); calMonth=t.getMonth(); renderCal(); }
@@ -2572,25 +2578,68 @@ async function saveCh(){
   saveS();closeMo('ch');['ch_firm','ch_sz','ch_fee','ch_notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('ch_invoice').value='';render();
 }
 
+function editPy(id){
+  const p=S.payouts.find(x=>x.id===id); if(!p)return;
+  editingPyId=id;
+  document.getElementById('py_firm').value=p.firm;
+  document.getElementById('py_amt').value=p.amt;
+  document.getElementById('py_date').value=p.date;
+  document.getElementById('py_meth').value=p.meth;
+  document.getElementById('py_sz').value=p.sz||'';
+  document.getElementById('py_notes').value=p.notes||'';
+  openMo('py');
+}
+
 function savePy(){
   const firm=document.getElementById('py_firm').value,amt=document.getElementById('py_amt').value,date=document.getElementById('py_date').value;
   if(!firm||firm==='__add__'||!amt||!date){alert('Firm, Amount, and Date required.');return;}
-  S.payouts.push({id:uid(),firm,amt:+amt,date,meth:document.getElementById('py_meth').value,sz:+document.getElementById('py_sz').value||0,notes:document.getElementById('py_notes').value.trim()});
+  if(editingPyId){
+    const p=S.payouts.find(x=>x.id===editingPyId);
+    if(p){p.firm=firm;p.amt=+amt;p.date=date;p.meth=document.getElementById('py_meth').value;p.sz=+document.getElementById('py_sz').value||0;p.notes=document.getElementById('py_notes').value.trim();}
+    editingPyId=null;
+  } else {
+    S.payouts.push({id:uid(),firm,amt:+amt,date,meth:document.getElementById('py_meth').value,sz:+document.getElementById('py_sz').value||0,notes:document.getElementById('py_notes').value.trim()});
+  }
   saveS();closeMo('py');['py_firm','py_amt','py_sz','py_notes'].forEach(i=>document.getElementById(i).value='');render();
+}
+
+function editExp(id){
+  const e=S.expenses.find(x=>x.id===id); if(!e)return;
+  editingExpId=id;
+  document.getElementById('ex_cat').value=e.cat;
+  document.getElementById('ex_amt').value=e.amt;
+  document.getElementById('ex_vendor').value=e.vendor||'';
+  document.getElementById('ex_date').value=e.date;
+  document.getElementById('ex_rec').value=e.rec;
+  openMo('exp');
 }
 
 async function saveExp(){
   const amt=document.getElementById('ex_amt').value,date=document.getElementById('ex_date').value;
   if(!amt||!date){alert('Amount and Date required.');return;}
-  const id=uid();
-  let invoiceUrl='';
   const file=document.getElementById('ex_invoice').files[0];
-  if(file&&currentUser){
-    const ext=file.name.split('.').pop();
-    const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
-    if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
+  if(editingExpId){
+    const e=S.expenses.find(x=>x.id===editingExpId);
+    if(e){
+      e.cat=document.getElementById('ex_cat').value;e.vendor=document.getElementById('ex_vendor').value.trim();
+      e.amt=+amt;e.date=date;e.rec=document.getElementById('ex_rec').value;
+      if(file&&currentUser){
+        const ext=file.name.split('.').pop();
+        const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${e.id}.${ext}`,file,{upsert:true});
+        if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${e.id}.${ext}`);e.invoiceUrl=pd.publicUrl;}
+      }
+    }
+    editingExpId=null;
+  } else {
+    const id=uid();
+    let invoiceUrl='';
+    if(file&&currentUser){
+      const ext=file.name.split('.').pop();
+      const {error}=await sb.storage.from('INVOICES').upload(`${currentUser.id}/${id}.${ext}`,file,{upsert:true});
+      if(!error){const {data:pd}=sb.storage.from('INVOICES').getPublicUrl(`${currentUser.id}/${id}.${ext}`);invoiceUrl=pd.publicUrl;}
+    }
+    S.expenses.push({id,cat:document.getElementById('ex_cat').value,vendor:document.getElementById('ex_vendor').value.trim(),amt:+amt,date,rec:document.getElementById('ex_rec').value,invoiceUrl});
   }
-  S.expenses.push({id,cat:document.getElementById('ex_cat').value,vendor:document.getElementById('ex_vendor').value.trim(),amt:+amt,date,rec:document.getElementById('ex_rec').value,invoiceUrl});
   saveS();closeMo('exp');['ex_amt','ex_vendor','ex_date'].forEach(i=>document.getElementById(i).value='');document.getElementById('ex_invoice').value='';render();
 }
 
