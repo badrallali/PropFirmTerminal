@@ -2176,12 +2176,15 @@ function printInv(){
 }
 
 function printTax(){
-  const pys=fy(S.payouts),chs=fy(S.challenges),exps=fy(S.expenses);
+  // Always use all data — PDF is a complete record, not a filtered dashboard view
+  const pys=[...S.payouts].sort((a,b)=>a.date.localeCompare(b.date));
+  const chs=[...S.challenges].sort((a,b)=>a.date.localeCompare(b.date));
+  const exps=[...S.expenses].sort((a,b)=>a.date.localeCompare(b.date));
   const gross=pys.reduce((s,p)=>s+Number(p.amt),0);
   const fees=chs.reduce((s,c)=>s+Number(c.fee),0);
   const other=exps.reduce((s,e)=>s+Number(e.amt),0);
   const net=gross-fees-other;
-  const periodLabel=_period==='all'?'All Time':_period==='ytd'?'Year to Date':_period==='mtd'?'Month to Date':_period==='week'?'This Week':_period==='today'?'Today':(_periodFrom&&_periodTo)?`${_periodFrom} → ${_periodTo}`:'Custom';
+  const periodLabel='All Time';
   const pr=S.profile||{};
   const fmt=n=>Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
