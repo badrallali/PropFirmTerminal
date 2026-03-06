@@ -1026,9 +1026,24 @@ function fixS(){
   if(!S.settings)S.settings={jur:'US'};
 }
 
+// Re-assign payouts previously logged as Unknown using stored sender address
+function reprocessUnknownPayouts(){
+  const userWallets=S.settings?.firmWallets||{};
+  let changed=0;
+  S.payouts.forEach(p=>{
+    if(p.firm!=='Unknown')return;
+    const match=(p.notes||'').match(/^from:(0x[0-9a-fA-F]+)/);
+    if(!match)return;
+    const firm=FIRM_WALLETS[match[1].toLowerCase()]||userWallets[match[1].toLowerCase()];
+    if(firm){p.firm=firm;p.notes='';changed++;}
+  });
+  if(changed>0){saveS();render();}
+}
+
 function loadLocal(){
   try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r);}catch(e){}
   fixS();
+  reprocessUnknownPayouts();
 }
 
 async function loadS(){
@@ -1452,7 +1467,11 @@ function demo(){
     {id:uid(),name:'TopStep',       web:'topstep.com',      addr:'141 W Jackson Blvd, Suite 4240', city:'Chicago', state:'IL', country:'United States', zip:'60604', email:'help@topstep.com',          tax:''},
     {id:uid(),name:'FundedNext',    web:'fundednext.com',   addr:'Office No. 7, AI Robotics HUB, C1 Bldg, AFZ', city:'Ajman', state:'', country:'United Arab Emirates', zip:'', email:'support@fundednext.com', tax:''},
     {id:uid(),name:'PipFarm',       web:'pipfarm.com',      addr:'',                       city:'',          state:'',  country:'',                zip:'',       email:'support@pipfarm.com',         tax:''},
-    {id:uid(),name:'E8 Funding',    web:'e8markets.com',    addr:'4101 McEwen Rd, Suite 205', city:'Dallas',  state:'TX', country:'United States', zip:'75244', email:'support@e8markets.com',       tax:'13392694'},
+    {id:uid(),name:'E8 Funding',    web:'e8markets.com',    addr:'100 Crescent Ct, Unit 700', city:'Dallas',  state:'TX', country:'United States', zip:'75201', email:'support@e8markets.com',       tax:''},
+    {id:uid(),name:'The 5%ers',     web:'the5ers.com',      addr:'3 Golda Meir Street',        city:"Ra'anana",state:'',  country:'Israel',          zip:'',       email:'support@the5ers.com',         tax:''},
+    {id:uid(),name:'Blue Guardian', web:'blueguardian.com', addr:'The Sotheby Building, Rodney Village, Rodney Bay', city:'Gros-Islet', state:'', country:'Saint Lucia', zip:'', email:'support@blueguardian.com', tax:''},
+    {id:uid(),name:'Funding Pips',  web:'fundingpips.com',  addr:'',                           city:'Dubai',   state:'',  country:'United Arab Emirates', zip:'',  email:'support@fundingpips.com',     tax:''},
+    {id:uid(),name:'Alpha Capital', web:'alphacapitalgroup.uk', addr:'',                       city:'London',  state:'',  country:'United Kingdom',  zip:'',       email:'support@alphacapitalgroup.uk',tax:''},
   ];
 }
 
@@ -2431,7 +2450,7 @@ function renderCalDetail(k,ev){
 const FIRM_WALLETS = {
   '0x349b0ed1520eae1472f57eac77e390a1ecb0c677': 'The 5%ers',
   '0x68035843020b6c0cd94dd29c273fff13c8e9a914': 'Blue Guardian',
-  '0xd19e945eeea57475b791c20112ebb4b628f5b95c': 'E8',
+  '0xd19e945eeea57475b791c20112ebb4b628f5b95c': 'E8 Funding',
   '0x1e198ad0608476efa952de1cd8e574db68df5f16': 'Funding Pips',
   '0xd172b9c227361fcf6151e802e1f09c084964bdcd': 'Alpha Capital',
 };
