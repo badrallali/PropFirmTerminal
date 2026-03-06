@@ -2443,34 +2443,28 @@ async function syncRisePayouts(){
   btn.textContent='⏳ Syncing…';btn.disabled=true;
 
   try{
-    // Blockscout Arbitrum — free, no API key, no proxy needed
-    const url=`https://arbitrum.blockscout.com/api?module=account&action=tokentx`
-      +`&address=${encodeURIComponent(wallet)}&sort=desc&offset=200&page=1`;
-    const res=await fetch(url);
-    if(!res.ok)throw new Error(`Blockscout responded with HTTP ${res.status}`);
+    const res=await fetch(`/api/rise-sync?wallet=${encodeURIComponent(wallet)}`);
+    if(!res.ok)throw new Error(`Server error ${res.status}`);
     const json=await res.json();
-    if(json.message==='NOTOK')throw new Error(json.result||'Could not fetch transactions — check your wallet address');
-    const txs=Array.isArray(json.result)?json.result:[];
+    if(json.error)throw new Error(json.error);
+    const txs=json.transfers||[];
 
-    // All known tx hashes to deduplicate
     const knownHashes=new Set(S.payouts.map(p=>p.txHash).filter(Boolean));
-    // User-saved wallet→firm overrides
     const userWallets=S.settings?.firmWallets||{};
 
     let added=0,dupes=0;
     const unknown=[];
 
     for(const tx of txs){
-      // Only incoming transfers (to == user wallet)
-      if((tx.to||'').toLowerCase()!==wallet.toLowerCase())continue;
-      // Accept any USD stablecoin (USDC, USDC.e, USDT, USDbC, etc.)
-      const sym=(tx.tokenSymbol||'').toUpperCase();
+      // Alchemy returns value as a number and timestamp as ISO string
+      const sym=(tx.asset||'').toUpperCase();
       if(!sym.includes('USD'))continue;
       const hash=tx.hash;
       if(knownHashes.has(hash)){dupes++;continue;}
-      const decimals=parseInt(tx.tokenDecimal)||6;
-      const amt=parseInt(tx.value)/Math.pow(10,decimals);
-      const date=new Date(parseInt(tx.timeStamp)*1000).toISOString().substr(0,10);
+      const amt=tx.value; // already a number, e.g. 50.0
+      const date=tx.metadata?.blockTimestamp
+        ?tx.metadata.blockTimestamp.substr(0,10)
+        :new Date().toISOString().substr(0,10);
       const fromAddr=(tx.from||'').toLowerCase();
       const firm=FIRM_WALLETS[fromAddr]||userWallets[fromAddr]||null;
       if(!firm){unknown.push({hash,amt,date,from:tx.from});continue;}
