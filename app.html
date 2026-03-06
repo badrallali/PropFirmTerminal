@@ -826,7 +826,7 @@
     <div class="field">
       <label>Rise Wallet Address (Arbitrum)</label>
       <input id="pr_riseWallet" placeholder="0x0000000000000000000000000000000000000000" style="font-family:var(--mf);font-size:12px;letter-spacing:.3px"/>
-      <div style="font-size:11px;color:var(--text3);margin-top:5px">Your Rise payout receiving address on Arbitrum. Used to auto-import payouts directly from the blockchain.</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px">Your Rise payout receiving address on Arbitrum.</div>
     </div>
     <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('profile')">Cancel</button><button class="btn btn-blue" onclick="saveProfile()">Save Profile</button></div>
   </div>
@@ -2432,14 +2432,11 @@ async function syncRisePayouts(){
   btn.textContent='⏳ Syncing…';btn.disabled=true;
 
   try{
-    // Arbiscan — etherscan-compatible, free without API key
-    const url=`https://api.arbiscan.io/api`
-      +`?module=account&action=tokentx&address=${wallet}&sort=desc&offset=200&page=1`;
-    const res=await fetch(url);
-    if(!res.ok)throw new Error(`Arbiscan responded with HTTP ${res.status}`);
+    const res=await fetch(`/api/rise-sync?wallet=${encodeURIComponent(wallet)}`);
+    if(!res.ok)throw new Error(`Server responded with HTTP ${res.status}`);
     const json=await res.json();
-    // status '0' with message 'NOTOK' is a real error; anything else (no data, empty) is fine
-    if(json.message==='NOTOK')throw new Error(json.result||'Arbiscan error — check your wallet address');
+    if(json.error)throw new Error(json.error);
+    if(json.message==='NOTOK')throw new Error(json.result||'Could not fetch transactions — check your wallet address');
     const txs=Array.isArray(json.result)?json.result:[];
 
     // All known tx hashes to deduplicate
