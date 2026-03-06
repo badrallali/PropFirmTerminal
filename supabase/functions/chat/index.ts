@@ -34,32 +34,21 @@ serve(async (req) => {
       })
     }
 
-    // Call OpenRouter with fallback models
-    const models = [
-      'deepseek/deepseek-chat:free',
-      'deepseek/deepseek-r1:free',
-      'meta-llama/llama-3.1-8b-instruct:free',
-    ]
-    let orData: any = null
-    for (const model of models) {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('OPENROUTER_KEY')}`,
-          'HTTP-Referer': 'https://propfirmterminal.com',
-          'X-Title': 'PropFirmTerminal',
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          max_tokens: generationConfig.maxOutputTokens || 600,
-          temperature: generationConfig.temperature ?? 0.7,
-        }),
-      })
-      orData = await res.json()
-      if (!orData.error) break
-    }
+    // Call OpenAI
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_KEY')}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages,
+        max_tokens: generationConfig.maxOutputTokens || 600,
+        temperature: generationConfig.temperature ?? 0.7,
+      }),
+    })
+    const orData = await res.json()
 
     // Convert OpenAI response → Gemini format so app.html needs no changes
     if (orData.error) {
