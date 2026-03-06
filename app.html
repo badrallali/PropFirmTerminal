@@ -468,13 +468,11 @@
   <div class="he">
     <button class="btn btn-ghost btn-xs" onclick="openMo('import')" title="Import PDF bank or payment statement" style="font-size:11px;padding:4px 10px;gap:4px;display:flex;align-items:center">⬆ Import</button>
     <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</div>
-    <div class="icon-btn" onclick="openMo('profile')" title="Profile & Settings">👤</div>
+    <div class="icon-btn" onclick="navTo('profile',event)" title="Profile & Settings">👤</div>
     <div id="userBadge" style="display:none;align-items:center;gap:6px">
       <span id="userEmail" style="font-size:11px;color:var(--text3);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-      <button class="btn btn-ghost btn-xs" onclick="confirmLoadDemo()" style="font-size:11px;padding:3px 8px">Load Sample Data</button>
       <button class="btn btn-ghost btn-xs" onclick="signOut()" style="font-size:11px;padding:3px 8px">Sign Out</button>
     </div>
-    <div class="hd-meta" id="savedAt"></div>
   </div>
 </header>
 <div id="customPeriodBar" style="display:none;position:sticky;top:64px;z-index:40;background:var(--card);border-bottom:1px solid var(--border2);padding:8px 32px;align-items:center;gap:10px">
@@ -531,7 +529,7 @@
       </div>
     </div>
     <!-- Charts row 2 -->
-    <div class="ch-row3">
+    <div class="ch-row">
       <div class="cc">
         <div class="ct-row">
           <div class="ct">Spend vs. Payouts by Firm</div>
@@ -540,15 +538,6 @@
           </select>
         </div>
         <div class="cw"><canvas id="cFirm"></canvas></div>
-      </div>
-      <div class="cc">
-        <div class="ct-row">
-          <div class="ct">Payment Method</div>
-          <select id="cper-meth" class="chart-per" onchange="setChartPeriod('meth',this.value)">
-            <option value="all">All Time</option><option value="ytd">Year to Date</option><option value="1y">Last 12 Mo</option><option value="6m">Last 6 Mo</option><option value="3m" selected>Last 3 Mo</option><option value="mtd">This Month</option>
-          </select>
-        </div>
-        <div class="cw"><canvas id="cMethod"></canvas></div>
       </div>
       <div class="cc">
         <div class="ct-row">
@@ -751,6 +740,128 @@
     <div id="certGrid"></div>
   </section>
 
+  <!-- ── PROFILE ── -->
+  <section class="sec" id="profile">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="sec-dot" style="background:var(--blue)"></span>Profile &amp; Settings</div>
+      <div class="sec-actions">
+        <span id="pr-save-badge" style="display:none;font-size:12px;color:var(--green);font-weight:600">✓ Saved</span>
+        <button class="btn btn-blue btn-xs" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+
+    <div class="profile-sections">
+      <!-- Left column -->
+      <div style="display:flex;flex-direction:column;gap:24px">
+
+        <!-- Personal / Business -->
+        <div class="cc">
+          <div class="ct-row"><div class="ct">Personal / Business</div></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+            <div class="fg">
+              <div class="field"><label>Full Name</label><input id="pr_name" placeholder="John Doe"/></div>
+              <div class="field"><label>Business Name (optional)</label><input id="pr_biz" placeholder="JD Trading Ltd."/></div>
+            </div>
+            <div class="field"><label>Address Line</label><input id="pr_addr" placeholder="123 Main Street"/></div>
+            <div class="fg">
+              <div class="field"><label>City</label><input id="pr_city" placeholder="Miami"/></div>
+              <div class="field"><label>State / Province</label><input id="pr_state" placeholder="FL"/></div>
+            </div>
+            <div class="fg">
+              <div class="field"><label>Country</label><input id="pr_country" placeholder="United States"/></div>
+              <div class="field"><label>Postal Code</label><input id="pr_zip" placeholder="33101"/></div>
+            </div>
+            <div class="fg">
+              <div class="field"><label>Email</label><input type="email" id="pr_email" placeholder="john@example.com"/></div>
+              <div class="field"><label>Phone (optional)</label><input id="pr_phone" placeholder="+1 305 000 0000"/></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tax & Invoice -->
+        <div class="cc">
+          <div class="ct-row"><div class="ct">Tax &amp; Invoice</div></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+            <div class="fg">
+              <div class="field"><label>Tax ID / EIN / VAT / UTR</label><input id="pr_tax" placeholder="EIN: XX-XXXXXXX"/></div>
+              <div class="field"><label>Default Jurisdiction</label>
+                <select id="pr_jur"><option value="US">🇺🇸 United States</option><option value="UK">🇬🇧 United Kingdom</option><option value="OTHER">🌍 Other</option></select>
+              </div>
+            </div>
+            <div class="field"><label>Invoice Footer / Bank Details</label><textarea id="pr_footer" placeholder="Bank: Chase Bank&#10;Account: XXXX-XXXX&#10;Routing: XXXXXXXXX" style="min-height:80px"></textarea></div>
+          </div>
+        </div>
+
+        <!-- Integrations -->
+        <div class="cc">
+          <div class="ct-row"><div class="ct">Integrations</div></div>
+          <div style="padding:20px">
+            <div class="field">
+              <label>Rise Wallet Address (Arbitrum)</label>
+              <input id="pr_riseWallet" placeholder="0x0000000000000000000000000000000000000000" style="font-family:var(--mf);font-size:12px;letter-spacing:.3px"/>
+              <div style="font-size:11px;color:var(--text3);margin-top:5px">Your Rise payout receiving address on Arbitrum.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right column -->
+      <div style="display:flex;flex-direction:column;gap:24px">
+
+        <!-- Import Data -->
+        <div class="cc">
+          <div class="ct-row"><div class="ct">Import Data</div></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+            <p style="font-size:13px;color:var(--text2);line-height:1.55">Upload a bank or payment statement (PDF, CSV, or Excel) and AI will automatically extract all transactions — payouts, challenge fees, and expenses — for you to review before importing.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-blue" onclick="openMo('import')" style="gap:6px;display:flex;align-items:center">⬆ Import Statement</button>
+            </div>
+            <div style="border-top:1px solid var(--border2);padding-top:14px">
+              <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Export Your Data</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-xs" onclick="exportCSV('py')">Export Payouts CSV</button>
+                <button class="btn btn-ghost btn-xs" onclick="exportCSV('ch')">Export Challenges CSV</button>
+                <button class="btn btn-ghost btn-xs" onclick="exportCSV('exp')">Export Expenses CSV</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Billing -->
+        <div class="cc">
+          <div class="ct-row"><div class="ct">Billing &amp; Plan</div></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:1px solid var(--border2);border-radius:var(--rl);padding:16px 20px">
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--text)">Free Plan</div>
+                <div style="font-size:12px;color:var(--text3);margin-top:3px">All core features included</div>
+              </div>
+              <div class="kpill" style="background:rgba(91,138,245,.15);color:var(--blue)">Active</div>
+            </div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.6">
+              PropFirm Terminal is currently free. Premium features — including advanced AI analysis, multi-account sync, and team sharing — are coming soon.
+            </div>
+            <button class="btn btn-ghost btn-xs" style="align-self:flex-start;opacity:.5;cursor:default" disabled>Upgrade (Coming Soon)</button>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="cc" style="border-color:rgba(248,113,113,.18)">
+          <div class="ct-row"><div class="ct" style="color:var(--red)">Danger Zone</div></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+            <p style="font-size:12px;color:var(--text3)">These actions are irreversible. Proceed with caution.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-xs" style="border-color:rgba(248,113,113,.3);color:var(--red)" onclick="confirmLoadDemo()">↺ Load Sample Data</button>
+              <button class="btn btn-ghost btn-xs" style="border-color:rgba(248,113,113,.3);color:var(--red)" onclick="clearAllData()">🗑 Clear All Data</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
 </main>
 </div><!-- /appWrap -->
 
@@ -843,51 +954,6 @@
   </div>
 </div>
 
-<!-- PROFILE -->
-<div class="ov" id="ov-profile">
-  <div class="modal modal-wide">
-    <div class="mo-title">Profile & Settings</div>
-    <div class="mo-desc">Your details appear on auto-generated invoices.</div>
-    <div class="dl">Personal / Business</div>
-    <div class="fg">
-      <div class="field"><label>Full Name</label><input id="pr_name" placeholder="John Doe"/></div>
-      <div class="field"><label>Business Name (optional)</label><input id="pr_biz" placeholder="JD Trading Ltd."/></div>
-    </div>
-    <div class="field"><label>Address Line</label><input id="pr_addr" placeholder="123 Main Street"/></div>
-    <div class="fg">
-      <div class="field"><label>City</label><input id="pr_city" placeholder="Miami"/></div>
-      <div class="field"><label>State / Province</label><input id="pr_state" placeholder="FL"/></div>
-    </div>
-    <div class="fg">
-      <div class="field"><label>Country</label><input id="pr_country" placeholder="United States"/></div>
-      <div class="field"><label>Postal Code</label><input id="pr_zip" placeholder="33101"/></div>
-    </div>
-    <div class="fg">
-      <div class="field"><label>Email</label><input type="email" id="pr_email" placeholder="john@example.com"/></div>
-      <div class="field"><label>Phone (optional)</label><input id="pr_phone" placeholder="+1 305 000 0000"/></div>
-    </div>
-    <div class="dl">Tax & Invoice</div>
-    <div class="fg">
-      <div class="field"><label>Tax ID / EIN / VAT / UTR</label><input id="pr_tax" placeholder="EIN: XX-XXXXXXX"/></div>
-      <div class="field"><label>Default Jurisdiction</label>
-        <select id="pr_jur"><option value="US">🇺🇸 United States</option><option value="UK">🇬🇧 United Kingdom</option><option value="OTHER">🌍 Other</option></select>
-      </div>
-    </div>
-    <div class="field"><label>Invoice Footer / Bank Details (appears on invoices)</label><textarea id="pr_footer" placeholder="Bank: Chase Bank&#10;Account: XXXX-XXXX&#10;Routing: XXXXXXXXX"></textarea></div>
-    <div class="dl">Integrations</div>
-    <div class="field">
-      <label>Rise Wallet Address (Arbitrum)</label>
-      <input id="pr_riseWallet" placeholder="0x0000000000000000000000000000000000000000" style="font-family:var(--mf);font-size:12px;letter-spacing:.3px"/>
-      <div style="font-size:11px;color:var(--text3);margin-top:5px">Your Rise payout receiving address on Arbitrum.</div>
-    </div>
-    <div class="dl" style="color:var(--red);border-color:rgba(248,113,113,.2)">Danger Zone</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-xs" style="border-color:rgba(248,113,113,.3);color:var(--red)" onclick="confirmLoadDemo()">↺ Load Sample Data</button>
-      <button class="btn btn-ghost btn-xs" style="border-color:rgba(248,113,113,.3);color:var(--red)" onclick="clearAllData()">🗑 Clear All Data</button>
-    </div>
-    <div class="mo-foot"><button class="btn btn-ghost" onclick="closeMo('profile')">Cancel</button><button class="btn btn-blue" onclick="saveProfile()">Save Profile</button></div>
-  </div>
-</div>
 
 <!-- INVOICE PREVIEW -->
 <div class="ov" id="ov-inv">
@@ -1206,15 +1272,7 @@ async function syncFromSB(){
 
 function saveS(){
   localStorage.setItem(KEY,JSON.stringify(S));
-  document.getElementById('savedAt').textContent='Saving…';
-  if(currentUser)syncSB().then(()=>{
-    const t=new Date();
-    document.getElementById('savedAt').textContent='Saved '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  }).catch(()=>{document.getElementById('savedAt').textContent='Sync error';});
-  else{
-    const t=new Date();
-    document.getElementById('savedAt').textContent='Saved '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  }
+  if(currentUser)syncSB().catch(e=>console.warn('Sync error',e));
 }
 
 async function syncSB(){
@@ -1238,7 +1296,7 @@ function confirmLoadDemo(){
 function clearAllData(){
   if(!confirm('This will permanently delete ALL payouts, challenges, expenses and invoices. Cannot be undone.\n\nContinue?'))return;
   S.payouts=[];S.challenges=[];S.expenses=[];S.invoices=[];
-  saveS();closeMo('profile');render();
+  saveS();render();
 }
 
 function demo(){
@@ -1871,16 +1929,6 @@ function renderCharts(rawChs,rawPys){
     CC['firm']=new Chart(GC('cFirm'),{type:'bar',data:{labels:fk,datasets:[{label:'Fees',data:fk.map(f=>fd[f].spent),backgroundColor:'rgba(248,113,113,.6)',borderRadius:4},{label:'Payouts',data:fk.map(f=>fd[f].earned),backgroundColor:'rgba(34,211,160,.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:MU,font:TF,padding:8,boxWidth:8}}},scales:sc()}});
   }
 
-  // Payment method
-  kc('meth');
-  const methP=fp('meth');
-  const mths={};methP.forEach(p=>{mths[p.meth]=(mths[p.meth]||0)+Number(p.amt);});
-  const mk=Object.keys(mths);
-  if(mk.length){
-    const COLS=['#5b8af5','#22d3a0','#8b5cf6','#fbbf24','#f87171','#f97316','#06b6d4'];
-    CC['meth']=new Chart(GC('cMethod'),{type:'doughnut',data:{labels:mk,datasets:[{data:mk.map(k=>mths[k]),backgroundColor:mk.map((_,i)=>COLS[i%COLS.length]),borderColor:'var(--card)',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:MU,font:TF,padding:8,boxWidth:8}}}}});
-  }
-
   // Quarterly
   kc('q');
   const qC=fc('q'),qP=fp('q');
@@ -2224,7 +2272,7 @@ function genInv(payoutId){
   const pr=S.profile;
   if(!pr.name){
     alert('Please fill in your Profile first (click the 👤 icon in the top right) — your name and details appear on the invoice.');
-    openMo('profile');return;
+    navTo('profile',null);return;
   }
   // Check if invoice for this payout already exists
   const existing=S.invoices.find(i=>i.payoutId===payoutId);
@@ -2652,7 +2700,7 @@ const FIRM_WALLETS = {
 
 async function syncRisePayouts(){
   const wallet=(S.settings?.riseWallet||'').trim();
-  if(!wallet){alert('Add your Rise wallet address in Profile & Settings first.');openMo('profile');return;}
+  if(!wallet){alert('Add your Rise wallet address in Profile & Settings first.');navTo('profile',null);return;}
 
   const btn=document.getElementById('riseBtn');
   btn.textContent='⏳ Syncing…';btn.disabled=true;
@@ -2728,7 +2776,8 @@ function saveProfile(){
   if(!S.settings)S.settings={};
   const jurEl=document.getElementById('pr_jur'); if(jurEl)S.settings.jur=jurEl.value;
   const walletEl=document.getElementById('pr_riseWallet'); if(walletEl)S.settings.riseWallet=walletEl.value.trim();
-  saveS();closeMo('profile');render();
+  saveS();render();
+  const sb=document.getElementById('pr-save-badge');if(sb){sb.style.display='';setTimeout(()=>sb.style.display='none',2000);}
 }
 
 // ── MODALS ──────────────────────────────────────────────────────
@@ -2748,7 +2797,6 @@ function openMo(t){
   if(t==='ch'){populateFirmDropdowns();if(!editingChId)document.getElementById('ch_date').value=today();}
   if(t==='py'&&!editingPyId)document.getElementById('py_date').value=today();
   if(t==='exp'&&!editingExpId)document.getElementById('ex_date').value=today();
-  if(t==='profile')openProfile();
   document.getElementById('ov-'+t).classList.add('open');
 }
 function closeMo(t){document.getElementById('ov-'+t).classList.remove('open');}
@@ -3108,7 +3156,7 @@ function dl(name,content,mime){const a=document.createElement('a');a.href=URL.cr
 
 
 // ── TAB NAVIGATION ───────────────────────────────────────────────
-const SECS=['overview','expenses','payouts','firms','propfirms','tax','invoices','certificates'];
+const SECS=['overview','expenses','payouts','firms','propfirms','tax','invoices','certificates','profile'];
 let activeTab='overview';
 
 function navTo(id,e){
@@ -3123,6 +3171,7 @@ function navTo(id,e){
   });
   window.scrollTo(0,0);
   if(id==='certificates') renderCertGrid();
+  if(id==='profile') openProfile();
 }
 
 // Show only overview on init
